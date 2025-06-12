@@ -4,6 +4,7 @@ import jwt from 'jsonwebtoken';
 import { User, IUser } from '../models/User';
 import crypto from 'crypto';
 import { sendVerificationEmail, sendPasswordResetEmail } from '../utils/email';
+import { OAuth2Client } from 'google-auth-library';
 
 interface LoginBody {
   email: string;
@@ -35,6 +36,7 @@ type AsyncRequestHandler = RequestHandler<
 >;
 
 const router = Router();
+const client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
 
 const validateEmail = (email: string): boolean => {
   return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
@@ -275,11 +277,75 @@ const resetPasswordHandler: AsyncRequestHandler = async (req, res) => {
   }
 };
 
+const googleAuthHandler: AsyncRequestHandler = async (req, res) => {
+  try {
+    const { token } = req.body;
+    
+    const ticket = await client.verifyIdToken({
+      idToken: token,
+      audience: process.env.GOOGLE_CLIENT_ID
+    });
+    
+    const payload = ticket.getPayload();
+    if (!payload) {
+      throw new Error('Invalid token');
+    }
+
+    const { email, name, picture, sub: googleId } = payload;
+
+    let user = await User.findOne({ email });
+
+    if (!user) {
+      // Create new user if doesn't exist
+      user = new User({
+        email,
+        name,
+        googleId,
+        picture,
+        password: crypto.randomBytes(16).toString('hex'), // Random password for Google users
+        isVerified: true // Google users are automatically verified
+      });
+      await user.save();
+    } else if (!user.googleId) {
+      // Link Google account to existing user
+      user.googleId = googleId;
+      user.picture = picture;
+      await user.save();
+    }
+
+    const jwtToken = jwt.sign(
+      { 
+        _id: user._id,
+        email: user.email,
+        name: user.name,
+        role: user.role
+      },
+      process.env.JWT_SECRET!,
+      { expiresIn: '24h' }
+    );
+
+    res.json({
+      token: jwtToken,
+      user: {
+        _id: user._id.toString(),
+        name: user.name,
+        email: user.email,
+        role: user.role,
+        picture: user.picture
+      }
+    });
+  } catch (error) {
+    console.error('Google auth error:', error);
+    res.status(401).json({ message: 'Invalid Google token' });
+  }
+};
+
 router.post('/register', registerHandler);
 router.post('/login', loginHandler);
 router.get('/verify-email/:token', verifyEmailHandler);
 router.post('/resend-verification', resendVerificationHandler);
 router.post('/forgot-password', forgotPasswordHandler);
 router.post('/reset-password', resetPasswordHandler);
+router.post('/google', googleAuthHandler);
 
 export default router;

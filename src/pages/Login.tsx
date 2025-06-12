@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useSearchParams, useNavigate, useLocation } from 'react-router-dom';
 import { Navbar } from "@/components/Navbar";
 import { Button } from "@/components/ui/button";
@@ -8,6 +8,28 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { toast } from "sonner";
 import { useAuth } from '@/context/AuthContext';
 import { Eye, EyeOff } from "lucide-react"; // Add this import
+
+declare global {
+  interface Window {
+    google?: {
+      accounts: {
+        id: {
+          initialize: (config: any) => void;
+          renderButton: (element: HTMLElement, config: any) => void;
+          prompt: (callback?: (notification: {
+            isDisplayed: () => boolean;
+            isNotDisplayed: () => boolean;
+            isSkippedMoment: () => boolean;
+            isDismissedMoment: () => boolean;
+            getNotDisplayedReason: () => string;
+            getMomentType: () => string;
+          }) => void) => void;
+          cancel: () => void;
+        };
+      };
+    };
+  }
+}
 
 interface FormData {
   email: string;
@@ -151,6 +173,93 @@ export default function Login() {
     } text-foreground hover:text-foreground/80`;
   };
 
+  const handleGoogleSignIn = async (response: any) => {
+    setIsLoading(true);
+    try {
+      const res = await fetch('http://localhost:5000/api/users/google', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          token: response.credential,
+        }),
+      });
+
+      const data = await res.json();
+      
+      if (!res.ok) {
+        throw new Error(data.message || 'Google sign-in failed');
+      }
+
+      login(data.token, data.user);
+      toast.success('Logged in successfully!');
+      
+      if (data.user.role === 'admin') {
+        navigate('/admin', { replace: true });
+      } else {
+        navigate('/', { replace: true });
+      }
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : 'Failed to sign in with Google');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    const initializeGoogleSignIn = () => {
+      if (window.google?.accounts?.id) {
+        window.google.accounts.id.initialize({
+          client_id: import.meta.env.VITE_GOOGLE_CLIENT_ID,
+          callback: handleGoogleSignIn,
+        });
+
+        const buttonDiv = document.getElementById('googleButton');
+        if (buttonDiv) {
+          window.google.accounts.id.renderButton(buttonDiv, {
+            type: 'standard',
+            theme: 'outline',
+            size: 'large',
+            width: '400',
+            text: 'continue_with',
+            shape: 'rectangular',
+            locale: 'en',
+            style: {
+              width: '100%',
+              maxWidth: '100%',
+              borderRadius: '0.5rem',
+              padding: '8px',
+              fontSize: '14px',
+              fontFamily: 'system-ui, -apple-system, sans-serif',
+              display: 'flex',
+              justifyContent: 'center',
+              alignItems: 'center'
+            }
+          });
+
+          // Force the inner button to be full width
+          const googleButton = buttonDiv.querySelector('div[role="button"]');
+          if (googleButton instanceof HTMLElement) {
+            googleButton.style.width = '100%';
+            googleButton.style.display = 'flex';
+            googleButton.style.justifyContent = 'center';
+          }
+        }
+      } else {
+        setTimeout(initializeGoogleSignIn, 100);
+      }
+    };
+
+    initializeGoogleSignIn();
+
+    return () => {
+      if (window.google?.accounts?.id) {
+        window.google.accounts.id.cancel();
+      }
+    };
+  }, []);
+
   return (
     <>
       <Navbar />
@@ -168,6 +277,20 @@ export default function Login() {
                 <CardDescription className="text-lg">Enter your credentials to access your account</CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
+                <div 
+                  id="googleButton" 
+                  className="w-full flex justify-center items-center min-h-[42px] overflow-hidden rounded-md [&>div]:!w-full [&>div>div]:!w-full"
+                />
+                <div className="relative">
+                  <div className="absolute inset-0 flex items-center">
+                    <span className="w-full border-t" />
+                  </div>
+                  <div className="relative flex justify-center text-xs uppercase">
+                    <span className="bg-background px-2 text-muted-foreground">
+                      Or continue with
+                    </span>
+                  </div>
+                </div>
                 <div className="space-y-2">
                   <Input
                     type="email"
@@ -232,6 +355,12 @@ export default function Login() {
                 <CardDescription className="text-lg">Enter your information to create your account</CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
+                <div className="relative">
+           
+                  <div className="relative flex justify-center text-xs uppercase">
+                   
+                  </div>
+                </div>
                 <div className="space-y-2">
                   <Input
                     placeholder="Name"
