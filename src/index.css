@@ -163,3 +163,23 @@ body {
 .leaflet-popup-tip {
   background-color: hsl(var(--background)) !important;
 }
+
+@layer base {
+  /* Add these styles for number input spinbutton */
+  input[type="number"]::-webkit-inner-spin-button,
+  input[type="number"]::-webkit-outer-spin-button {
+    color: var(--foreground);
+    background: var(--background);
+    opacity: 1;
+  }
+
+  /* Firefox */
+  input[type="number"] {
+    -moz-appearance: textfield;
+  }
+
+  .dark input[type="number"]::-webkit-inner-spin-button,
+  .dark input[type="number"]::-webkit-outer-spin-button {
+    filter: invert(1);
+  }
+}

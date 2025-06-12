@@ -17,6 +17,8 @@ import {
 import { Loader2 } from "lucide-react";
 import { toast } from 'sonner';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
+import { FileDown } from "lucide-react";
 
 interface OrderItem {
   productId: number;
@@ -132,6 +134,37 @@ export default function Orders() {
     }
   };
 
+  const exportOrders = () => {
+    // Convert orders to CSV format
+    const headers = ['Order ID', 'Date', 'Customer', 'Items', 'Amount', 'Payment Method', 'Status'];
+    const csvData = orders.map(order => [
+      order._id.slice(-6),
+      new Date(order.createdAt).toLocaleDateString(),
+      order.user ? order.user.name : 'Guest Order',
+      order.items.map(item => `${item.quantity}x ${item.name} (${item.variantName})`).join('; '),
+      order.totalAmount.toFixed(2), // Removed peso sign
+      order.paymentMethod,
+      order.status
+    ]);
+
+    // Create CSV content
+    const csvContent = [
+      headers.join(','),
+      ...csvData.map(row => row.map(cell => `"${cell}"`).join(','))
+    ].join('\n');
+
+    // Create and trigger download
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement('a');
+    const url = URL.createObjectURL(blob);
+    link.setAttribute('href', url);
+    link.setAttribute('download', `orders_${new Date().toISOString().slice(0,10)}.csv`);
+    link.style.visibility = 'hidden';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
   useEffect(() => {
     fetchOrders();
   }, []);
@@ -146,6 +179,14 @@ export default function Orders() {
 
   return (
     <div className="space-y-4">
+      <div className="flex justify-between items-center">
+        <h2 className="text-xl font-semibold text-foreground">Orders List</h2>
+        <Button onClick={exportOrders} variant="secondary">
+          <FileDown className="h-4 w-4 mr-2" />
+          Export Orders
+        </Button>
+      </div>
+
       <div className="rounded-md border border-border">
         <Table>
           <TableHeader>

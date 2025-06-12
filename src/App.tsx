@@ -20,6 +20,7 @@ import { Toaster } from 'sonner';
 import PaymentSuccess from '@/pages/payment/PaymentSuccess';
 import PaymentFailed from '@/pages/payment/PaymentFailed';
 import { CartProvider } from '@/context/CartContext';
+import Coupon from '@/pages/admin/Coupon';
 
 function App() {
   return (
@@ -57,6 +58,7 @@ function App() {
                           <Route path="products" element={<Products />} />
                           <Route path="orders" element={<Orders />} />
                           <Route path="inventory" element={<Inventory />} />
+                          <Route path="coupons" element={<Coupon />} />
                         </Routes>
                       </AdminLayout>
                     </SidebarProvider>
