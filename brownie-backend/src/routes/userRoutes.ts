@@ -2,6 +2,8 @@ import { Router, Request, Response, NextFunction, RequestHandler } from 'express
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import { User, IUser } from '../models/User';
+import crypto from 'crypto';
+import { sendVerificationEmail, sendPasswordResetEmail } from '../utils/email';
 
 interface LoginBody {
   email: string;
@@ -63,32 +65,106 @@ const registerHandler: AsyncRequestHandler = async (req, res) => {
       return;
     }
 
-    const user = new User(req.body);
+    const verificationToken = crypto.randomBytes(32).toString('hex');
+    const verificationExpires = new Date(Date.now() + 24 * 60 * 60 * 1000);
+
+    // Create user with verification data
+    const user = new User({
+      ...req.body,
+      verificationToken,
+      verificationExpires,
+      isVerified: false
+    });
+    
     await user.save();
     
-    const token = jwt.sign(
-      { 
-        _id: user._id,
-        email: user.email,
-        name: user.name,
-        role: user.role
-      },
-      process.env.JWT_SECRET || 'fallback-secret',
-      { expiresIn: '24h' }
-    );
-    
-    res.status(201).json({
-      token,
-      user: {
-        _id: user._id.toString(),
-        name: user.name,
-        email: user.email,
-        role: user.role
-      }
-    });
+    try {
+      await sendVerificationEmail(user.email, verificationToken);
+      res.status(201).json({
+        message: 'Registration successful. Please check your email to verify your account.'
+      });
+    } catch (emailError) {
+      // If email fails, delete the user and report error
+      await User.findByIdAndDelete(user._id);
+      throw new Error('Failed to send verification email');
+    }
   } catch (error) {
     console.error('Register error:', error);
+    res.status(500).json({ 
+      message: error instanceof Error ? error.message : 'Internal server error'
+    });
+  }
+};
+
+const verifyEmailHandler: AsyncRequestHandler = async (req, res) => {
+  try {
+    const { token } = req.params;
+    console.log('Received verification token:', token);
+
+    // First, try to find any user with this token
+    const user = await User.findOne({ verificationToken: token });
+    console.log('Found user:', user);
+
+    if (!user) {
+      res.status(400).json({ message: 'Invalid verification token' });
+      return;
+    }
+
+    // If user is already verified
+    if (user.isVerified) {
+      res.status(400).json({ message: 'Email is already verified. Please login.' });
+      return;
+    }
+
+    // Check if token is expired
+    if (user.verificationExpires && user.verificationExpires < new Date()) {
+      res.status(400).json({ message: 'Verification token has expired' });
+      return;
+    }
+
+    // Update user verification status
+    user.isVerified = true;
+    user.verificationToken = undefined;
+    user.verificationExpires = undefined;
+    await user.save();
+
+    res.json({ message: 'Email verified successfully. You can now login.' });
+  } catch (error) {
+    console.error('Verification error:', error);
     res.status(500).json({ message: 'Internal server error' });
+  }
+};
+
+const resendVerificationHandler: AsyncRequestHandler = async (req, res) => {
+  try {
+    const { email } = req.body;
+    
+    const user = await User.findOne({ email, isVerified: false });
+    
+    if (!user) {
+      res.status(400).json({ 
+        message: 'Invalid email or already verified' 
+      });
+      return;
+    }
+
+    const verificationToken = crypto.randomBytes(32).toString('hex');
+    const verificationExpires = new Date(Date.now() + 24 * 60 * 60 * 1000);
+
+    user.verificationToken = verificationToken;
+    user.verificationExpires = verificationExpires;
+    await user.save();
+
+    await sendVerificationEmail(email, verificationToken);
+    
+    res.json({ 
+      message: 'Verification email resent successfully' 
+    });
+    return;
+  } catch (error) {
+    console.error('Resend verification error:', error);
+    res.status(500).json({ message: 'Failed to resend verification email' });
+    return;
   }
 };
 
@@ -104,6 +180,12 @@ const loginHandler: AsyncRequestHandler = async (req, res) => {
     const user = await User.findOne({ email });
     if (!user) {
       res.status(401).json({ message: 'Invalid credentials' });
+      return;
+    }
+
+    // Only check verification for non-admin users
+    if (!user.isVerified && user.role !== 'admin') {
+      res.status(403).json({ message: 'Please verify your email before logging in' });
       return;
     }
 
@@ -141,7 +223,63 @@ const loginHandler: AsyncRequestHandler = async (req, res) => {
   }
 };
 
+const forgotPasswordHandler: AsyncRequestHandler = async (req, res) => {
+  try {
+    const { email } = req.body;
+    const user = await User.findOne({ email });
+
+    if (!user) {
+      // Return success even if user not found (security)
+      res.json({ message: 'If your email is registered, you will receive a password reset link.' });
+      return;
+    }
+
+    const resetToken = crypto.randomBytes(32).toString('hex');
+    const resetExpires = new Date(Date.now() + 60 * 60 * 1000); // 1 hour
+
+    user.resetPasswordToken = resetToken;
+    user.resetPasswordExpires = resetExpires;
+    await user.save();
+
+    await sendPasswordResetEmail(email, resetToken);
+    res.json({ message: 'If your email is registered, you will receive a password reset link.' });
+  } catch (error) {
+    console.error('Forgot password error:', error);
+    res.status(500).json({ message: 'Failed to process password reset request' });
+  }
+};
+
+const resetPasswordHandler: AsyncRequestHandler = async (req, res) => {
+  try {
+    const { token, newPassword } = req.body;
+
+    const user = await User.findOne({
+      resetPasswordToken: token,
+      resetPasswordExpires: { $gt: Date.now() }
+    });
+
+    if (!user) {
+      res.status(400).json({ message: 'Invalid or expired reset token' });
+      return;
+    }
+
+    user.password = newPassword;
+    user.resetPasswordToken = undefined;
+    user.resetPasswordExpires = undefined;
+    await user.save();
+
+    res.json({ message: 'Password has been reset successfully' });
+  } catch (error) {
+    console.error('Reset password error:', error);
+    res.status(500).json({ message: 'Failed to reset password' });
+  }
+};
+
 router.post('/register', registerHandler);
 router.post('/login', loginHandler);
+router.get('/verify-email/:token', verifyEmailHandler);
+router.post('/resend-verification', resendVerificationHandler);
+router.post('/forgot-password', forgotPasswordHandler);
+router.post('/reset-password', resetPasswordHandler);
 
 export default router;

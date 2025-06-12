@@ -26,14 +26,33 @@ export function AuthProvider({ children }: { children: ReactNode | ((props: { us
 
   useEffect(() => {
     const initializeAuth = () => {
-      const storedToken = localStorage.getItem('token');
-      const storedUser = localStorage.getItem('user');
-      
-      if (storedToken && storedUser) {
-        setToken(storedToken);
-        setUser(JSON.parse(storedUser));
+      try {
+        const storedToken = localStorage.getItem('token');
+        const storedUser = localStorage.getItem('user');
+        
+        if (storedToken && storedUser) {
+          try {
+            const parsedUser = JSON.parse(storedUser);
+            if (parsedUser && parsedUser._id) { // Validate user object
+              setToken(storedToken);
+              setUser(parsedUser);
+            } else {
+              // Invalid user data, clear storage
+              localStorage.removeItem('token');
+              localStorage.removeItem('user');
+            }
+          } catch (e) {
+            // JSON parse error, clear storage
+            console.error('Error parsing stored user:', e);
+            localStorage.removeItem('token');
+            localStorage.removeItem('user');
+          }
+        }
+      } catch (e) {
+        console.error('Error initializing auth:', e);
+      } finally {
+        setIsLoading(false);
       }
-      setIsLoading(false);
     };
 
     initializeAuth();

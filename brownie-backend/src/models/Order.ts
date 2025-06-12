@@ -34,6 +34,7 @@ const orderSchema = new mongoose.Schema({
     default: 'pending'
   },
   paymentSourceId: String, // Store PayMongo source ID
+  email: String, // Add this field for guest orders
 }, {
   timestamps: true
 });

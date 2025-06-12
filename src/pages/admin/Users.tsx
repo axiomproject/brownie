@@ -29,6 +29,17 @@ import {
   PaginationPrevious,
 } from "@/components/ui/pagination"
 import React from "react";
+import { Checkbox } from "@/components/ui/checkbox";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 
 interface User {
   _id: string;
@@ -65,6 +76,8 @@ export default function Users() {
   const [sortDirection, setSortDirection] = useState<SortDirection>('asc');
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 10;
+  const [selectedUsers, setSelectedUsers] = useState<string[]>([]);
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
 
   const fetchUsers = async () => {
     try {
@@ -254,6 +267,57 @@ export default function Users() {
     return items;
   };
 
+  const confirmBulkDelete = () => {
+    setShowDeleteDialog(true);
+  };
+
+  const executeBulkDelete = async () => {
+    let successCount = 0;
+    let failCount = 0;
+
+    for (const userId of selectedUsers) {
+      try {
+        const response = await fetch(`http://localhost:5000/api/admin/users/${userId}`, {
+          method: 'DELETE',
+          headers: {
+            'Authorization': `Bearer ${localStorage.getItem('token')}`
+          }
+        });
+        
+        if (!response.ok) throw new Error('Failed to delete user');
+        
+        successCount++;
+      } catch (error) {
+        failCount++;
+      }
+    }
+
+    if (successCount > 0) {
+      setUsers(users.filter(user => !selectedUsers.includes(user._id)));
+      toast.success(`Successfully deleted ${successCount} users`);
+    }
+    if (failCount > 0) {
+      toast.error(`Failed to delete ${failCount} users`);
+    }
+    setSelectedUsers([]);
+    setShowDeleteDialog(false);
+  };
+
+  const toggleUser = (userId: string) => {
+    setSelectedUsers(current =>
+      current.includes(userId)
+        ? current.filter(id => id !== userId)
+        : [...current, userId]
+    );
+  };
+
+  const toggleAll = () => {
+    const pageUserIds = paginatedUsers().map(user => user._id);
+    setSelectedUsers(current =>
+      current.length === pageUserIds.length ? [] : pageUserIds
+    );
+  };
+
   useEffect(() => {
     fetchUsers();
   }, []);
@@ -339,10 +403,52 @@ export default function Users() {
         </Dialog>
       </div>
 
+      {selectedUsers.length > 0 && (
+        <div className="flex items-center justify-between bg-muted p-2 rounded-md">
+          <span className="text-sm text-foreground">
+            {selectedUsers.length} users selected
+          </span>
+          <Button
+            variant="destructive"
+            size="sm"
+            onClick={confirmBulkDelete}
+          >
+            Delete Selected
+          </Button>
+        </div>
+      )}
+
+      {/* Add AlertDialog */}
+      <AlertDialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle className="text-foreground">Are you absolutely sure?</AlertDialogTitle>
+            <AlertDialogDescription className="text-muted-foreground">
+              This will permanently delete {selectedUsers.length} selected users and remove their data from the system.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel className="text-foreground">Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={executeBulkDelete}>
+              Continue
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
       <div className="rounded-md border border-border">
         <Table>
           <TableHeader>
             <TableRow className="border-border">
+              <TableHead className="w-[50px]">
+                <Checkbox
+                  checked={
+                    paginatedUsers().length > 0 &&
+                    paginatedUsers().every(user => selectedUsers.includes(user._id))
+                  }
+                  onCheckedChange={toggleAll}
+                />
+              </TableHead>
               <TableHead 
                 className="text-foreground cursor-pointer hover:bg-muted"
                 onClick={() => handleSort('name')}
@@ -372,7 +478,17 @@ export default function Users() {
           </TableHeader>
           <TableBody>
             {paginatedUsers().map((user) => (
-              <TableRow key={user._id} className="border-border">
+              <TableRow 
+                key={user._id} 
+                className="border-border"
+                data-selected={selectedUsers.includes(user._id)}
+              >
+                <TableCell>
+                  <Checkbox
+                    checked={selectedUsers.includes(user._id)}
+                    onCheckedChange={() => toggleUser(user._id)}
+                  />
+                </TableCell>
                 <TableCell className="text-foreground">{user.name}</TableCell>
                 <TableCell className="text-foreground">{user.email}</TableCell>
                 <TableCell className="capitalize text-foreground">{user.role}</TableCell>

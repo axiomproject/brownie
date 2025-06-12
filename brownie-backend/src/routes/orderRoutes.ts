@@ -1,24 +1,33 @@
 import { Router } from 'express';
-import type { Request, Response } from 'express';
+import type { Request, Response, RequestHandler } from 'express';
 import { Order } from '../models/Order';
 import { Product } from '../models/Product';
 import { authenticateToken } from '../middleware/auth';
 import type { AuthRequest } from '../middleware/auth';
+import { sendOrderConfirmationEmail } from '../utils/email';
+
+// Add this type definition at the top
+type AsyncRequestHandler = RequestHandler<
+  any,
+  any,
+  any,
+  any,
+  Record<string, any>
+>;
 
 const router = Router();
 
-// Add new guest order route
 router.post('/guest', async (req: Request, res: Response) => {
   try {
-    const { items, totalAmount, paymentMethod, paymentStatus } = req.body;
+    const { items, totalAmount, paymentMethod, paymentStatus, email } = req.body;
 
-    // Create the order without user reference
     const order = new Order({
       items,
       totalAmount,
       paymentMethod,
       paymentStatus,
-      status: 'received'
+      status: 'received',
+      email // Store guest email
     });
 
     // Update product stock levels
@@ -35,6 +44,16 @@ router.post('/guest', async (req: Request, res: Response) => {
     }));
 
     const savedOrder = await order.save();
+
+    // Send confirmation email for guest orders
+    if (email) {
+      try {
+        await sendOrderConfirmationEmail(email, savedOrder);
+      } catch (emailError) {
+        console.error('Failed to send order confirmation email:', emailError);
+      }
+    }
+
     res.status(201).json(savedOrder);
   } catch (error) {
     console.error('Order creation error:', error);
@@ -45,10 +64,10 @@ router.post('/guest', async (req: Request, res: Response) => {
 router.post('/', authenticateToken, async (req: AuthRequest, res: Response) => {
   try {
     const { items, totalAmount, paymentMethod, paymentStatus } = req.body;
+    const user = req.user!;
 
-    // Create the order
     const order = new Order({
-      user: req.user?._id,
+      user: user._id,
       items,
       totalAmount,
       paymentMethod,
@@ -70,6 +89,14 @@ router.post('/', authenticateToken, async (req: AuthRequest, res: Response) => {
     }));
 
     const savedOrder = await order.save();
+
+    // Send confirmation email for registered users
+    try {
+      await sendOrderConfirmationEmail(user.email, savedOrder);
+    } catch (emailError) {
+      console.error('Failed to send order confirmation email:', emailError);
+    }
+
     res.status(201).json(savedOrder);
   } catch (error) {
     console.error('Order creation error:', error);
@@ -85,5 +112,23 @@ router.get('/my-orders', authenticateToken, async (req: AuthRequest, res: Respon
     res.status(500).json({ message: 'Error fetching orders' });
   }
 });
+
+// Add this new route handler
+router.get('/track/:orderId', (async (req: Request, res: Response) => {
+  try {
+    const { orderId } = req.params;
+    const order = await Order.findById(orderId);
+
+    if (!order) {
+      res.status(404).json({ message: 'Order not found' });
+      return;
+    }
+
+    res.json(order);
+  } catch (error) {
+    console.error('Error fetching order:', error);
+    res.status(500).json({ message: 'Error fetching order details' });
+  }
+}) as AsyncRequestHandler);
 
 export default router;
