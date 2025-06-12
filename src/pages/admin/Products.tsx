@@ -24,9 +24,20 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { MoreHorizontal, Loader2, Plus } from "lucide-react";
+import { MoreHorizontal, Loader2, Plus, ChevronUp, ChevronDown } from "lucide-react";
 import { toast } from 'sonner';
 import { Checkbox } from "@/components/ui/checkbox";
+import {
+  Pagination,
+  PaginationContent,
+  PaginationEllipsis,
+  PaginationItem,
+  PaginationLink,
+  PaginationNext,
+  PaginationPrevious,
+} from "@/components/ui/pagination"
+import React from "react";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 
 interface Variant {
   name: string;
@@ -64,12 +75,22 @@ const initialFormData: ProductFormData = {
   isPopular: false,
 };
 
+// Add sort types
+type SortColumn = 'name' | 'category' | 'isPopular' | 'createdAt';
+type SortDirection = 'asc' | 'desc';
+
 export default function Products() {
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [formData, setFormData] = useState<ProductFormData>(initialFormData);
   const [editingId, setEditingId] = useState<string | null>(null);
+  const [sortColumn, setSortColumn] = useState<SortColumn>('name');
+  const [sortDirection, setSortDirection] = useState<SortDirection>('asc');
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 10;
+  const [selectedProducts, setSelectedProducts] = useState<string[]>([]);
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
 
   const fetchProducts = async () => {
     try {
@@ -166,6 +187,124 @@ export default function Products() {
     } catch (error) {
       toast.error("Failed to delete product");
     }
+  };
+
+  const sortData = (data: Product[]): Product[] => {
+    return [...data].sort((a, b) => {
+      const aValue = a[sortColumn];
+      const bValue = b[sortColumn];
+      
+      if (sortDirection === 'asc') {
+        return aValue < bValue ? -1 : aValue > bValue ? 1 : 0;
+      } else {
+        return bValue < aValue ? -1 : bValue > aValue ? 1 : 0;
+      }
+    });
+  };
+
+  const handleSort = (column: SortColumn) => {
+    if (sortColumn === column) {
+      setSortDirection(current => current === 'asc' ? 'desc' : 'asc');
+    } else {
+      setSortColumn(column);
+      setSortDirection('asc');
+    }
+  };
+
+  const SortIcon = ({ column }: { column: SortColumn }) => {
+    if (sortColumn !== column) return null;
+    return sortDirection === 'asc' ? 
+      <ChevronUp className="w-4 h-4 inline ml-1" /> : 
+      <ChevronDown className="w-4 h-4 inline ml-1" />;
+  };
+
+  const paginatedProducts = () => {
+    const sortedData = sortData(products);
+    const startIndex = (currentPage - 1) * itemsPerPage;
+    const endIndex = startIndex + itemsPerPage;
+    return sortedData.slice(startIndex, endIndex);
+  };
+
+  const totalPages = Math.ceil(products.length / itemsPerPage);
+
+  const renderPaginationItems = () => {
+    const items = [];
+    for (let i = 1; i <= totalPages; i++) {
+      if (
+        i === 1 ||
+        i === totalPages ||
+        (i >= currentPage - 1 && i <= currentPage + 1)
+      ) {
+        items.push(
+          <PaginationItem key={i}>
+            <PaginationLink
+              onClick={() => setCurrentPage(i)}
+              isActive={currentPage === i}
+            >
+              {i}
+            </PaginationLink>
+          </PaginationItem>
+        );
+      } else if (i === currentPage - 2 || i === currentPage + 2) {
+        items.push(
+          <PaginationItem key={i}>
+            <PaginationEllipsis />
+          </PaginationItem>
+        );
+      }
+    }
+    return items;
+  };
+
+  const confirmBulkDelete = () => {
+    setShowDeleteDialog(true);
+  };
+
+  const executeBulkDelete = async () => {
+    let successCount = 0;
+    let failCount = 0;
+
+    for (const productId of selectedProducts) {
+      try {
+        const response = await fetch(`http://localhost:5000/api/admin/products/${productId}`, {
+          method: 'DELETE',
+          headers: {
+            'Authorization': `Bearer ${localStorage.getItem('token')}`
+          }
+        });
+        
+        if (!response.ok) throw new Error('Failed to delete product');
+        
+        successCount++;
+      } catch (error) {
+        failCount++;
+      }
+    }
+
+    if (successCount > 0) {
+      setProducts(products.filter(product => !selectedProducts.includes(product._id)));
+      toast.success(`Successfully deleted ${successCount} products`);
+    }
+    if (failCount > 0) {
+      toast.error(`Failed to delete ${failCount} products`);
+    }
+    setSelectedProducts([]);
+    setShowDeleteDialog(false);
+  };
+
+  const toggleProduct = (productId: string) => {
+    setSelectedProducts(current =>
+      current.includes(productId)
+        ? current.filter(id => id !== productId)
+        : [...current, productId]
+    );
+  };
+
+  const toggleAll = () => {
+    const pageProductIds = paginatedProducts().map(product => product._id);
+    setSelectedProducts(current =>
+      current.length === pageProductIds.length ? [] : pageProductIds
+    );
   };
 
   useEffect(() => {
@@ -332,21 +471,87 @@ export default function Products() {
         </Dialog>
       </div>
 
+      {selectedProducts.length > 0 && (
+        <div className="flex items-center justify-between bg-muted p-2 rounded-md">
+          <span className="text-sm text-foreground">
+            {selectedProducts.length} products selected
+          </span>
+          <Button
+            variant="destructive"
+            size="sm"
+            onClick={confirmBulkDelete}
+          >
+            Delete Selected
+          </Button>
+        </div>
+      )}
+
+      <AlertDialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle className="text-foreground">Are you absolutely sure?</AlertDialogTitle>
+            <AlertDialogDescription className="text-muted-foreground">
+              This will permanently delete {selectedProducts.length} selected products and remove their data from the system.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel className="text-foreground">Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={executeBulkDelete}>
+              Continue
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
       <div className="rounded-md border border-border">
         <Table>
           <TableHeader>
             <TableRow className="border-border">
+              <TableHead className="w-[50px]">
+                <Checkbox
+                  checked={
+                    paginatedProducts().length > 0 &&
+                    paginatedProducts().every(product => selectedProducts.includes(product._id))
+                  }
+                  onCheckedChange={toggleAll}
+                />
+              </TableHead>
               <TableHead>Image</TableHead>
-              <TableHead className="text-foreground">Name</TableHead>
-              <TableHead className="text-foreground">Category</TableHead>
+              <TableHead 
+                className="text-foreground cursor-pointer hover:bg-muted"
+                onClick={() => handleSort('name')}
+              >
+                Name <SortIcon column="name" />
+              </TableHead>
+              <TableHead 
+                className="text-foreground cursor-pointer hover:bg-muted"
+                onClick={() => handleSort('category')}
+              >
+                Category <SortIcon column="category" />
+              </TableHead>
               <TableHead className="text-foreground">Variants</TableHead>
-              <TableHead className="text-foreground">Popular</TableHead>
+              <TableHead 
+                className="text-foreground cursor-pointer hover:bg-muted"
+                onClick={() => handleSort('isPopular')}
+              >
+                Popular <SortIcon column="isPopular" />
+              </TableHead>
               <TableHead className="text-right">Actions</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
-            {products.map((product) => (
-              <TableRow key={product._id} className="border-border">
+            {paginatedProducts().map((product) => (
+              <TableRow 
+                key={product._id} 
+                className="border-border"
+                data-selected={selectedProducts.includes(product._id)}
+              >
+                <TableCell>
+                  <Checkbox
+                    checked={selectedProducts.includes(product._id)}
+                    onCheckedChange={() => toggleProduct(product._id)}
+                  />
+                </TableCell>
                 <TableCell>
                   <img 
                     src={product.image} 
@@ -401,6 +606,35 @@ export default function Products() {
           </TableBody>
         </Table>
       </div>
+
+      {/* Add pagination UI after the table */}
+      {totalPages > 1 && (
+        <Pagination className="mt-4 select-none">
+          <PaginationContent>
+            <PaginationItem>
+              <PaginationPrevious 
+                onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                className={`${currentPage === 1 ? 'pointer-events-none opacity-50' : 'cursor-pointer'} text-foreground hover:bg-muted hover:text-foreground`}
+              />
+            </PaginationItem>
+            
+            {renderPaginationItems().map((item, index) => (
+              <PaginationItem key={index} className="text-foreground">
+                {React.cloneElement(item, {
+                  className: `${item.props.className || ''} text-foreground hover:bg-muted hover:text-foreground select-none`
+                })}
+              </PaginationItem>
+            ))}
+            
+            <PaginationItem>
+              <PaginationNext 
+                onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+                className={`${currentPage === totalPages ? 'pointer-events-none opacity-50' : 'cursor-pointer'} text-foreground hover:bg-muted hover:text-foreground`}
+              />
+            </PaginationItem>
+          </PaginationContent>
+        </Pagination>
+      )}
     </div>
   );
 }

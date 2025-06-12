@@ -7,11 +7,20 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Loader2 } from "lucide-react";
+import { Loader2, ChevronUp, ChevronDown } from "lucide-react";
 import { toast } from 'sonner';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import {
+  Pagination,
+  PaginationContent,
+  PaginationEllipsis,
+  PaginationItem,
+  PaginationLink,
+  PaginationNext,
+  PaginationPrevious,
+} from "@/components/ui/pagination";
+import React from "react";
 
 interface Variant {
   name: string;
@@ -39,11 +48,24 @@ interface InventoryLog {
   createdAt: string;
 }
 
+type SortColumn = 'name' | 'category' | 'stockQuantity';
+type SortDirection = 'asc' | 'desc';
+
+// Add these types after the existing interfaces
+type LogSortColumn = 'createdAt' | 'productId.name' | 'variantName' | 'newQuantity' | 'reason' | 'updatedBy.name';
+
 export default function Inventory() {
   const [products, setProducts] = useState<Product[]>([]);
   const [logs, setLogs] = useState<InventoryLog[]>([]);
   const [loading, setLoading] = useState(true);
   const [updatingStock, setUpdatingStock] = useState<string>("");
+  const [sortColumn, setSortColumn] = useState<SortColumn>('name');
+  const [sortDirection, setSortDirection] = useState<SortDirection>('asc');
+  const [logSortColumn, setLogSortColumn] = useState<LogSortColumn>('createdAt');
+  const [logSortDirection, setLogSortDirection] = useState<SortDirection>('desc');
+  const [currentPage, setCurrentPage] = useState(1);
+  const [logsCurrentPage, setLogsCurrentPage] = useState(1);
+  const itemsPerPage = 10;
 
   const fetchData = async () => {
     try {
@@ -106,6 +128,139 @@ export default function Inventory() {
     }
   };
 
+  const sortData = (data: Product[]): Product[] => {
+    return [...data].sort((a, b) => {
+      let aValue: any, bValue: any;
+
+      switch (sortColumn) {
+        case 'stockQuantity':
+          // Convert to numbers for proper numeric sorting
+          aValue = a.variants.reduce((sum, v) => sum + Number(v.stockQuantity || 0), 0);
+          bValue = b.variants.reduce((sum, v) => sum + Number(v.stockQuantity || 0), 0);
+          break;
+        default:
+          aValue = String(a[sortColumn]).toLowerCase();
+          bValue = String(b[sortColumn]).toLowerCase();
+      }
+      
+      if (sortColumn === 'stockQuantity') {
+        // Use numeric comparison for stockQuantity
+        return sortDirection === 'asc' 
+          ? Number(aValue) - Number(bValue)
+          : Number(bValue) - Number(aValue);
+      }
+
+      // Use string comparison for other columns
+      if (sortDirection === 'asc') {
+        return aValue < bValue ? -1 : aValue > bValue ? 1 : 0;
+      } else {
+        return bValue < aValue ? -1 : bValue > aValue ? 1 : 0;
+      }
+    });
+  };
+
+  const sortLogs = (data: InventoryLog[]): InventoryLog[] => {
+    return [...data].sort((a, b) => {
+      let aValue, bValue;
+
+      // Handle nested properties
+      if (logSortColumn === 'productId.name') {
+        aValue = a.productId.name;
+        bValue = b.productId.name;
+      } else if (logSortColumn === 'updatedBy.name') {
+        aValue = a.updatedBy.name;
+        bValue = b.updatedBy.name;
+      } else {
+        aValue = a[logSortColumn as keyof InventoryLog];
+        bValue = b[logSortColumn as keyof InventoryLog];
+      }
+      
+      if (logSortDirection === 'asc') {
+        return aValue < bValue ? -1 : aValue > bValue ? 1 : 0;
+      } else {
+        return bValue < aValue ? -1 : bValue > aValue ? 1 : 0;
+      }
+    });
+  };
+
+  const handleSort = (column: SortColumn) => {
+    if (sortColumn === column) {
+      setSortDirection(current => current === 'asc' ? 'desc' : 'asc');
+    } else {
+      setSortColumn(column);
+      setSortDirection('asc');
+    }
+  };
+
+  const handleLogSort = (column: LogSortColumn) => {
+    if (logSortColumn === column) {
+      setLogSortDirection(current => current === 'asc' ? 'desc' : 'asc');
+    } else {
+      setLogSortColumn(column);
+      setLogSortDirection('asc');
+    }
+  };
+
+  const SortIcon = ({ column }: { column: SortColumn }) => {
+    if (sortColumn !== column) return null;
+    return sortDirection === 'asc' ? 
+      <ChevronUp className="w-4 h-4 inline ml-1" /> : 
+      <ChevronDown className="w-4 h-4 inline ml-1" />;
+  };
+
+  const LogSortIcon = ({ column }: { column: LogSortColumn }) => {
+    if (logSortColumn !== column) return null;
+    return logSortDirection === 'asc' ? 
+      <ChevronUp className="w-4 h-4 inline ml-1" /> : 
+      <ChevronDown className="w-4 h-4 inline ml-1" />;
+  };
+
+  const paginatedProducts = () => {
+    const sortedData = sortData(products);
+    const startIndex = (currentPage - 1) * itemsPerPage;
+    const endIndex = startIndex + itemsPerPage;
+    return sortedData.slice(startIndex, endIndex);
+  };
+
+  const paginatedLogs = () => {
+    const sortedData = sortLogs(logs);
+    const startIndex = (logsCurrentPage - 1) * itemsPerPage;
+    const endIndex = startIndex + itemsPerPage;
+    return sortedData.slice(startIndex, endIndex);
+  };
+
+  const totalPages = Math.ceil(products.length / itemsPerPage);
+  const totalLogsPages = Math.ceil(logs.length / itemsPerPage);
+
+  const renderPaginationItems = (currentPage: number, totalPages: number, setPage: (page: number) => void) => {
+    const items = [];
+    for (let i = 1; i <= totalPages; i++) {
+      if (
+        i === 1 ||
+        i === totalPages ||
+        (i >= currentPage - 1 && i <= currentPage + 1)
+      ) {
+        items.push(
+          <PaginationItem key={i}>
+            <PaginationLink
+              onClick={() => setPage(i)}
+              isActive={currentPage === i}
+            >
+              {i}
+            </PaginationLink>
+          </PaginationItem>
+        );
+      } else if (i === currentPage - 2 || i === currentPage + 2) {
+        items.push(
+          <PaginationItem key={i}>
+            <PaginationEllipsis />
+          </PaginationItem>
+        );
+      }
+    }
+    return items;
+  };
+
   useEffect(() => {
     fetchData();
   }, []);
@@ -133,16 +288,31 @@ export default function Inventory() {
             <Table>
               <TableHeader>
                 <TableRow className="border-border">
-                  <TableHead className="text-foreground">Product</TableHead>
-                  <TableHead className="text-foreground">Category</TableHead>
+                  <TableHead 
+                    className="text-foreground cursor-pointer hover:bg-muted"
+                    onClick={() => handleSort('name')}
+                  >
+                    Product <SortIcon column="name" />
+                  </TableHead>
+                  <TableHead 
+                    className="text-foreground cursor-pointer hover:bg-muted"
+                    onClick={() => handleSort('category')}
+                  >
+                    Category <SortIcon column="category" />
+                  </TableHead>
                   <TableHead className="text-foreground">Variant</TableHead>
-                  <TableHead className="text-foreground">Stock Quantity</TableHead>
+                  <TableHead 
+                    className="text-foreground cursor-pointer hover:bg-muted"
+                    onClick={() => handleSort('stockQuantity')}
+                  >
+                    Stock Quantity <SortIcon column="stockQuantity" />
+                  </TableHead>
                   <TableHead className="text-foreground">Status</TableHead>
                   <TableHead className="text-foreground">Actions</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {products.flatMap((product) =>
+                {paginatedProducts().flatMap((product) =>
                   product.variants.map((variant) => (
                     <TableRow key={`${product._id}-${variant.name}`} className="border-border">
                       <TableCell className="text-foreground">{product.name}</TableCell>
@@ -185,6 +355,33 @@ export default function Inventory() {
               </TableBody>
             </Table>
           </div>
+          {totalPages > 1 && (
+            <Pagination className="mt-4 select-none">
+              <PaginationContent>
+                <PaginationItem>
+                  <PaginationPrevious 
+                    onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                    className={`${currentPage === 1 ? 'pointer-events-none opacity-50' : 'cursor-pointer'} text-foreground hover:bg-muted hover:text-foreground`}
+                  />
+                </PaginationItem>
+                
+                {renderPaginationItems(currentPage, totalPages, setCurrentPage).map((item, index) => (
+                  <PaginationItem key={index} className="text-foreground">
+                    {React.cloneElement(item, {
+                      className: `${item.props.className || ''} text-foreground hover:bg-muted hover:text-foreground select-none`
+                    })}
+                  </PaginationItem>
+                ))}
+                
+                <PaginationItem>
+                  <PaginationNext 
+                    onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+                    className={`${currentPage === totalPages ? 'pointer-events-none opacity-50' : 'cursor-pointer'} text-foreground hover:bg-muted hover:text-foreground`}
+                  />
+                </PaginationItem>
+              </PaginationContent>
+            </Pagination>
+          )}
         </TabsContent>
 
         <TabsContent value="logs">
@@ -192,16 +389,46 @@ export default function Inventory() {
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead className="text-foreground">Date</TableHead>
-                  <TableHead className="text-foreground">Product</TableHead>
-                  <TableHead className="text-foreground">Variant</TableHead>
-                  <TableHead className="text-foreground">Change</TableHead>
-                  <TableHead className="text-foreground">Reason</TableHead>
-                  <TableHead className="text-foreground">Updated By</TableHead>
+                  <TableHead 
+                    className="text-foreground cursor-pointer hover:bg-muted"
+                    onClick={() => handleLogSort('createdAt')}
+                  >
+                    Date <LogSortIcon column="createdAt" />
+                  </TableHead>
+                  <TableHead 
+                    className="text-foreground cursor-pointer hover:bg-muted"
+                    onClick={() => handleLogSort('productId.name')}
+                  >
+                    Product <LogSortIcon column="productId.name" />
+                  </TableHead>
+                  <TableHead 
+                    className="text-foreground cursor-pointer hover:bg-muted"
+                    onClick={() => handleLogSort('variantName')}
+                  >
+                    Variant <LogSortIcon column="variantName" />
+                  </TableHead>
+                  <TableHead 
+                    className="text-foreground cursor-pointer hover:bg-muted"
+                    onClick={() => handleLogSort('newQuantity')}
+                  >
+                    Change <LogSortIcon column="newQuantity" />
+                  </TableHead>
+                  <TableHead 
+                    className="text-foreground cursor-pointer hover:bg-muted"
+                    onClick={() => handleLogSort('reason')}
+                  >
+                    Reason <LogSortIcon column="reason" />
+                  </TableHead>
+                  <TableHead 
+                    className="text-foreground cursor-pointer hover:bg-muted"
+                    onClick={() => handleLogSort('updatedBy.name')}
+                  >
+                    Updated By <LogSortIcon column="updatedBy.name" />
+                  </TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {logs.map((log) => (
+                {paginatedLogs().map((log) => (
                   <TableRow key={log._id}>
                     <TableCell className="text-foreground">{new Date(log.createdAt).toLocaleString()}</TableCell>
                     <TableCell className="text-foreground">{log.productId.name}</TableCell>
@@ -222,6 +449,33 @@ export default function Inventory() {
               </TableBody>
             </Table>
           </div>
+          {totalLogsPages > 1 && (
+            <Pagination className="mt-4 select-none">
+              <PaginationContent>
+                <PaginationItem>
+                  <PaginationPrevious 
+                    onClick={() => setLogsCurrentPage(p => Math.max(1, p - 1))}
+                    className={`${logsCurrentPage === 1 ? 'pointer-events-none opacity-50' : 'cursor-pointer'} text-foreground hover:bg-muted hover:text-foreground`}
+                  />
+                </PaginationItem>
+                
+                {renderPaginationItems(logsCurrentPage, totalLogsPages, setLogsCurrentPage).map((item, index) => (
+                  <PaginationItem key={index} className="text-foreground">
+                    {React.cloneElement(item, {
+                      className: `${item.props.className || ''} text-foreground hover:bg-muted hover:text-foreground select-none`
+                    })}
+                  </PaginationItem>
+                ))}
+                
+                <PaginationItem>
+                  <PaginationNext 
+                    onClick={() => setLogsCurrentPage(p => Math.min(totalLogsPages, p + 1))}
+                    className={`${logsCurrentPage === totalLogsPages ? 'pointer-events-none opacity-50' : 'cursor-pointer'} text-foreground hover:bg-muted hover:text-foreground`}
+                  />
+                </PaginationItem>
+              </PaginationContent>
+            </Pagination>
+          )}
         </TabsContent>
       </Tabs>
     </div>

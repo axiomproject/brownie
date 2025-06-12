@@ -21,6 +21,9 @@ import PaymentSuccess from '@/pages/payment/PaymentSuccess';
 import PaymentFailed from '@/pages/payment/PaymentFailed';
 import { CartProvider } from '@/context/CartContext';
 import Coupon from '@/pages/admin/Coupon';
+import VerifyEmail from "@/pages/VerifyEmail";
+import ResetPassword from "@/pages/ResetPassword";
+import TrackOrder from '@/pages/TrackOrder';
 
 function App() {
   return (
@@ -42,6 +45,9 @@ function App() {
 
                 {/* Standalone routes (no navbar) */}
                 <Route path="/login" element={<Login />} />
+                <Route path="/verify-email" element={<VerifyEmail />} />
+                <Route path="/reset-password" element={<ResetPassword />} />
+                <Route path="/track-order/:orderId" element={<TrackOrder />} />
                 
                 {/* Payment routes */}
                 <Route path="/payment/success" element={<PaymentSuccess />} />

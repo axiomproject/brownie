@@ -9,7 +9,7 @@ import {
 } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Loader2, Plus, Pencil, X } from "lucide-react";
+import { Loader2, Plus, Pencil, X, ChevronUp, ChevronDown } from "lucide-react";
 import { toast } from 'sonner';
 import {
   Dialog,
@@ -27,6 +27,18 @@ import {
 } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
+import {
+  Pagination,
+  PaginationContent,
+  PaginationEllipsis,
+  PaginationItem,
+  PaginationLink,
+  PaginationNext,
+  PaginationPrevious,
+} from "@/components/ui/pagination"
+import React from "react";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
+import { Checkbox } from "@/components/ui/checkbox";
 
 interface Coupon {
   _id: string;
@@ -42,6 +54,9 @@ interface Coupon {
   newUsersOnly: boolean;
 }
 
+type SortColumn = 'code' | 'type' | 'value' | 'maxUses' | 'usedCount' | 'isActive' | 'expiryDate' | 'createdAt';
+type SortDirection = 'asc' | 'desc';
+
 export default function Coupon() {
   const [coupons, setCoupons] = useState<Coupon[]>([]);
   const [loading, setLoading] = useState(true);
@@ -56,6 +71,12 @@ export default function Coupon() {
   });
   const [editingCoupon, setEditingCoupon] = useState<Coupon | null>(null);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
+  const [sortColumn, setSortColumn] = useState<SortColumn>('createdAt');
+  const [sortDirection, setSortDirection] = useState<SortDirection>('desc');
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 10;
+  const [selectedCoupons, setSelectedCoupons] = useState<string[]>([]);
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
 
   const fetchCoupons = async () => {
     try {
@@ -158,6 +179,142 @@ export default function Coupon() {
     } catch (error) {
       toast.error("Failed to update coupon");
     }
+  };
+
+  const sortData = (data: Coupon[]): Coupon[] => {
+    return [...data].sort((a, b) => {
+      let aValue: any, bValue: any;
+
+      switch (sortColumn) {
+        case 'value':
+        case 'maxUses':
+        case 'usedCount':
+          // Numeric sorting
+          aValue = Number(a[sortColumn]);
+          bValue = Number(b[sortColumn]);
+          break;
+        case 'expiryDate':
+          // Handle null dates
+          aValue = a.expiryDate ? new Date(a.expiryDate).getTime() : Infinity;
+          bValue = b.expiryDate ? new Date(b.expiryDate).getTime() : Infinity;
+          break;
+        default:
+          // String sorting
+          aValue = String(a[sortColumn]).toLowerCase();
+          bValue = String(b[sortColumn]).toLowerCase();
+      }
+
+      if (sortDirection === 'asc') {
+        return aValue < bValue ? -1 : aValue > bValue ? 1 : 0;
+      } else {
+        return bValue < aValue ? -1 : bValue > aValue ? 1 : 0;
+      }
+    });
+  };
+
+  const handleSort = (column: SortColumn) => {
+    if (sortColumn === column) {
+      setSortDirection(current => current === 'asc' ? 'desc' : 'asc');
+    } else {
+      setSortColumn(column);
+      setSortDirection('asc');
+    }
+  };
+
+  const SortIcon = ({ column }: { column: SortColumn }) => {
+    if (sortColumn !== column) return null;
+    return sortDirection === 'asc' ? 
+      <ChevronUp className="w-4 h-4 inline ml-1" /> : 
+      <ChevronDown className="w-4 h-4 inline ml-1" />;
+  };
+
+  const paginatedCoupons = () => {
+    const sortedData = sortData(coupons);
+    const startIndex = (currentPage - 1) * itemsPerPage;
+    const endIndex = startIndex + itemsPerPage;
+    return sortedData.slice(startIndex, endIndex);
+  };
+
+  const totalPages = Math.ceil(coupons.length / itemsPerPage);
+
+  const renderPaginationItems = () => {
+    const items = [];
+    for (let i = 1; i <= totalPages; i++) {
+      if (
+        i === 1 ||
+        i === totalPages ||
+        (i >= currentPage - 1 && i <= currentPage + 1)
+      ) {
+        items.push(
+          <PaginationItem key={i}>
+            <PaginationLink
+              onClick={() => setCurrentPage(i)}
+              isActive={currentPage === i}
+            >
+              {i}
+            </PaginationLink>
+          </PaginationItem>
+        );
+      } else if (i === currentPage - 2 || i === currentPage + 2) {
+        items.push(
+          <PaginationItem key={i}>
+            <PaginationEllipsis />
+          </PaginationItem>
+        );
+      }
+    }
+    return items;
+  };
+
+  const confirmBulkDelete = () => {
+    setShowDeleteDialog(true);
+  };
+
+  const executeBulkDelete = async () => {
+    let successCount = 0;
+    let failCount = 0;
+
+    for (const couponId of selectedCoupons) {
+      try {
+        const response = await fetch(`http://localhost:5000/api/admin/coupons/${couponId}`, {
+          method: 'DELETE',
+          headers: {
+            'Authorization': `Bearer ${localStorage.getItem('token')}`
+          }
+        });
+        
+        if (!response.ok) throw new Error('Failed to delete coupon');
+        
+        successCount++;
+      } catch (error) {
+        failCount++;
+      }
+    }
+
+    if (successCount > 0) {
+      setCoupons(coupons.filter(coupon => !selectedCoupons.includes(coupon._id)));
+      toast.success(`Successfully deleted ${successCount} coupons`);
+    }
+    if (failCount > 0) {
+      toast.error(`Failed to delete ${failCount} coupons`);
+    }
+    setSelectedCoupons([]);
+    setShowDeleteDialog(false);
+  };
+
+  const toggleCoupon = (couponId: string) => {
+    setSelectedCoupons(current =>
+      current.includes(couponId)
+        ? current.filter(id => id !== couponId)
+        : [...current, couponId]
+    );
+  };
+
+  const toggleAll = () => {
+    const pageCouponIds = paginatedCoupons().map(coupon => coupon._id);
+    setSelectedCoupons(current =>
+      current.length === pageCouponIds.length ? [] : pageCouponIds
+    );
   };
 
   useEffect(() => {
@@ -368,23 +525,103 @@ export default function Coupon() {
         </DialogContent>
       </Dialog>
 
+      {selectedCoupons.length > 0 && (
+        <div className="flex items-center justify-between bg-muted p-2 rounded-md">
+          <span className="text-sm text-foreground">
+            {selectedCoupons.length} coupons selected
+          </span>
+          <Button
+            variant="destructive"
+            size="sm"
+            onClick={confirmBulkDelete}
+          >
+            Delete Selected
+          </Button>
+        </div>
+      )}
+
+      <AlertDialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle className="text-foreground">Are you absolutely sure?</AlertDialogTitle>
+            <AlertDialogDescription className="text-muted-foreground">
+              This will permanently delete {selectedCoupons.length} selected coupons and remove their data from the system.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel className="text-foreground">Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={executeBulkDelete}>
+              Continue
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
       <div className="rounded-md border border-border">
         <Table>
           <TableHeader>
             <TableRow className="border-border">
-              <TableHead className="text-foreground">Code</TableHead>
-              <TableHead className="text-foreground">Type</TableHead>
-              <TableHead className="text-foreground">Value</TableHead>
-              <TableHead className="text-foreground">New Users</TableHead>
-              <TableHead className="text-foreground">Usage</TableHead>
-              <TableHead className="text-foreground">Expiry</TableHead>
-              <TableHead className="text-foreground">Status</TableHead>
+              <TableHead className="w-[50px]">
+                <Checkbox
+                  checked={
+                    paginatedCoupons().length > 0 &&
+                    paginatedCoupons().every(coupon => selectedCoupons.includes(coupon._id))
+                  }
+                  onCheckedChange={toggleAll}
+                />
+              </TableHead>
+              <TableHead 
+                className="text-foreground cursor-pointer hover:bg-muted"
+                onClick={() => handleSort('code')}
+              >
+                Code <SortIcon column="code" />
+              </TableHead>
+              <TableHead 
+                className="text-foreground cursor-pointer hover:bg-muted"
+                onClick={() => handleSort('type')}
+              >
+                Type <SortIcon column="type" />
+              </TableHead>
+              <TableHead 
+                className="text-foreground cursor-pointer hover:bg-muted"
+                onClick={() => handleSort('value')}
+              >
+                Value <SortIcon column="value" />
+              </TableHead>
+              <TableHead
+                className="text-foreground cursor-pointer hover:bg-muted"
+                onClick={() => handleSort('maxUses')}
+              >
+                Usage <SortIcon column="maxUses" />
+              </TableHead>
+              <TableHead 
+                className="text-foreground cursor-pointer hover:bg-muted"
+                onClick={() => handleSort('expiryDate')}
+              >
+                Expiry <SortIcon column="expiryDate" />
+              </TableHead>
+              <TableHead 
+                className="text-foreground cursor-pointer hover:bg-muted"
+                onClick={() => handleSort('isActive')}
+              >
+                Status <SortIcon column="isActive" />
+              </TableHead>
               <TableHead className="text-foreground">Actions</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
-            {coupons.map((coupon) => (
-              <TableRow key={coupon._id} className="border-border">
+            {paginatedCoupons().map((coupon) => (
+              <TableRow 
+                key={coupon._id} 
+                className="border-border"
+                data-selected={selectedCoupons.includes(coupon._id)}
+              >
+                <TableCell>
+                  <Checkbox
+                    checked={selectedCoupons.includes(coupon._id)}
+                    onCheckedChange={() => toggleCoupon(coupon._id)}
+                  />
+                </TableCell>
                 <TableCell className="font-mono text-foreground">{coupon.code}</TableCell>
                 <TableCell className="text-foreground">
                   {coupon.type}
@@ -430,6 +667,34 @@ export default function Coupon() {
           </TableBody>
         </Table>
       </div>
+
+      {totalPages > 1 && (
+        <Pagination className="mt-4 select-none">
+          <PaginationContent>
+            <PaginationItem>
+              <PaginationPrevious 
+                onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                className={`${currentPage === 1 ? 'pointer-events-none opacity-50' : 'cursor-pointer'} text-foreground hover:bg-muted hover:text-foreground`}
+              />
+            </PaginationItem>
+            
+            {renderPaginationItems().map((item, index) => (
+              <PaginationItem key={index} className="text-foreground">
+                {React.cloneElement(item, {
+                  className: `${item.props.className || ''} text-foreground hover:bg-muted hover:text-foreground select-none`
+                })}
+              </PaginationItem>
+            ))}
+            
+            <PaginationItem>
+              <PaginationNext 
+                onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+                className={`${currentPage === totalPages ? 'pointer-events-none opacity-50' : 'cursor-pointer'} text-foreground hover:bg-muted hover:text-foreground`}
+              />
+            </PaginationItem>
+          </PaginationContent>
+        </Pagination>
+      )}
     </div>
   );
 }

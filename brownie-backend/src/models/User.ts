@@ -11,6 +11,11 @@ export interface IUser extends Document {
   role: string;
   createdAt: Date;
   updatedAt: Date;
+  isVerified: boolean;
+  verificationToken?: string;
+  verificationExpires?: Date;
+  resetPasswordToken?: string;
+  resetPasswordExpires?: Date;
 }
 
 const userSchema = new Schema({
@@ -19,7 +24,12 @@ const userSchema = new Schema({
   name: { type: String, required: true },
   address: String,
   phone: String,
-  role: { type: String, default: 'customer' }
+  role: { type: String, default: 'customer' },
+  isVerified: { type: Boolean, default: false },
+  verificationToken: String,
+  verificationExpires: Date,
+  resetPasswordToken: String,
+  resetPasswordExpires: Date
 }, {
   timestamps: true
 });

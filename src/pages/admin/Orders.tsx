@@ -14,11 +14,23 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Loader2 } from "lucide-react";
+import { Loader2, ChevronUp, ChevronDown } from "lucide-react";
 import { toast } from 'sonner';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { FileDown } from "lucide-react";
+import {
+  Pagination,
+  PaginationContent,
+  PaginationEllipsis,
+  PaginationItem,
+  PaginationLink,
+  PaginationNext,
+  PaginationPrevious,
+} from "@/components/ui/pagination"
+import React from "react";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
+import { Checkbox } from "@/components/ui/checkbox";
 
 interface OrderItem {
   productId: number;
@@ -62,12 +74,21 @@ const statusColors = {
   delivered: 'bg-green-500/10 text-green-500'
 };
 
+type SortColumn = 'createdAt' | 'totalAmount' | 'status' | 'paymentMethod';
+type SortDirection = 'asc' | 'desc';
+
 export default function Orders() {
   const [orders, setOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedCustomer, setSelectedCustomer] = useState<{ id: string; name: string } | null>(null);
   const [customerDetails, setCustomerDetails] = useState<CustomerDetails | null>(null);
   const [isDetailsDialogOpen, setIsDetailsDialogOpen] = useState(false);
+  const [sortColumn, setSortColumn] = useState<SortColumn>('createdAt');
+  const [sortDirection, setSortDirection] = useState<SortDirection>('desc'); // Default to newest first
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 10;
+  const [selectedOrders, setSelectedOrders] = useState<string[]>([]);
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
 
   const fetchOrders = async () => {
     try {
@@ -165,6 +186,124 @@ export default function Orders() {
     document.body.removeChild(link);
   };
 
+  const sortData = (data: Order[]): Order[] => {
+    return [...data].sort((a, b) => {
+      const aValue = sortColumn === 'totalAmount' ? a[sortColumn] : a[sortColumn]?.toString().toLowerCase();
+      const bValue = sortColumn === 'totalAmount' ? b[sortColumn] : b[sortColumn]?.toString().toLowerCase();
+      
+      if (sortDirection === 'asc') {
+        return aValue < bValue ? -1 : aValue > bValue ? 1 : 0;
+      } else {
+        return bValue < aValue ? -1 : bValue > aValue ? 1 : 0;
+      }
+    });
+  };
+
+  const handleSort = (column: SortColumn) => {
+    if (sortColumn === column) {
+      setSortDirection(current => current === 'asc' ? 'desc' : 'asc');
+    } else {
+      setSortColumn(column);
+      setSortDirection('asc');
+    }
+  };
+
+  const SortIcon = ({ column }: { column: SortColumn }) => {
+    if (sortColumn !== column) return null;
+    return sortDirection === 'asc' ? 
+      <ChevronUp className="w-4 h-4 inline ml-1" /> : 
+      <ChevronDown className="w-4 h-4 inline ml-1" />;
+  };
+
+  const paginatedOrders = () => {
+    const sortedData = sortData(orders);
+    const startIndex = (currentPage - 1) * itemsPerPage;
+    const endIndex = startIndex + itemsPerPage;
+    return sortedData.slice(startIndex, endIndex);
+  };
+
+  const totalPages = Math.ceil(orders.length / itemsPerPage);
+
+  const renderPaginationItems = () => {
+    const items = [];
+    for (let i = 1; i <= totalPages; i++) {
+      if (
+        i === 1 ||
+        i === totalPages ||
+        (i >= currentPage - 1 && i <= currentPage + 1)
+      ) {
+        items.push(
+          <PaginationItem key={i}>
+            <PaginationLink
+              onClick={() => setCurrentPage(i)}
+              isActive={currentPage === i}
+            >
+              {i}
+            </PaginationLink>
+          </PaginationItem>
+        );
+      } else if (i === currentPage - 2 || i === currentPage + 2) {
+        items.push(
+          <PaginationItem key={i}>
+            <PaginationEllipsis />
+          </PaginationItem>
+        );
+      }
+    }
+    return items;
+  };
+
+  const confirmBulkDelete = () => {
+    setShowDeleteDialog(true);
+  };
+
+  const executeBulkDelete = async () => {
+    let successCount = 0;
+    let failCount = 0;
+
+    for (const orderId of selectedOrders) {
+      try {
+        const response = await fetch(`http://localhost:5000/api/admin/orders/${orderId}`, {
+          method: 'DELETE',
+          headers: {
+            'Authorization': `Bearer ${localStorage.getItem('token')}`
+          }
+        });
+        
+        if (!response.ok) throw new Error('Failed to delete order');
+        
+        successCount++;
+      } catch (error) {
+        failCount++;
+      }
+    }
+
+    if (successCount > 0) {
+      setOrders(orders.filter(order => !selectedOrders.includes(order._id)));
+      toast.success(`Successfully deleted ${successCount} orders`);
+    }
+    if (failCount > 0) {
+      toast.error(`Failed to delete ${failCount} orders`);
+    }
+    setSelectedOrders([]);
+    setShowDeleteDialog(false);
+  };
+
+  const toggleOrder = (orderId: string) => {
+    setSelectedOrders(current =>
+      current.includes(orderId)
+        ? current.filter(id => id !== orderId)
+        : [...current, orderId]
+    );
+  };
+
+  const toggleAll = () => {
+    const pageOrderIds = paginatedOrders().map(order => order._id);
+    setSelectedOrders(current =>
+      current.length === pageOrderIds.length ? [] : pageOrderIds
+    );
+  };
+
   useEffect(() => {
     fetchOrders();
   }, []);
@@ -187,22 +326,93 @@ export default function Orders() {
         </Button>
       </div>
 
+      {selectedOrders.length > 0 && (
+        <div className="flex items-center justify-between bg-muted p-2 rounded-md">
+          <span className="text-sm text-foreground">
+            {selectedOrders.length} orders selected
+          </span>
+          <Button
+            variant="destructive"
+            size="sm"
+            onClick={confirmBulkDelete}
+          >
+            Delete Selected
+          </Button>
+        </div>
+      )}
+
+      <AlertDialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle className="text-foreground">Are you absolutely sure?</AlertDialogTitle>
+            <AlertDialogDescription className="text-muted-foreground">
+              This will permanently delete {selectedOrders.length} selected orders and remove their data from the system.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel className="text-foreground">Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={executeBulkDelete}>
+              Continue
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
       <div className="rounded-md border border-border">
         <Table>
           <TableHeader>
             <TableRow className="border-border">
+              <TableHead className="w-[50px]">
+                <Checkbox
+                  checked={
+                    paginatedOrders().length > 0 &&
+                    paginatedOrders().every(order => selectedOrders.includes(order._id))
+                  }
+                  onCheckedChange={toggleAll}
+                />
+              </TableHead>
               <TableHead className="text-foreground">Order ID</TableHead>
               <TableHead className="text-foreground">Customer</TableHead>
               <TableHead className="text-foreground">Items</TableHead>
-              <TableHead className="text-foreground">Total</TableHead>
-              <TableHead className="text-foreground">Payment</TableHead>
-              <TableHead className="text-foreground">Status</TableHead>
-              <TableHead className="text-foreground">Date</TableHead>
+              <TableHead 
+                className="text-foreground cursor-pointer hover:bg-muted"
+                onClick={() => handleSort('totalAmount')}
+              >
+                Total <SortIcon column="totalAmount" />
+              </TableHead>
+              <TableHead 
+                className="text-foreground cursor-pointer hover:bg-muted"
+                onClick={() => handleSort('paymentMethod')}
+              >
+                Payment <SortIcon column="paymentMethod" />
+              </TableHead>
+              <TableHead 
+                className="text-foreground cursor-pointer hover:bg-muted"
+                onClick={() => handleSort('status')}
+              >
+                Status <SortIcon column="status" />
+              </TableHead>
+              <TableHead 
+                className="text-foreground cursor-pointer hover:bg-muted"
+                onClick={() => handleSort('createdAt')}
+              >
+                Date <SortIcon column="createdAt" />
+              </TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
-            {orders.map((order) => (
-              <TableRow key={order._id} className="border-border">
+            {paginatedOrders().map((order) => (
+              <TableRow 
+                key={order._id} 
+                className="border-border"
+                data-selected={selectedOrders.includes(order._id)}
+              >
+                <TableCell>
+                  <Checkbox
+                    checked={selectedOrders.includes(order._id)}
+                    onCheckedChange={() => toggleOrder(order._id)}
+                  />
+                </TableCell>
                 <TableCell className="text-foreground font-mono">
                   {order._id.slice(-6)}
                 </TableCell>
@@ -309,6 +519,34 @@ export default function Orders() {
           </TableBody>
         </Table>
       </div>
+
+      {totalPages > 1 && (
+        <Pagination className="mt-4 select-none">
+          <PaginationContent>
+            <PaginationItem>
+              <PaginationPrevious 
+                onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                className={`${currentPage === 1 ? 'pointer-events-none opacity-50' : 'cursor-pointer'} text-foreground hover:bg-muted hover:text-foreground`}
+              />
+            </PaginationItem>
+            
+            {renderPaginationItems().map((item, index) => (
+              <PaginationItem key={index} className="text-foreground">
+                {React.cloneElement(item, {
+                  className: `${item.props.className || ''} text-foreground hover:bg-muted hover:text-foreground select-none`
+                })}
+              </PaginationItem>
+            ))}
+            
+            <PaginationItem>
+              <PaginationNext 
+                onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+                className={`${currentPage === totalPages ? 'pointer-events-none opacity-50' : 'cursor-pointer'} text-foreground hover:bg-muted hover:text-foreground`}
+              />
+            </PaginationItem>
+          </PaginationContent>
+        </Pagination>
+      )}
     </div>
   );
 }
