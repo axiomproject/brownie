@@ -14,11 +14,21 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Button } from "@/components/ui/button";
-import { MoreHorizontal, Loader2, Plus } from "lucide-react";
+import { MoreHorizontal, Loader2, Plus, ChevronUp, ChevronDown } from "lucide-react";
 import { toast } from 'sonner';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import {
+  Pagination,
+  PaginationContent,
+  PaginationEllipsis,
+  PaginationItem,
+  PaginationLink,
+  PaginationNext,
+  PaginationPrevious,
+} from "@/components/ui/pagination"
+import React from "react";
 
 interface User {
   _id: string;
@@ -42,12 +52,19 @@ const initialFormData: UserFormData = {
   role: 'customer'
 };
 
+type SortColumn = 'name' | 'email' | 'role' | 'createdAt';
+type SortDirection = 'asc' | 'desc';
+
 export default function Users() {
   const [users, setUsers] = useState<User[]>([]);
   const [loading, setLoading] = useState(true);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [formData, setFormData] = useState<UserFormData>(initialFormData);
   const [editingId, setEditingId] = useState<string | null>(null);
+  const [sortColumn, setSortColumn] = useState<SortColumn>('name');
+  const [sortDirection, setSortDirection] = useState<SortDirection>('asc');
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 10;
 
   const fetchUsers = async () => {
     try {
@@ -170,6 +187,73 @@ export default function Users() {
     }
   };
 
+  const sortData = (data: User[]): User[] => {
+    return [...data].sort((a, b) => {
+      const aValue = a[sortColumn];
+      const bValue = b[sortColumn];
+      
+      if (sortDirection === 'asc') {
+        return aValue < bValue ? -1 : aValue > bValue ? 1 : 0;
+      } else {
+        return bValue < aValue ? -1 : bValue > aValue ? 1 : 0;
+      }
+    });
+  };
+
+  const handleSort = (column: SortColumn) => {
+    if (sortColumn === column) {
+      setSortDirection(current => current === 'asc' ? 'desc' : 'asc');
+    } else {
+      setSortColumn(column);
+      setSortDirection('asc');
+    }
+  };
+
+  const SortIcon = ({ column }: { column: SortColumn }) => {
+    if (sortColumn !== column) return null;
+    return sortDirection === 'asc' ? 
+      <ChevronUp className="w-4 h-4 inline ml-1" /> : 
+      <ChevronDown className="w-4 h-4 inline ml-1" />;
+  };
+
+  const paginatedUsers = () => {
+    const sortedData = sortData(users);
+    const startIndex = (currentPage - 1) * itemsPerPage;
+    const endIndex = startIndex + itemsPerPage;
+    return sortedData.slice(startIndex, endIndex);
+  };
+
+  const totalPages = Math.ceil(users.length / itemsPerPage);
+
+  const renderPaginationItems = () => {
+    const items = [];
+    for (let i = 1; i <= totalPages; i++) {
+      if (
+        i === 1 ||
+        i === totalPages ||
+        (i >= currentPage - 1 && i <= currentPage + 1)
+      ) {
+        items.push(
+          <PaginationItem key={i}>
+            <PaginationLink
+              onClick={() => setCurrentPage(i)}
+              isActive={currentPage === i}
+            >
+              {i}
+            </PaginationLink>
+          </PaginationItem>
+        );
+      } else if (i === currentPage - 2 || i === currentPage + 2) {
+        items.push(
+          <PaginationItem key={i}>
+            <PaginationEllipsis />
+          </PaginationItem>
+        );
+      }
+    }
+    return items;
+  };
+
   useEffect(() => {
     fetchUsers();
   }, []);
@@ -259,15 +343,35 @@ export default function Users() {
         <Table>
           <TableHeader>
             <TableRow className="border-border">
-              <TableHead className="text-foreground">Name</TableHead>
-              <TableHead className="text-foreground">Email</TableHead>
-              <TableHead className="text-foreground">Role</TableHead>
-              <TableHead className="text-foreground">Joined</TableHead>
+              <TableHead 
+                className="text-foreground cursor-pointer hover:bg-muted"
+                onClick={() => handleSort('name')}
+              >
+                Name <SortIcon column="name" />
+              </TableHead>
+              <TableHead 
+                className="text-foreground cursor-pointer hover:bg-muted"
+                onClick={() => handleSort('email')}
+              >
+                Email <SortIcon column="email" />
+              </TableHead>
+              <TableHead 
+                className="text-foreground cursor-pointer hover:bg-muted"
+                onClick={() => handleSort('role')}
+              >
+                Role <SortIcon column="role" />
+              </TableHead>
+              <TableHead 
+                className="text-foreground cursor-pointer hover:bg-muted"
+                onClick={() => handleSort('createdAt')}
+              >
+                Joined <SortIcon column="createdAt" />
+              </TableHead>
               <TableHead className="text-right text-foreground">Actions</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
-            {users.map((user) => (
+            {paginatedUsers().map((user) => (
               <TableRow key={user._id} className="border-border">
                 <TableCell className="text-foreground">{user.name}</TableCell>
                 <TableCell className="text-foreground">{user.email}</TableCell>
@@ -301,6 +405,35 @@ export default function Users() {
           </TableBody>
         </Table>
       </div>
+
+      {/* Add pagination UI after the table */}
+      {totalPages > 1 && (
+        <Pagination className="mt-4 select-none">
+          <PaginationContent>
+            <PaginationItem>
+              <PaginationPrevious 
+                onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                className={`${currentPage === 1 ? 'pointer-events-none opacity-50' : 'cursor-pointer'} text-foreground hover:bg-muted hover:text-foreground`}
+              />
+            </PaginationItem>
+            
+            {renderPaginationItems().map((item, index) => (
+              <PaginationItem key={index} className="text-foreground">
+                {React.cloneElement(item, {
+                  className: `${item.props.className || ''} text-foreground hover:bg-muted hover:text-foreground select-none`
+                })}
+              </PaginationItem>
+            ))}
+            
+            <PaginationItem>
+              <PaginationNext 
+                onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+                className={`${currentPage === totalPages ? 'pointer-events-none opacity-50' : 'cursor-pointer'} text-foreground hover:bg-muted hover:text-foreground`}
+              />
+            </PaginationItem>
+          </PaginationContent>
+        </Pagination>
+      )}
     </div>
   );
 }

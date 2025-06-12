@@ -10,7 +10,8 @@ import {
   LogOut,
   ChevronLeft,
   ChevronRight,
-  Box // Add this import
+  Box,
+  Ticket // Add this import
 } from "lucide-react";
 import { useAuth } from '@/context/AuthContext';
 import { ModeToggle } from "@/components/mode-toggle";
@@ -32,7 +33,8 @@ export function AdminSidebar() {
     { icon: Users, label: 'Users', path: '/admin/users' },
     { icon: Package, label: 'Products', path: '/admin/products' },
     { icon: ShoppingCart, label: 'Orders', path: '/admin/orders' },
-    { icon: Box, label: 'Inventory', path: '/admin/inventory' }, // Add this line
+    { icon: Box, label: 'Inventory', path: '/admin/inventory' }, 
+    { icon: Ticket, label: 'Coupons', path: '/admin/coupons' }, // Add this line
   ];
 
   return (

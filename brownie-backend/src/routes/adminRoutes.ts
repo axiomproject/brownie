@@ -4,6 +4,7 @@ import { User } from '../models/User';
 import { Product } from '../models/Product';
 import { Order } from '../models/Order';
 import { InventoryLog } from '../models/InventoryLog';
+import { Coupon } from '../models/Coupon';
 import bcrypt from 'bcryptjs';
 
 const router = Router();
@@ -15,24 +16,102 @@ router.use(requireAdmin);
 // All handlers should be typed as RequestHandler
 const getStats: RequestHandler = async (req, res) => {
   try {
-    const [totalUsers, totalOrders, orders] = await Promise.all([
+    const [users, allOrders, products] = await Promise.all([
       User.countDocuments({ role: 'customer' }),
-      Order.countDocuments(),
-      Order.find()
+      Order.find().populate('user', 'name').sort({ createdAt: -1 }),
+      Product.find()
     ]);
 
-    const totalRevenue = orders.reduce((sum, order) => {
-      const orderTotal = order.items.reduce((itemSum, item) => itemSum + item.price * item.quantity, 0);
-      return sum + orderTotal;
+    // Calculate total revenue from delivered orders
+    const totalRevenue = allOrders
+      .filter(order => order.status === 'delivered')
+      .reduce((sum, order) => sum + order.totalAmount, 0);
+
+    // Calculate total products including variants
+    const totalProducts = products.reduce((sum, product) => 
+      sum + product.variants.length, 0
+    );
+
+    // Calculate low stock items (less than 20% of max stock or below 50 units)
+    const lowStockProducts = products.reduce((count, product) => {
+      const lowStockVariants = product.variants.filter(variant => {
+        // Consider it low stock if below 50 units OR below 20% of initial stock (assuming 500 is max)
+        const threshold = Math.min(50, 500 * 0.2); // 20% of max stock or 50, whichever is lower
+        return variant.stockQuantity < threshold;
+      });
+      return count + lowStockVariants.length;
     }, 0);
 
+    // Calculate orders by status for the chart
+    const ordersByStatus = {
+      received: allOrders.filter(order => order.status === 'received').length,
+      baking: allOrders.filter(order => order.status === 'baking').length,
+      'out for delivery': allOrders.filter(order => order.status === 'out for delivery').length,
+      delivered: allOrders.filter(order => order.status === 'delivered').length,
+    };
+
+    // Get start date for 12 months ago
+    const startDate = new Date();
+    startDate.setMonth(startDate.getMonth() - 11);
+    startDate.setDate(1);
+    startDate.setHours(0, 0, 0, 0);
+
+    // Generate 12 month periods
+    const months = Array.from({ length: 12 }, (_, i) => {
+      const date = new Date(startDate);
+      date.setMonth(startDate.getMonth() + i);
+      return {
+        year: date.getFullYear(),
+        month: date.getMonth() + 1,
+        monthYear: date.toLocaleString('default', { month: 'long', year: 'numeric' }),
+        total: 0
+      };
+    });
+
+    // Get revenue data
+    const revenueData = await Order.aggregate([
+      {
+        $match: {
+          status: 'delivered',
+          createdAt: { $gte: startDate }
+        }
+      },
+      {
+        $group: {
+          _id: {
+            year: { $year: "$createdAt" },
+            month: { $month: "$createdAt" }
+          },
+          total: { $sum: "$totalAmount" }
+        }
+      }
+    ]);
+
+    // Map revenue data to months array
+    const completeRevenueData = months.map(month => {
+      const revenue = revenueData.find(r => 
+        r._id.year === month.year && 
+        r._id.month === month.month
+      );
+
+      return {
+        name: month.monthYear,
+        total: revenue ? revenue.total : 0
+      };
+    });
+
     res.json({
-      totalUsers,
-      totalOrders,
+      totalUsers: users,
+      totalOrders: allOrders.length,
       totalRevenue,
-      recentOrders: await Order.find().sort({ createdAt: -1 }).limit(5)
+      totalProducts,
+      lowStockProducts,
+      ordersByStatus,
+      revenueData: completeRevenueData,
+      recentOrders: allOrders.slice(0, 5)
     });
   } catch (error) {
+    console.error('Error fetching stats:', error);
     res.status(500).json({ message: 'Error fetching stats' });
   }
 };
@@ -285,6 +364,43 @@ const updateInventory: RequestHandler = async (req, res) => {
   }
 };
 
+// Add these new route handlers
+const getCoupons: RequestHandler = async (req, res) => {
+  try {
+    const coupons = await Coupon.find().sort({ createdAt: -1 });
+    res.json(coupons);
+  } catch (error) {
+    res.status(500).json({ message: 'Error fetching coupons' });
+  }
+};
+
+const createCoupon: RequestHandler = async (req, res) => {
+  try {
+    const coupon = new Coupon({
+      ...req.body,
+      usedCount: 0,
+      isActive: true
+    });
+    await coupon.save();
+    res.status(201).json(coupon);
+  } catch (error) {
+    res.status(500).json({ message: 'Error creating coupon' });
+  }
+};
+
+const updateCoupon: RequestHandler = async (req, res) => {
+  try {
+    const coupon = await Coupon.findByIdAndUpdate(
+      req.params.id,
+      req.body,
+      { new: true }
+    );
+    res.json(coupon);
+  } catch (error) {
+    res.status(500).json({ message: 'Error updating coupon' });
+  }
+};
+
 // Route definitions
 router.get('/stats', getStats);
 router.get('/users', getUsers);
@@ -302,5 +418,8 @@ router.get('/products/:id', getProduct);
 router.get('/users/:id/orders', getUserDetails);
 router.get('/inventory/logs', getInventoryLogs);
 router.patch('/inventory/update', updateInventory);
+router.get('/coupons', getCoupons);
+router.post('/coupons', createCoupon);
+router.patch('/coupons/:id', updateCoupon);
 
 export default router;
