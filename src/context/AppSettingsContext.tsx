@@ -3,6 +3,7 @@ import type { ReactNode } from 'react';
 import { API_URL } from '@/config';
 
 interface AppSettings {
+  [x: string]: string;
   appName: string;
 }
 
