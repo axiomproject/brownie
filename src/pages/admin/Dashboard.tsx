@@ -12,7 +12,7 @@ import {
   ChartTooltip,
   ChartTooltipContent,
 } from "@/components/ui/chart";
-import { Line, LineChart, ResponsiveContainer, CartesianGrid, XAxis, YAxis, Bar, BarChart, LabelList } from "recharts";
+import {  CartesianGrid, XAxis, YAxis, Bar, BarChart, LabelList } from "recharts";
 import type { ChartConfig } from "@/components/ui/chart";
 
 interface DashboardStats {
@@ -45,7 +45,7 @@ interface DashboardStats {
 }
 
 export default function Dashboard() {
-  const { user } = useAuth();
+  useAuth();
   const [stats, setStats] = useState<DashboardStats>({
     totalOrders: 0,
     totalUsers: 0,

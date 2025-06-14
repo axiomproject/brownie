@@ -8,8 +8,6 @@ import { toast } from "sonner";
 import { z } from "zod";
 import { motion } from "framer-motion";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import ContactMap from '@/components/ContactMap';
-import LoadingMap from '@/components/LoadingMap';
 
 const contactSchema = z.object({
   name: z.string().min(2, "Name must be at least 2 characters"),
@@ -20,7 +18,7 @@ const contactSchema = z.object({
 
 export default function Contact() {
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const [] = useState<string | null>(null);
   const [formData, setFormData] = useState({
     name: "",
     email: "",

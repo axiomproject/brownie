@@ -2,12 +2,12 @@ import { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import { Navbar } from '@/components/Navbar';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Loader2, Truck, CheckCircle, Phone } from 'lucide-react';
+import { Loader2, Truck, Phone } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { 
   ScrollText, // For order received
   ChefHat,   // For baking
-  PartyPopper, // For delivered
+  PartyPopper, // For delivered 
   RefreshCcw // Add this for refunded status
 } from 'lucide-react';
 

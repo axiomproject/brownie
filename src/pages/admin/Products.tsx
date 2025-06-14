@@ -43,7 +43,7 @@ interface Variant {
   name: string;
   price: number;
   inStock: boolean;
-  stockQuantity: number; // Add this line
+  stockQuantity: number;
 }
 
 interface Product {
@@ -90,7 +90,7 @@ export default function Products() {
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 10;
   const [selectedProducts, setSelectedProducts] = useState<string[]>([]);
-  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+  const [, setShowDeleteDialog] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [showSingleDeleteDialog, setShowSingleDeleteDialog] = useState(false);
 const [productToDelete, setProductToDelete] = useState<string | null>(null);
@@ -283,37 +283,6 @@ const [productToDelete, setProductToDelete] = useState<string | null>(null);
     setShowDeleteDialog(true);
   };
 
-  const executeBulkDelete = async () => {
-    let successCount = 0;
-    let failCount = 0;
-
-    for (const productId of selectedProducts) {
-      try {
-        const response = await fetch(`http://localhost:5000/api/admin/products/${productId}`, {
-          method: 'DELETE',
-          headers: {
-            'Authorization': `Bearer ${localStorage.getItem('token')}`
-          }
-        });
-        
-        if (!response.ok) throw new Error('Failed to delete product');
-        
-        successCount++;
-      } catch (error) {
-        failCount++;
-      }
-    }
-
-    if (successCount > 0) {
-      setProducts(products.filter(product => !selectedProducts.includes(product._id)));
-      toast.success(`Successfully deleted ${successCount} products`);
-    }
-    if (failCount > 0) {
-      toast.error(`Failed to delete ${failCount} products`);
-    }
-    setSelectedProducts([]);
-    setShowDeleteDialog(false);
-  };
 
   const toggleProduct = (productId: string) => {
     setSelectedProducts(current =>

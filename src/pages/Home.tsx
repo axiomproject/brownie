@@ -10,7 +10,7 @@ export default function Home() {
   const navigate = useNavigate();
   const [popularProducts, setPopularProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const [, setError] = useState<string | null>(null);
   const [pageContent, setPageContent] = useState({
     heroTitle: '',
     heroSubtitle: '',

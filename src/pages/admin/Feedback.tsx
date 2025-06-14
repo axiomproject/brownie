@@ -20,7 +20,7 @@ import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
-import { Star, Search, ChevronUp, ChevronDown, Loader2 } from "lucide-react";
+import { Star, Search, ChevronUp, ChevronDown } from "lucide-react";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { Switch } from "@/components/ui/switch";
 
@@ -43,7 +43,7 @@ interface FeedbackEntry {
       name: string;
       email: string;
     };
-    email?: string; // For guest orders
+    email?: string; 
   };
 }
 
@@ -60,7 +60,7 @@ type PaginationItemType = React.ReactElement<{
 export default function Feedback() {
   const [feedbacks, setFeedbacks] = useState<FeedbackEntry[]>([]);
   const [loading, setLoading] = useState(true);
-  const [selectedFeedback, setSelectedFeedback] = useState<string[]>([]);
+  const [] = useState<string[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
   const [sortColumn, setSortColumn] = useState<SortColumn>('createdAt');
   const [sortDirection, setSortDirection] = useState<SortDirection>('desc');
@@ -386,7 +386,7 @@ export default function Feedback() {
           </TableHeader>
           <TableBody>
             {paginatedFeedbacks().map((feedback) => (
-              feedback.productFeedback.map((product, index) => (
+              feedback.productFeedback.map((product) => (
                 <TableRow key={`${feedback._id}-${product.productId}`}>
                   <TableCell>
                     <Checkbox

@@ -8,7 +8,6 @@ import { useNotifications } from '@/hooks/useNotifications';
 import {
   DropdownMenu,
   DropdownMenuContent,
-  DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { NotificationItem } from './NotificationItem';
@@ -42,12 +41,6 @@ export function AdminLayout({ children }: AdminLayoutProps) {
     }
   };
 
-  const formatTime = (date: Date) => {
-    return new Date(date).toLocaleTimeString('en-US', {
-      hour: '2-digit',
-      minute: '2-digit'
-    });
-  };
 
   const groupedNotifications = {
     all: notifications,

@@ -1,5 +1,4 @@
 import { Link, useLocation, useNavigate } from 'react-router-dom';
-import { useEffect } from 'react';
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { 

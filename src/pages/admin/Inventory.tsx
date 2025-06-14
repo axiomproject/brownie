@@ -178,7 +178,7 @@ export default function Inventory() {
     currentQuantity: number;
     newQuantity: number;
   } | null>(null);
-  const [updateReason, setUpdateReason] = useState("");
+  const [] = useState("");
 
   const fetchData = async () => {
     try {
