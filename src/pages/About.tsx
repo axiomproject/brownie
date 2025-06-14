@@ -1,6 +1,7 @@
 import { Navbar } from "@/components/Navbar";
 import { motion } from "framer-motion";
 import { useState, useEffect } from "react";
+import { API_URL } from '@/config';
 
 export default function About() {
   interface Value {
@@ -29,7 +30,13 @@ export default function About() {
   useEffect(() => {
     const fetchContent = async () => {
       try {
-        const response = await fetch('http://localhost:5000/api/content/home-content');
+        const response = await fetch(`${API_URL}/api/content/home-content`, {
+                  method: 'GET',
+                  headers: {
+                    'Content-Type': 'application/json'
+                  },
+                  credentials: 'include'
+                });
         if (!response.ok) throw new Error('Failed to fetch content');
         const data = await response.json();
         if (data) {

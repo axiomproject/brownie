@@ -14,6 +14,7 @@ import { useCart } from "@/context/CartContext";
 import { toast } from "sonner";
 import type { Product } from "@/types/product";
 import { motion } from "framer-motion";
+import { API_URL } from '@/config';
 
 export default function Menu() {
   const [category, setCategory] = useState("all");
@@ -30,7 +31,13 @@ export default function Menu() {
   useEffect(() => {
     const fetchProducts = async () => {
       try {
-        const response = await fetch('http://localhost:5000/api/products');
+          const response = await fetch(`${API_URL}/api/products`, {
+                  method: 'GET',
+                  headers: {
+                    'Content-Type': 'application/json'
+                  },
+                  credentials: 'include'
+                });
         if (!response.ok) throw new Error('Failed to fetch products');
         const data = await response.json();
         setProducts(data);
@@ -47,7 +54,13 @@ export default function Menu() {
   useEffect(() => {
     const fetchContent = async () => {
       try {
-        const response = await fetch('http://localhost:5000/api/content/home-content');
+        const response = await fetch(`${API_URL}/api/content/home-content`, {
+          method: 'GET',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          credentials: 'include'
+        });
         if (!response.ok) throw new Error('Failed to fetch content');
         const data = await response.json();
         if (data && data.menuPageHero) {
