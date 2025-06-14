@@ -1,7 +1,7 @@
 import nodemailer from 'nodemailer';
 import dotenv from 'dotenv';
 import type { Error } from 'mongoose';
-import { type IOrder } from '../models/Order'; // Change this line
+import { type IOrder, type IOrderPopulated } from '../models/Order'; // Change this line
 
 // Ensure environment variables are loaded
 dotenv.config();
@@ -65,7 +65,7 @@ interface OrderItem {
   quantity: number;
 }
 
-export async function sendOrderConfirmationEmail(email: string, order: IOrder): Promise<void> {
+export async function sendOrderConfirmationEmail(email: string, order: IOrder | IOrderPopulated): Promise<void> {
   const subject = 'Order Confirmation';
   const html = `
     <h1>Thank you for your order!</h1>
@@ -82,7 +82,7 @@ export async function sendOrderConfirmationEmail(email: string, order: IOrder): 
   await sendEmail(email, subject, html);
 }
 
-export async function sendDeliveryConfirmationEmail(email: string, order: IOrder): Promise<void> {
+export async function sendDeliveryConfirmationEmail(email: string, order: IOrder | IOrderPopulated): Promise<void> {
   const subject = 'Order Delivered';
   const html = `
     <h1>Your order has been delivered!</h1>
@@ -93,7 +93,7 @@ export async function sendDeliveryConfirmationEmail(email: string, order: IOrder
   await sendEmail(email, subject, html);
 }
 
-export async function sendOrderRefundEmail(email: string, order: IOrder): Promise<void> {
+export async function sendOrderRefundEmail(email: string, order: IOrder | IOrderPopulated): Promise<void> {
   const subject = 'Order Refund Confirmation';
   const html = `
     <h1>Refund Confirmation</h1>
