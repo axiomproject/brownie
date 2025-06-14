@@ -125,4 +125,91 @@ router.get('/', async (req, res) => {
   }
 });
 
+// Add new route to fetch feedback by product ID
+router.get('/product/:productId', async (req, res) => {
+  try {
+    const { productId } = req.params;
+    console.log('Debug: Starting feedback fetch for productId:', productId);
+
+    const feedbacks = await Feedback.aggregate([
+      // First lookup orders
+      {
+        $lookup: {
+          from: 'orders',
+          localField: 'orderId',
+          foreignField: '_id',
+          as: 'order'
+        }
+      },
+      // Then lookup users from orders
+      {
+        $lookup: {
+          from: 'users',
+          localField: 'order.user',
+          foreignField: '_id',
+          as: 'userInfo'
+        }
+      },
+      { $unwind: { path: '$order', preserveNullAndEmptyArrays: true } },
+      { $unwind: '$productFeedback' },
+      {
+        $match: {
+          'productFeedback.isDisplayed': true,
+          'productFeedback.productName': 'Triple Chocolate Brownie'
+        }
+      },
+      {
+        $project: {
+          rating: '$productFeedback.rating',
+          comment: '$productFeedback.comment',
+          productName: '$productFeedback.productName',
+          variantName: '$productFeedback.variantName',
+          customerName: {
+            $cond: {
+              if: { $gt: [{ $size: '$userInfo' }, 0] },
+              then: { $arrayElemAt: ['$userInfo.name', 0] },
+              else: {
+                $cond: {
+                  if: '$order.email',
+                  then: 'Guest Order',
+                  else: 'Unknown Customer'
+                }
+              }
+            }
+          }
+        }
+      }
+    ]);
+
+    console.log('Debug: Processed feedbacks:', JSON.stringify(feedbacks, null, 2));
+    res.json(feedbacks);
+  } catch (error) {
+    console.error('Error in feedback route:', error);
+    res.status(500).json({ 
+      message: 'Error fetching feedback', 
+      error: error instanceof Error ? error.message : 'Unknown error' 
+    });
+  }
+});
+
+// Add a helper endpoint to check feedback structure
+router.get('/debug/:productId', async (req, res) => {
+  try {
+    const { productId } = req.params;
+    const rawFeedbacks = await Feedback.find().lean();
+    res.json({
+      totalFeedbacks: rawFeedbacks.length,
+      feedbacksWithProduct: rawFeedbacks.filter(f => 
+        f.productFeedback.some(pf => pf.productId.toString() === productId)
+      ),
+      query: {
+        productId,
+        condition: { 'productFeedback.productId': productId }
+      }
+    });
+  } catch (error) {
+    res.status(500).json({ error: error instanceof Error ? error.message : 'Unknown error' });
+  }
+});
+
 export default router;

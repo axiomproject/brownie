@@ -9,7 +9,7 @@ import {
   ShoppingCart,
   LogOut,
   ChevronLeft,
-  Box,
+  Boxes,  // Change from Box to Boxes
   Ticket, 
   MessageSquare,
   Settings as SettingsIcon,
@@ -35,7 +35,7 @@ export function AdminSidebar() {
     { icon: Users, label: 'Users', path: '/admin/users', external: false },
     { icon: Package, label: 'Products', path: '/admin/products', external: false },
     { icon: ShoppingCart, label: 'Orders', path: '/admin/orders', external: false },
-    { icon: Box, label: 'Inventory', path: '/admin/inventory', external: false }, 
+    { icon: Boxes, label: 'Inventory', path: '/admin/inventory', external: false },  // Change from Box to Boxes
     { icon: Ticket, label: 'Coupons', path: '/admin/coupons', external: false }, 
     { icon: MessageSquare, label: 'Feedbacks', path: '/admin/feedbacks', external: false }, 
     { icon: SettingsIcon, label: 'Settings', path: '/admin/settings', external: false },
