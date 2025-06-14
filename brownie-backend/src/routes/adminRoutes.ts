@@ -3,6 +3,7 @@ import { authenticateToken, requireAdmin, AuthRequest } from '../middleware/auth
 import { User } from '../models/User';
 import { Product } from '../models/Product';
 import { Order } from '../models/Order';
+import type { IOrderPopulated } from '../models/Order';
 import { Contact } from '../models/Contact';
 import { InventoryLog } from '../models/InventoryLog';
 import { Coupon } from '../models/Coupon';
@@ -293,7 +294,7 @@ const updateOrderStatus: RequestHandler = async (req, res) => {
       req.params.id,
       { status },
       { new: true }
-    ).populate<{ user: { email: string } }>('user', 'name email');
+    ).populate<IOrderPopulated>('user', 'name email');
 
     if (!order) {
       res.status(404).json({ message: 'Order not found' });
@@ -323,7 +324,7 @@ const sendRefundEmail: RequestHandler = async (req, res) => {
   try {
     const orderId = req.params.id;
     const order = await Order.findById(orderId)
-      .populate<{ user: { email: string } }>('user', 'name email');
+      .populate<IOrderPopulated>('user', 'name email');
     
     if (!order) {
       res.status(404).json({ message: 'Order not found' });

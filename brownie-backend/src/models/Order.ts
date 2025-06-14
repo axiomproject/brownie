@@ -1,5 +1,7 @@
 import mongoose from 'mongoose';
+import { IUser } from './User';
 
+// Base Order interface
 export interface IOrder extends mongoose.Document {
   _id: string;
   user?: mongoose.Types.ObjectId;
@@ -14,6 +16,11 @@ export interface IOrder extends mongoose.Document {
   status: string;
   email?: string;
   createdAt: Date;
+}
+
+// Interface for populated Order
+export interface IOrderPopulated extends Omit<IOrder, 'user'> {
+  user?: IUser | { email: string };
 }
 
 const orderItemSchema = new mongoose.Schema({
