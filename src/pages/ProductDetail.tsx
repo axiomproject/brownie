@@ -9,14 +9,24 @@ import { useCart } from "@/context/CartContext";
 import { toast } from "sonner";
 import type { Product } from "@/types/product";
 
-interface ProductFeedback {
+interface FeedbackItem {
   rating: number;
   comment: string;
   productName: string;
   variantName: string;
-  user?: {
-    name: string;
-  };
+  customerName: string;  // Add this field
+}
+
+interface ProductFeedbackDocument {
+  productFeedback: Array<{
+    isDisplayed: boolean;
+    productId: string;
+    productName: string;
+    variantName: string;
+    rating: number;
+    comment: string;
+  }>;
+  createdAt: string;
 }
 
 export default function ProductDetail() {
@@ -26,7 +36,7 @@ export default function ProductDetail() {
   const [product, setProduct] = useState<Product | null>(null);
   const [loading, setLoading] = useState(true);
   const { addItem, items } = useCart();
-  const [feedbacks, setFeedbacks] = useState<ProductFeedback[]>([]);
+  const [feedbacks, setFeedbacks] = useState<FeedbackItem[]>([]);
   
   useEffect(() => {
     const fetchProduct = async () => {
@@ -49,19 +59,32 @@ export default function ProductDetail() {
   useEffect(() => {
     const fetchFeedbacks = async () => {
       try {
-        const response = await fetch(`http://localhost:5000/api/products/${id}/feedbacks`);
-        if (!response.ok) throw new Error('Failed to fetch feedbacks');
+        if (!product) return; // Make sure we have the product data first
+
+        console.log('Fetching feedbacks for:', product.name);
+        const response = await fetch(`http://localhost:5000/api/feedback/product/${id}`);
+        
+        if (!response.ok) {
+          throw new Error('Failed to fetch feedbacks');
+        }
+        
         const data = await response.json();
-        setFeedbacks(data);
+        console.log('Received feedback data:', data);
+        
+        if (Array.isArray(data) && data.length > 0) {
+          setFeedbacks(data);
+        } else {
+          console.log('No feedbacks found or empty array received');
+        }
       } catch (error) {
         console.error('Error fetching feedbacks:', error);
       }
     };
 
-    if (id) {
+    if (id && product) {
       fetchFeedbacks();
     }
-  }, [id]);
+  }, [id, product]); // Add product as a dependency
 
   // Initialize selectedVariant with the only variant's name if there's just one variant
   const [selectedVariant, setSelectedVariant] = useState<string>(() => {
@@ -249,16 +272,18 @@ export default function ProductDetail() {
             </div>
           </div>
 
-          {feedbacks.length > 0 && (
+          {feedbacks && feedbacks.length > 0 && (
             <div className="mt-12 border-t pt-8 pb-8">
-              <h2 className="text-2xl font-bold text-foreground mb-6">Customer Reviews</h2>
+              <h2 className="text-2xl font-bold text-foreground mb-6">
+                Customer Reviews ({feedbacks.length})
+              </h2>
               <div className="space-y-6">
                 {feedbacks.map((feedback, index) => (
                   <div key={index} className="bg-muted p-4 rounded-lg">
                     <div className="flex justify-between items-start mb-2">
                       <div>
                         <p className="font-semibold text-foreground">
-                          {feedback.user?.name || 'Customer'}
+                          {feedback.customerName}
                         </p>
                         <StarRating rating={feedback.rating} />
                       </div>

@@ -104,6 +104,47 @@ const getStats: RequestHandler = async (req, res) => {
       };
     });
 
+    // Updated aggregation for most ordered items
+    const mostOrderedItems = await Order.aggregate([
+      { $unwind: '$items' },
+      {
+        $lookup: {
+          from: 'products',
+          localField: 'items.productId',
+          foreignField: '_id',
+          as: 'product'
+        }
+      },
+      { $unwind: '$product' },
+      {
+        $group: {
+          _id: {
+            productId: '$items.productId',
+            variantName: '$items.variantName'
+          },
+          name: {
+            $first: {
+              $concat: [
+                '$product.name',  // Use the actual product name from products collection
+                ' - ',
+                '$items.variantName'  // Use the variant name from the order
+              ]
+            }
+          },
+          quantity: { $sum: '$items.quantity' }
+        }
+      },
+      { $sort: { quantity: -1 } },
+      { $limit: 5 },
+      {
+        $project: {
+          _id: 0,
+          name: 1,
+          quantity: 1
+        }
+      }
+    ]);
+
     res.json({
       totalUsers: users,
       totalOrders: allOrders.length,
@@ -112,7 +153,8 @@ const getStats: RequestHandler = async (req, res) => {
       lowStockProducts,
       ordersByStatus,
       revenueData: completeRevenueData,
-      recentOrders: allOrders.slice(0, 5)
+      recentOrders: allOrders.slice(0, 5),
+      mostOrderedItems: mostOrderedItems // Now directly use the aggregated result
     });
   } catch (error) {
     console.error('Error fetching stats:', error);

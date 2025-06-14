@@ -5,13 +5,14 @@ import {
   CardContent,
   CardHeader,
   CardTitle,
+  CardDescription
 } from "@/components/ui/card";
 import {
   ChartContainer,
   ChartTooltip,
   ChartTooltipContent,
 } from "@/components/ui/chart";
-import { Line, LineChart, ResponsiveContainer, CartesianGrid, XAxis, YAxis, Bar, BarChart } from "recharts";
+import { Line, LineChart, ResponsiveContainer, CartesianGrid, XAxis, YAxis, Bar, BarChart, LabelList } from "recharts";
 import type { ChartConfig } from "@/components/ui/chart";
 
 interface DashboardStats {
@@ -37,6 +38,10 @@ interface DashboardStats {
     name: string;
     total: number;
   }[];
+  mostOrderedItems: Array<{
+    name: string;
+    quantity: number;
+  }>;
 }
 
 export default function Dashboard() {
@@ -54,7 +59,8 @@ export default function Dashboard() {
       delivered: 0,
     },
     revenueData: [],
-    recentOrders: []
+    recentOrders: [],
+    mostOrderedItems: [], // Make sure this is initialized as an empty array
   });
   const [loading, setLoading] = useState(true);
 
@@ -70,6 +76,8 @@ export default function Dashboard() {
 
         if (!response.ok) throw new Error('Failed to fetch stats');
         const data = await response.json();
+        console.log('Fetched stats data:', data); // Add this debug log
+        console.log('Most ordered items:', data.mostOrderedItems); // Add this debug log
         setStats(data);
       } catch (error) {
         console.error('Error fetching dashboard stats:', error);
@@ -91,12 +99,23 @@ export default function Dashboard() {
     },
   } satisfies ChartConfig;
 
+  const mostOrderedConfig = {
+    quantity: {
+      label: "Quantity",
+      color: "var(--chart-2)",
+    },
+    label: {
+      color: "var(--background)",
+    },
+  } satisfies ChartConfig;
+
   if (loading) {
     return <div>Loading...</div>;
   }
 
   return (
     <div className="min-h-screen bg-background p-8">
+      {/* Stats cards grid */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-6">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
@@ -136,40 +155,104 @@ export default function Dashboard() {
         </Card>
       </div>
 
-      {/* Revenue Chart Section */}
-      <Card className="col-span-4">
-        <CardHeader>
-          <CardTitle>Monthly Revenue (Last 12 Months)</CardTitle>
-        </CardHeader>
-        <CardContent className="pl-2">
-          <ChartContainer config={chartConfig} className="max-h-[500px] w-full">
-            <BarChart 
-              data={stats.revenueData}
-              margin={{ top: 20, right: 20, bottom: 40, left: 40 }}
-            >
-              <XAxis 
-                dataKey="name" 
-                tick={{ fill: 'var(--muted-foreground)' }}
-                angle={-45}
-                textAnchor="end"
-                height={50}
-                interval={0} // Force show all labels
-              />
-              <YAxis 
-                tick={{ fill: 'var(--muted-foreground)' }}
-                width={20}
-              />
-              <Bar 
-                dataKey="total" 
-                fill="currentColor"
-                className="fill-current text-primary"
-                radius={[4, 4, 0, 0]}
-                maxBarSize={35} // Limit maximum width of bars
-              />
-            </BarChart>
-          </ChartContainer>
-        </CardContent>
-      </Card>
+      {/* Charts Grid Section */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+        {/* Revenue Chart */}
+        <Card className="col-span-1">
+          <CardHeader>
+            <CardTitle>Monthly Revenue</CardTitle>
+            <CardDescription>Total revenue by month</CardDescription>
+          </CardHeader>
+          <CardContent className="pl-2">
+            <ChartContainer config={chartConfig}>
+              <BarChart 
+                data={stats.revenueData}
+                margin={{ top: 40, right: 20, bottom: 90, left: 70 }}
+              >
+                <CartesianGrid vertical={false} />
+                <XAxis 
+                  dataKey="name" 
+                  tick={{ fill: 'var(--muted-foreground)' }}
+                  angle={-45}
+                  textAnchor="end"
+                  height={20}
+                  interval={0}
+                />
+                <YAxis 
+                  tick={{ fill: 'var(--muted-foreground)' }}
+                  width={20}
+                />
+                <ChartTooltip
+                  cursor={{ fill: 'var(--accent)' }}
+                  content={<ChartTooltipContent />}
+                />
+                <Bar 
+                  dataKey="total" 
+                  fill="currentColor"
+                  className="fill-current text-primary"
+                  radius={[4, 4, 0, 0]}
+                  maxBarSize={35}
+                />
+              </BarChart>
+            </ChartContainer>
+          </CardContent>
+        </Card>
+
+        {/* Most Ordered Items Chart */}
+        <Card className="col-span-1">
+          <CardHeader>
+            <CardTitle>Most Ordered Items</CardTitle>
+            <CardDescription>Top selling products by quantity</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <ChartContainer config={mostOrderedConfig}>
+              <BarChart
+                data={stats.mostOrderedItems || []}
+                layout="vertical"
+                margin={{
+                  top: 20,
+                  right: 40,
+                  bottom: 20,
+                  left: 10,
+                }}
+                height={400}
+              >
+                <CartesianGrid horizontal={false} />
+                <YAxis
+                  dataKey="name"
+                  type="category"
+                  tickLine={false}
+                  axisLine={false}
+                  width={70}
+                  tick={{ fill: 'var(--muted-foreground)' }}
+                />
+                <XAxis 
+                  type="number" 
+                  tick={{ fill: 'var(--muted-foreground)' }}
+                />
+                <ChartTooltip
+                  cursor={false}
+                  content={<ChartTooltipContent />}
+                />
+                <Bar
+                  dataKey="quantity"
+                  fill="currentColor"
+                  className="fill-current text-primary"
+                  radius={[0, 4, 4, 0]}
+                >
+                  <LabelList
+                    dataKey="quantity"
+                    position="right"
+                    offset={8}
+                    className="fill-foreground"
+                    fontSize={12}
+                  />
+                </Bar>
+              </BarChart>
+            </ChartContainer>
+          </CardContent>
+        </Card>
+      </div>
 
       {/* Recent Orders Table */}
       <div className="mt-8">
