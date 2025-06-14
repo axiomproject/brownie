@@ -21,9 +21,12 @@ import PaymentSuccess from '@/pages/payment/PaymentSuccess';
 import PaymentFailed from '@/pages/payment/PaymentFailed';
 import { CartProvider } from '@/context/CartContext';
 import Coupon from '@/pages/admin/Coupon';
+import Feedback from '@/pages/admin/Feedback';
 import VerifyEmail from "@/pages/VerifyEmail";
 import ResetPassword from "@/pages/ResetPassword";
 import TrackOrder from '@/pages/TrackOrder';
+import FeedbackPage from '@/pages/FeedbackPage';
+import Settings from '@/pages/admin/Settings';
 
 function App() {
   return (
@@ -48,6 +51,7 @@ function App() {
                 <Route path="/verify-email" element={<VerifyEmail />} />
                 <Route path="/reset-password" element={<ResetPassword />} />
                 <Route path="/track-order/:orderId" element={<TrackOrder />} />
+                <Route path="/feedback/:orderId" element={<FeedbackPage />} />
                 
                 {/* Payment routes */}
                 <Route path="/payment/success" element={<PaymentSuccess />} />
@@ -65,6 +69,8 @@ function App() {
                           <Route path="orders" element={<Orders />} />
                           <Route path="inventory" element={<Inventory />} />
                           <Route path="coupons" element={<Coupon />} />
+                          <Route path="feedbacks" element={<Feedback />} />
+                          <Route path="settings" element={<Settings />} />
                         </Routes>
                       </AdminLayout>
                     </SidebarProvider>

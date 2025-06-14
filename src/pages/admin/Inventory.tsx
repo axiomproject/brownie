@@ -8,7 +8,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Input } from "@/components/ui/input";
-import { Loader2, ChevronUp, ChevronDown } from "lucide-react";
+import { Loader2, ChevronUp, ChevronDown, Search } from "lucide-react";
 import { toast } from 'sonner';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
@@ -65,6 +65,7 @@ export default function Inventory() {
   const [logSortDirection, setLogSortDirection] = useState<SortDirection>('desc');
   const [currentPage, setCurrentPage] = useState(1);
   const [logsCurrentPage, setLogsCurrentPage] = useState(1);
+  const [searchQuery, setSearchQuery] = useState('');
   const itemsPerPage = 10;
 
   const fetchData = async () => {
@@ -215,8 +216,20 @@ export default function Inventory() {
       <ChevronDown className="w-4 h-4 inline ml-1" />;
   };
 
+  const filterProducts = (products: Product[]) => {
+    if (!searchQuery) return products;
+    
+    const query = searchQuery.toLowerCase();
+    return products.filter(product => 
+      product.name.toLowerCase().includes(query) ||
+      product.category.toLowerCase().includes(query) ||
+      product.variants.some(v => v.name.toLowerCase().includes(query))
+    );
+  };
+
   const paginatedProducts = () => {
-    const sortedData = sortData(products);
+    const filteredData = filterProducts(products);
+    const sortedData = sortData(filteredData);
     const startIndex = (currentPage - 1) * itemsPerPage;
     const endIndex = startIndex + itemsPerPage;
     return sortedData.slice(startIndex, endIndex);
@@ -265,6 +278,10 @@ export default function Inventory() {
     fetchData();
   }, []);
 
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchQuery]);
+
   if (loading) {
     return (
       <div className="flex justify-center items-center h-64">
@@ -275,8 +292,21 @@ export default function Inventory() {
 
   return (
     <div className="space-y-4">
-      <h2 className="text-xl font-semibold text-foreground">Inventory List</h2>
-      
+      <div className="flex justify-between items-center gap-4">
+        <div className="flex-1">
+          <h2 className="text-xl font-semibold text-foreground mb-4">Inventory List</h2>
+          <div className="relative w-full max-w-sm">
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+            <Input
+              placeholder="Search inventory..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="pl-10 w-full bg-background text-foreground placeholder:text-muted-foreground border-border"
+            />
+          </div>
+        </div>
+      </div>
+
       <Tabs defaultValue="stock" className="w-full">
         <TabsList>
           <TabsTrigger value="stock">Stock Levels</TabsTrigger>

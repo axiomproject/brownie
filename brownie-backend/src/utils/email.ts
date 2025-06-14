@@ -98,3 +98,73 @@ export const sendOrderConfirmationEmail = async (email: string, orderDetails: an
 
   await transporter.sendMail(mailOptions);
 };
+
+export const sendOrderRefundEmail = async (email: string, orderDetails: any) => {
+  const mailOptions = {
+    from: `"Brownie Shop" <${process.env.GMAIL_USER}>`,
+    to: email,
+    subject: 'Order Refund Notification - Brownie Shop',
+    html: `
+      <h1>Order Refund Notification</h1>
+      <p>Dear Customer,</p>
+      <p>We apologize for any inconvenience caused. Your order #${orderDetails._id.toString().slice(-6)} has been refunded.</p>
+      
+      <h2>Refunded Order Details:</h2>
+      <ul>
+        ${orderDetails.items.map((item: any) => `
+          <li>${item.name} (${item.variantName}) - ${item.quantity}x - ₱${item.price}</li>
+        `).join('')}
+      </ul>
+      
+      <p><strong>Refunded Amount:</strong> ₱${orderDetails.totalAmount.toFixed(2)}</p>
+      
+      <p>We value your business and hope to serve you better in the future. If you have any questions, please don't hesitate to contact us.</p>
+      
+      <p>Best regards,<br>Brownie Shop Team</p>
+    `
+  };
+
+  await transporter.sendMail(mailOptions);
+};
+
+export const sendDeliveryConfirmationEmail = async (email: string, orderDetails: any) => {
+  const feedbackUrl = `http://localhost:5173/feedback/${orderDetails._id.toString()}`;
+  
+  const mailOptions = {
+    from: `"Brownie Shop" <${process.env.GMAIL_USER}>`,
+    to: email,
+    subject: 'Order Delivered - We Value Your Feedback!',
+    html: `
+      <h1>Your Order Has Been Delivered!</h1>
+      <p>Dear Customer,</p>
+      <p>We're happy to confirm that your order #${orderDetails._id.toString().slice(-6)} has been delivered.</p>
+      
+      <h2>Order Details:</h2>
+      <ul>
+        ${orderDetails.items.map((item: any) => `
+          <li>${item.name} (${item.variantName}) - ${item.quantity}x</li>
+        `).join('')}
+      </ul>
+      
+      <p>We hope you enjoy your brownies! Your feedback is important to us.</p>
+      <p>Please take a moment to share your experience:</p>
+      
+      <div style="text-align: center; margin: 30px 0;">
+        <a href="${feedbackUrl}" style="
+          background-color: #7c3aed;
+          color: white;
+          padding: 12px 24px;
+          text-decoration: none;
+          border-radius: 6px;
+          display: inline-block;
+        ">Leave Feedback</a>
+      </div>
+      
+      <p>Thank you for choosing Brownie Shop!</p>
+      
+      <p>Best regards,<br>Brownie Shop Team</p>
+    `
+  };
+
+  await transporter.sendMail(mailOptions);
+};

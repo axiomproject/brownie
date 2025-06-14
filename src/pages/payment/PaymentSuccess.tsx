@@ -27,8 +27,17 @@ export default function PaymentSuccess() {
       const token = localStorage.getItem('token');
       try {
         const paymentMethod = localStorage.getItem('paymentMethod') || 'gcash';
-        const email = localStorage.getItem('guestEmail'); // Add this for guest orders
-        
+        const email = localStorage.getItem('guestEmail');
+        // Get applied coupon from localStorage
+        const appliedCoupon = localStorage.getItem('appliedCoupon') 
+          ? JSON.parse(localStorage.getItem('appliedCoupon')!)
+          : null;
+
+        // Calculate final amount with coupon
+        const finalAmount = appliedCoupon?.type === 'fixed'
+          ? totalPrice - appliedCoupon.value
+          : totalPrice;
+
         const endpoint = token 
           ? 'http://localhost:5000/api/orders'
           : 'http://localhost:5000/api/orders/guest';
@@ -49,10 +58,16 @@ export default function PaymentSuccess() {
               quantity: item.quantity,
               variantName: item.variant.name
             })),
-            totalAmount: totalPrice,
+            totalAmount: finalAmount,
             paymentStatus: 'paid',
             paymentMethod,
-            email // Include email for guest orders
+            email,
+            // Include coupon information
+            coupon: appliedCoupon ? {
+              code: appliedCoupon.code,
+              type: appliedCoupon.type,
+              value: appliedCoupon.value
+            } : null
           })
         });
 
@@ -73,6 +88,7 @@ export default function PaymentSuccess() {
         
         localStorage.removeItem('paymentMethod');
         localStorage.removeItem('guestEmail');
+        localStorage.removeItem('appliedCoupon'); // Remove coupon data
         clearCart();
       } catch (error) {
         console.error('Error creating order:', error);

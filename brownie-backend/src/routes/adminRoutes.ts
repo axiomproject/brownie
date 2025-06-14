@@ -1,11 +1,15 @@
-import { Router, RequestHandler } from 'express';
+import { Router, RequestHandler, Response } from 'express';
 import { authenticateToken, requireAdmin, AuthRequest } from '../middleware/auth';
 import { User } from '../models/User';
 import { Product } from '../models/Product';
 import { Order } from '../models/Order';
 import { InventoryLog } from '../models/InventoryLog';
 import { Coupon } from '../models/Coupon';
+import { Feedback } from '../models/Feedback';
 import bcrypt from 'bcryptjs';
+import { sendOrderRefundEmail, sendDeliveryConfirmationEmail } from '../utils/email';
+import { emitNotification } from '../services/socketService';
+import { Notification } from '../models/Notification';
 
 const router = Router();
 
@@ -118,8 +122,9 @@ const getStats: RequestHandler = async (req, res) => {
 
 const getUsers: RequestHandler = async (req, res) => {
   try {
-    const users = await User.find({}).select('-password').sort({ createdAt: -1 });
-    console.log('Retrieved users:', users); // Debug log
+    // Only fetch customer users
+    const users = await User.find({ role: 'customer' }).select('-password').sort({ createdAt: -1 });
+    console.log('Retrieved users:', users);
     res.json(users);
   } catch (error) {
     console.error('Error in getUsers:', error);
@@ -199,6 +204,26 @@ const updateUser: RequestHandler = async (req, res) => {
   }
 };
 
+const updateUserVerification: RequestHandler = async (req, res) => {
+  try {
+    const { isVerified } = req.body;
+    const user = await User.findByIdAndUpdate(
+      req.params.id,
+      { isVerified },
+      { new: true }
+    ).select('-password');
+
+    if (!user) {
+      res.status(404).json({ message: 'User not found' });
+      return;
+    }
+
+    res.json(user);
+  } catch (error) {
+    res.status(500).json({ message: 'Error updating user verification status' });
+  }
+};
+
 const getOrders: RequestHandler = async (req, res) => {
   try {
     const orders = await Order.find()
@@ -213,7 +238,9 @@ const getOrders: RequestHandler = async (req, res) => {
 const updateOrderStatus: RequestHandler = async (req, res) => {
   try {
     const { status } = req.body;
-    if (!['received', 'baking', 'out for delivery', 'delivered'].includes(status)) {
+    const validStatuses = ['received', 'baking', 'out for delivery', 'delivered', 'refunded'];
+    
+    if (!validStatuses.includes(status)) {
       res.status(400).json({ message: 'Invalid status' });
       return;
     }
@@ -222,11 +249,63 @@ const updateOrderStatus: RequestHandler = async (req, res) => {
       req.params.id,
       { status },
       { new: true }
-    ).populate('user', 'name email');
+    ).populate<{ user: { email: string } }>('user', 'name email');
+
+    if (!order) {
+      res.status(404).json({ message: 'Order not found' });
+      return;
+    }
+
+    // Send delivery confirmation email if status is changed to delivered
+    if (status === 'delivered') {
+      const customerEmail = order.user?.email || order.email;
+      if (customerEmail) {
+        try {
+          await sendDeliveryConfirmationEmail(customerEmail, order);
+        } catch (emailError) {
+          console.error('Failed to send delivery confirmation email:', emailError);
+        }
+      }
+    }
 
     res.json(order);
   } catch (error) {
+    console.error('Error updating order status:', error);
     res.status(500).json({ message: 'Error updating order status' });
+  }
+};
+
+const sendRefundEmail: RequestHandler = async (req, res) => {
+  try {
+    const orderId = req.params.id;
+    const order = await Order.findById(orderId)
+      .populate<{ user: { email: string } }>('user', 'name email');
+    
+    if (!order) {
+      res.status(404).json({ message: 'Order not found' });
+      return;
+    }
+
+    const customerEmail = order.user?.email || order.email;
+    if (!customerEmail) {
+      res.status(400).json({ message: 'No email address found for this order' });
+      return;
+    }
+
+    await sendOrderRefundEmail(customerEmail, order);
+    res.json({ message: 'Refund email sent successfully' });
+  } catch (error) {
+    console.error('Error sending refund email:', error);
+    res.status(500).json({ message: 'Error sending refund email' });
+  }
+};
+
+const deleteOrder: RequestHandler = async (req, res) => {
+  try {
+    await Order.findByIdAndDelete(req.params.id);
+    res.status(204).send();
+  } catch (error) {
+    res.status(500).json({ message: 'Error deleting order' });
   }
 };
 
@@ -357,6 +436,34 @@ const updateInventory: RequestHandler = async (req, res) => {
     variant.stockQuantity = stockQuantity;
     variant.inStock = stockQuantity > 0;
     
+    // Check for low stock and create notification if needed
+    if (stockQuantity <= 20) {  // Threshold for low stock
+      const notification = await Notification.create({
+        type: 'INVENTORY',
+        message: `Low stock alert: ${product.name} (${variant.name})`,
+        data: {
+          productId: product._id,
+          productName: product.name,
+          variantName: variant.name,
+          stockQuantity: stockQuantity,
+          threshold: 20
+        }
+      });
+
+      emitNotification({
+        type: 'INVENTORY',
+        message: `Low stock alert: ${product.name} (${variant.name})`,
+        timestamp: new Date(),
+        data: {
+          productId: product._id,
+          productName: product.name,
+          variantName: variant.name,
+          stockQuantity: stockQuantity,
+          threshold: 20
+        }
+      });
+    }
+    
     await product.save();
     res.json(product);
   } catch (error) {
@@ -401,6 +508,160 @@ const updateCoupon: RequestHandler = async (req, res) => {
   }
 };
 
+// Add this new handler before the route definitions
+const deleteCoupon: RequestHandler = async (req, res) => {
+  try {
+    await Coupon.findByIdAndDelete(req.params.id);
+    res.status(204).send();
+  } catch (error) {
+    res.status(500).json({ message: 'Error deleting coupon' });
+  }
+};
+
+// Add these new route handlers
+const getFeedbacks: RequestHandler = async (req, res) => {
+  try {
+    const feedbacks = await Feedback.find()
+      .populate({
+        path: 'orderId',
+        select: 'user email',
+        populate: {
+          path: 'user',
+          select: 'name email'
+        }
+      })
+      .sort({ createdAt: -1 });
+
+    // Transform the data to include order information
+    const transformedFeedbacks = feedbacks.map(feedback => ({
+      ...feedback.toObject(),
+      order: feedback.orderId
+    }));
+
+    res.json(transformedFeedbacks);
+  } catch (error) {
+    res.status(500).json({ message: 'Error fetching feedbacks' });
+  }
+};
+
+const toggleFeedbackDisplay: RequestHandler = async (req, res) => {
+  try {
+    const { feedbackId } = req.params;
+    const { productId } = req.body;
+    
+    const feedback = await Feedback.findById(feedbackId);
+    if (!feedback) {
+      res.status(404).json({ message: 'Feedback not found' });
+      return;
+    }
+
+    // Find the product feedback and toggle its display status
+    const productFeedback = feedback.productFeedback.find(
+      pf => pf.productId.toString() === productId
+    );
+
+    if (!productFeedback) {
+      res.status(404).json({ message: 'Product feedback not found' });
+      return;
+    }
+
+    // Get count of displayed feedbacks for this product
+    const displayedCount = feedback.productFeedback.filter(
+      pf => pf.isDisplayed && pf.productId.toString() !== productId
+    ).length;
+
+    // Check if we're trying to display a new feedback
+    if (!productFeedback.isDisplayed && displayedCount >= 3) {
+      res.status(400).json({ 
+        message: 'Maximum of 3 feedbacks can be displayed per product' 
+      });
+      return;
+    }
+
+    productFeedback.isDisplayed = !productFeedback.isDisplayed;
+    await feedback.save();
+
+    res.json(feedback);
+  } catch (error) {
+    res.status(500).json({ message: 'Error updating feedback display status' });
+  }
+};
+
+// Add this new handler before the route definitions
+const deleteFeedback: RequestHandler = async (req, res) => {
+  try {
+    await Feedback.findByIdAndDelete(req.params.id);
+    res.status(204).send();
+  } catch (error) {
+    res.status(500).json({ message: 'Error deleting feedback' });
+  }
+};
+
+// Add these new handlers for admin profile management
+const updateAdminProfile: RequestHandler = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { name, email } = req.body;
+    
+    if (!name || !email) {
+      res.status(400).json({ message: 'Name and email are required' });
+      return;
+    }
+
+    // Check if email is already taken by another user
+    const existingUser = await User.findOne({ 
+      email, 
+      _id: { $ne: id } 
+    });
+    
+    if (existingUser) {
+      res.status(409).json({ message: 'Email already in use' });
+      return;
+    }
+    
+    const user = await User.findOneAndUpdate(
+      { _id: id, role: 'admin' },
+      { name, email },
+      { new: true }
+    ).select('-password');
+
+    if (!user) {
+      res.status(404).json({ message: 'Admin not found' });
+      return;
+    }
+
+    res.json(user);
+  } catch (error) {
+    res.status(500).json({ message: 'Error updating admin profile' });
+  }
+};
+
+const updateAdminPassword: RequestHandler = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { currentPassword, newPassword } = req.body;
+    
+    const admin = await User.findOne({ _id: id, role: 'admin' });
+    if (!admin) {
+      res.status(404).json({ message: 'Admin not found' });
+      return;
+    }
+
+    const isValidPassword = await bcrypt.compare(currentPassword, admin.password);
+    if (!isValidPassword) {
+      res.status(401).json({ message: 'Current password is incorrect' });
+      return;
+    }
+
+    admin.password = await bcrypt.hash(newPassword, 10);
+    await admin.save();
+
+    res.json({ message: 'Password updated successfully' });
+  } catch (error) {
+    res.status(500).json({ message: 'Error updating password' });
+  }
+};
+
 // Route definitions
 router.get('/stats', getStats);
 router.get('/users', getUsers);
@@ -408,8 +669,11 @@ router.post('/users', createUser);
 router.delete('/users/:id', deleteUser);
 router.patch('/users/:id/role', updateUserRole);
 router.patch('/users/:id', updateUser);
+router.patch('/users/:id/verify', updateUserVerification);
 router.get('/orders', getOrders);
 router.patch('/orders/:id/status', updateOrderStatus);
+router.post('/orders/:id/refund-email', sendRefundEmail);
+router.delete('/orders/:id', deleteOrder);
 router.post('/products', createProduct);
 router.patch('/products/:id', updateProduct);
 router.delete('/products/:id', deleteProduct);
@@ -421,5 +685,11 @@ router.patch('/inventory/update', updateInventory);
 router.get('/coupons', getCoupons);
 router.post('/coupons', createCoupon);
 router.patch('/coupons/:id', updateCoupon);
+router.delete('/coupons/:id', deleteCoupon);
+router.get('/feedbacks', getFeedbacks);
+router.patch('/feedbacks/:feedbackId/display', toggleFeedbackDisplay);
+router.delete('/feedbacks/:id', deleteFeedback);
+router.patch('/profile/:id', updateAdminProfile);
+router.patch('/profile/:id/password', updateAdminPassword);
 
 export default router;

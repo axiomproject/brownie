@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useAuth } from "@/context/AuthContext";
 import {
   Sheet,
@@ -8,14 +8,26 @@ import {
   SheetTrigger,
 } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
-import { ShoppingCart, Minus, Plus, Trash2 } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import { ShoppingCart, Minus, Plus, Trash2, X } from "lucide-react";
 import { useCart } from "@/context/CartContext";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Checkout } from "@/components/checkout";
+import { toast } from "sonner"; 
+
+interface CouponResponse {
+  code: string;
+  type: 'fixed' | 'product';
+  value: number;
+  isActive: boolean;
+}
 
 export function CartSheet() {
   const { items, totalItems, totalPrice, updateQuantity, removeItem, clearCart } = useCart();
   const { user } = useAuth();
+  const [couponCode, setCouponCode] = useState('');
+  const [appliedCoupon, setAppliedCoupon] = useState<CouponResponse | null>(null);
+  const [couponError, setCouponError] = useState('');
 
   // Modified to only clear when switching between different authenticated users
   useEffect(() => {
@@ -32,6 +44,56 @@ export function CartSheet() {
       localStorage.setItem('prevUserId', currentUserId);
     }
   }, [user?._id, clearCart]);
+
+  const handleApplyCoupon = async () => {
+    try {
+      const response = await fetch(`http://localhost:5000/api/coupons/validate`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('token')}`
+        },
+        body: JSON.stringify({ 
+          code: couponCode,
+          userId: user?._id // Send user ID for new user validation
+        })
+      });
+
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.message || 'Invalid coupon');
+      }
+
+      const coupon = await response.json();
+
+      // Double-check max usage here as well
+      if (coupon.maxUses && coupon.usedCount >= coupon.maxUses) {
+        throw new Error('This coupon has reached its usage limit');
+      }
+
+      setAppliedCoupon(coupon);
+      setCouponError('');
+      toast.success('Coupon applied successfully!');
+    } catch (error) {
+      setAppliedCoupon(null);
+      setCouponCode('');
+      setCouponError(error instanceof Error ? error.message : 'Failed to apply coupon');
+      toast.error(error instanceof Error ? error.message : 'Failed to apply coupon');
+    }
+  };
+
+  const removeCoupon = () => {
+    setAppliedCoupon(null);
+    setCouponCode('');
+    setCouponError('');
+  };
+
+  const calculateDiscount = () => {
+    if (!appliedCoupon) return 0;
+    return appliedCoupon.type === 'fixed' ? appliedCoupon.value : 0;
+  };
+
+  const finalTotal = totalPrice - calculateDiscount();
 
   return (
     <Sheet>
@@ -106,11 +168,66 @@ export function CartSheet() {
         <div className="border-t border-border mt-auto p-6">
           {items.length > 0 ? (
             <div className="space-y-4">
-              <div className="flex justify-between text-lg font-semibold text-foreground">
-                <span>Total:</span>
-                <span>₱{totalPrice.toFixed(2)}</span>
+              {/* Add coupon input section */}
+              <div className="space-y-2">
+                <div className="flex gap-2">
+                  <Input
+                    placeholder="Enter coupon code"
+                    value={couponCode}
+                    onChange={(e) => setCouponCode(e.target.value.toUpperCase())}
+                    className="bg-background text-foreground placeholder:text-muted-foreground"
+                  />
+                  <Button 
+                    onClick={handleApplyCoupon}
+                    disabled={!couponCode || appliedCoupon !== null}
+                  >
+                    Apply
+                  </Button>
+                </div>
+                {couponError && (
+                  <p className="text-sm text-destructive">{couponError}</p>
+                )}
+                {appliedCoupon && (
+                  <div className="flex items-center justify-between bg-muted p-2 rounded">
+                    <span className="text-sm text-foreground">
+                      {appliedCoupon.type === 'fixed' 
+                        ? `₱${appliedCoupon.value} OFF`
+                        : `${appliedCoupon.value}x Free Item`
+                      }
+                    </span>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      onClick={removeCoupon}
+                      className="h-8 w-8 p-0 text-muted-foreground hover:text-foreground"
+                    >
+                      <X className="h-4 w-4" />
+                    </Button>
+                  </div>
+                )}
               </div>
-              <Checkout />
+
+              {/* Price breakdown */}
+              <div className="space-y-2">
+                <div className="flex justify-between text-sm">
+                  <span className="text-muted-foreground">Subtotal:</span>
+                  <span className="text-foreground">₱{totalPrice.toFixed(2)}</span>
+                </div>
+                {appliedCoupon && (
+                  <div className="flex justify-between text-sm">
+                    <span className="text-muted-foreground">Discount:</span>
+                    <span className="text-foreground">-₱{calculateDiscount().toFixed(2)}</span>
+                  </div>
+                )}
+                <div className="flex justify-between text-lg font-semibold">
+                  <span className="text-foreground">Total:</span>
+                  <span className="text-foreground">₱{finalTotal.toFixed(2)}</span>
+                </div>
+              </div>
+              <Checkout 
+                appliedCoupon={appliedCoupon} 
+                finalTotal={finalTotal}  // Pass the calculated final total
+              />
             </div>
           ) : (
             <div className="flex flex-col items-center justify-center py-8 text-center">

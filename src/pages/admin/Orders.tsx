@@ -14,11 +14,10 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Loader2, ChevronUp, ChevronDown } from "lucide-react";
+import { Loader2, ChevronUp, ChevronDown, FileDown, Search } from "lucide-react";
 import { toast } from 'sonner';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { FileDown } from "lucide-react";
 import {
   Pagination,
   PaginationContent,
@@ -31,6 +30,7 @@ import {
 import React from "react";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { Checkbox } from "@/components/ui/checkbox";
+import { Input } from "@/components/ui/input";
 
 interface OrderItem {
   productId: number;
@@ -47,9 +47,10 @@ interface Order {
     name: string;
     email: string;
   } | null;
+  email?: string;  // Optional email for guest orders
   items: OrderItem[];
   totalAmount: number;
-  status: 'received' | 'baking' | 'out for delivery' | 'delivered';
+  status: 'received' | 'baking' | 'out for delivery' | 'delivered' | 'refunded';
   shippingAddress: {
     street: string;
     city: string;
@@ -58,6 +59,11 @@ interface Order {
   };
   createdAt: string;
   paymentMethod: 'gcash' | 'grab_pay';
+  coupon?: {
+    code: string;
+    type: 'fixed' | 'product';
+    value: number;
+  };
 }
 
 interface CustomerDetails {
@@ -71,7 +77,8 @@ const statusColors = {
   received: 'bg-blue-500/10 text-blue-500',
   baking: 'bg-yellow-500/10 text-yellow-500',
   'out for delivery': 'bg-purple-500/10 text-purple-500',
-  delivered: 'bg-green-500/10 text-green-500'
+  delivered: 'bg-green-500/10 text-green-500',
+  refunded: 'bg-red-500/10 text-red-500'
 };
 
 type SortColumn = 'createdAt' | 'totalAmount' | 'status' | 'paymentMethod';
@@ -89,6 +96,7 @@ export default function Orders() {
   const itemsPerPage = 10;
   const [selectedOrders, setSelectedOrders] = useState<string[]>([]);
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
 
   const fetchOrders = async () => {
     try {
@@ -149,6 +157,22 @@ export default function Orders() {
       setOrders(orders.map(order => 
         order._id === orderId ? updatedOrder : order
       ));
+
+      // Handle different status changes
+      if (newStatus === 'refunded') {
+        const emailResponse = await fetch(`http://localhost:5000/api/admin/orders/${orderId}/refund-email`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${localStorage.getItem('token')}`
+          }
+        });
+        
+        if (!emailResponse.ok) {
+          throw new Error('Failed to send refund email');
+        }
+      }
+
       toast.success(`Order status updated to ${newStatus}`);
     } catch (error) {
       toast.error("Failed to update order status");
@@ -215,8 +239,21 @@ export default function Orders() {
       <ChevronDown className="w-4 h-4 inline ml-1" />;
   };
 
+  const filterOrders = (orders: Order[]) => {
+    if (!searchQuery) return orders;
+    
+    const query = searchQuery.toLowerCase();
+    return orders.filter(order => 
+      order._id.toLowerCase().includes(query) ||
+      (order.user?.name?.toLowerCase().includes(query) || false) ||
+      (order.user?.email?.toLowerCase().includes(query) || false) ||
+      order.paymentMethod.toLowerCase().includes(query)
+    );
+  };
+
   const paginatedOrders = () => {
-    const sortedData = sortData(orders);
+    const filteredData = filterOrders(orders);
+    const sortedData = sortData(filteredData);
     const startIndex = (currentPage - 1) * itemsPerPage;
     const endIndex = startIndex + itemsPerPage;
     return sortedData.slice(startIndex, endIndex);
@@ -266,7 +303,8 @@ export default function Orders() {
         const response = await fetch(`http://localhost:5000/api/admin/orders/${orderId}`, {
           method: 'DELETE',
           headers: {
-            'Authorization': `Bearer ${localStorage.getItem('token')}`
+            'Authorization': `Bearer ${localStorage.getItem('token')}`,
+            'Content-Type': 'application/json'
           }
         });
         
@@ -308,6 +346,10 @@ export default function Orders() {
     fetchOrders();
   }, []);
 
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchQuery]);
+
   if (loading) {
     return (
       <div className="flex justify-center items-center h-64">
@@ -318,9 +360,20 @@ export default function Orders() {
 
   return (
     <div className="space-y-4">
-      <div className="flex justify-between items-center">
-        <h2 className="text-xl font-semibold text-foreground">Orders List</h2>
-        <Button onClick={exportOrders} variant="secondary">
+      <div className="flex justify-between items-center gap-4">
+        <div className="flex-1">
+          <h2 className="text-xl font-semibold text-foreground mb-4">Orders List</h2>
+          <div className="relative w-full max-w-sm">
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+            <Input
+              placeholder="Search orders..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="pl-10 w-full bg-background text-foreground placeholder:text-muted-foreground border-border"
+            />
+          </div>
+        </div>
+        <Button onClick={exportOrders} variant="secondary" className="mt-8">
           <FileDown className="h-4 w-4 mr-2" />
           Export Orders
         </Button>
@@ -373,7 +426,9 @@ export default function Orders() {
               </TableHead>
               <TableHead className="text-foreground">Order ID</TableHead>
               <TableHead className="text-foreground">Customer</TableHead>
-              <TableHead className="text-foreground">Items</TableHead>
+              <TableHead className="text-foreground">
+                Items & Discounts
+              </TableHead>
               <TableHead 
                 className="text-foreground cursor-pointer hover:bg-muted"
                 onClick={() => handleSort('totalAmount')}
@@ -417,12 +472,15 @@ export default function Orders() {
                   {order._id.slice(-6)}
                 </TableCell>
                 <TableCell>
-                  <Dialog open={isDetailsDialogOpen} onOpenChange={setIsDetailsDialogOpen}>
-                    <DialogTrigger asChild>
+                  <Dialog 
+                    open={isDetailsDialogOpen} 
+                    onOpenChange={setIsDetailsDialogOpen}
+                  >
+                    <DialogTrigger  asChild>
                       {order.user ? (
                         <button 
                           onClick={() => order.user && handleCustomerClick(order.user._id, order.user.name)}
-                          className="text-left hover:underline"
+                          className="text-left hover:underline decoration-foreground/50 hover:text-foreground"
                         >
                           <div className="text-foreground">{order.user.name}</div>
                           <div className="text-sm text-muted-foreground">{order.user.email}</div>
@@ -432,7 +490,7 @@ export default function Orders() {
                       )}
                     </DialogTrigger>
                     {selectedCustomer && customerDetails && order.user && (
-                      <DialogContent className="bg-background">
+                      <DialogContent className="bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/95">
                         <DialogHeader>
                           <DialogTitle className="text-foreground">
                             Customer Details: {selectedCustomer.name}
@@ -449,13 +507,12 @@ export default function Orders() {
                               <p className="text-foreground text-lg">₱{customerDetails.totalSpent.toFixed(2)}</p>
                             </div>
                               <p className="text-muted-foreground">Customer Since</p>
-                              <p className="text-muted-foreground">Customer Since</p>
                               <p className="text-foreground">{new Date(customerDetails.firstOrder).toLocaleDateString()}</p>
                             </div>
                           </div>
                           
                           <div className="mt-4">
-                            <h3 className="text-lg font-semibold mb-2">Order History</h3>
+                            <h3 className="text-lg font-semibold mb-2 text-foreground">Order History</h3>
                             <div className="space-y-2 max-h-[300px] overflow-y-auto">
                               {customerDetails.orders.map((order) => (
                               <div key={order._id} className="border p-3 rounded-lg">
@@ -488,6 +545,17 @@ export default function Orders() {
                       {item.quantity}x {item.name} ({item.variantName})
                     </div>
                   ))}
+                  {order.coupon && (
+                    <div className="mt-1 text-sm text-primary-foreground">
+                      <span className="bg-primary px-2 py-0.5 rounded-full text-xs">
+                        Coupon: {order.coupon.code} 
+                        ({order.coupon.type === 'fixed' 
+                          ? `₱${order.coupon.value} OFF`
+                          : `${order.coupon.value}x Free Item`
+                        })
+                      </span>
+                    </div>
+                  )}
                 </TableCell>
                 <TableCell className="text-foreground">
                   ₱{order.totalAmount.toFixed(2)}
@@ -508,6 +576,7 @@ export default function Orders() {
                       <SelectItem value="baking">Baking</SelectItem>
                       <SelectItem value="out for delivery">Out for Delivery</SelectItem>
                       <SelectItem value="delivered">Delivered</SelectItem>
+                      <SelectItem value="refunded">Refunded</SelectItem>
                     </SelectContent>
                   </Select>
                 </TableCell>

@@ -13,7 +13,7 @@ export const paymentService = {
         body: JSON.stringify({
           data: {
             attributes: {
-              amount: Math.round(amount * 100), // Convert to cents and ensure whole number
+              amount: Math.round(amount * 100), // Convert to cents
               currency: 'PHP',
               type: paymentMethod,
               redirect: {

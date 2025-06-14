@@ -9,7 +9,7 @@ import {
 } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Loader2, Plus, Pencil, X, ChevronUp, ChevronDown } from "lucide-react";
+import { Loader2, Plus, Pencil, X, ChevronUp, ChevronDown, Search } from "lucide-react";
 import { toast } from 'sonner';
 import {
   Dialog,
@@ -77,6 +77,7 @@ export default function Coupon() {
   const itemsPerPage = 10;
   const [selectedCoupons, setSelectedCoupons] = useState<string[]>([]);
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
 
   const fetchCoupons = async () => {
     try {
@@ -228,8 +229,20 @@ export default function Coupon() {
       <ChevronDown className="w-4 h-4 inline ml-1" />;
   };
 
+  const filterCoupons = (coupons: Coupon[]) => {
+    if (!searchQuery) return coupons;
+    
+    const query = searchQuery.toLowerCase();
+    return coupons.filter(coupon => 
+      coupon.code.toLowerCase().includes(query) ||
+      coupon.type.toLowerCase().includes(query) ||
+      (coupon.isActive ? 'active' : 'inactive').includes(query)
+    );
+  };
+
   const paginatedCoupons = () => {
-    const sortedData = sortData(coupons);
+    const filteredData = filterCoupons(coupons);
+    const sortedData = sortData(filteredData);
     const startIndex = (currentPage - 1) * itemsPerPage;
     const endIndex = startIndex + itemsPerPage;
     return sortedData.slice(startIndex, endIndex);
@@ -279,7 +292,8 @@ export default function Coupon() {
         const response = await fetch(`http://localhost:5000/api/admin/coupons/${couponId}`, {
           method: 'DELETE',
           headers: {
-            'Authorization': `Bearer ${localStorage.getItem('token')}`
+            'Authorization': `Bearer ${localStorage.getItem('token')}`,
+            'Content-Type': 'application/json'
           }
         });
         
@@ -321,6 +335,10 @@ export default function Coupon() {
     fetchCoupons();
   }, []);
 
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchQuery]);
+
   if (loading) {
     return (
       <div className="flex justify-center items-center h-64">
@@ -331,11 +349,22 @@ export default function Coupon() {
 
   return (
     <div className="space-y-4">
-      <div className="flex justify-between items-center">
-        <h2 className="text-xl font-semibold text-foreground">Coupons</h2>
+      <div className="flex justify-between items-center gap-4">
+        <div className="flex-1">
+          <h2 className="text-xl font-semibold text-foreground mb-4">Coupons</h2>
+          <div className="relative w-full max-w-sm">
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+            <Input
+              placeholder="Search coupons..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="pl-10 w-full bg-background text-foreground placeholder:text-muted-foreground border-border"
+            />
+          </div>
+        </div>
         <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
           <DialogTrigger asChild>
-            <Button>
+            <Button className="mt-8">
               <Plus className="h-4 w-4 mr-2" />
               Create Coupon
             </Button>
@@ -587,6 +616,9 @@ export default function Coupon() {
                 onClick={() => handleSort('value')}
               >
                 Value <SortIcon column="value" />
+              </TableHead>
+              <TableHead className="text-foreground">
+                New Users
               </TableHead>
               <TableHead
                 className="text-foreground cursor-pointer hover:bg-muted"
