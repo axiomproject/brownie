@@ -1,5 +1,21 @@
 import mongoose from 'mongoose';
 
+export interface IOrder extends mongoose.Document {
+  _id: string;
+  user?: mongoose.Types.ObjectId;
+  items: Array<{
+    productId: mongoose.Types.ObjectId;
+    name: string;
+    price: number;
+    quantity: number;
+    variantName: string;
+  }>;
+  totalAmount: number;
+  status: string;
+  email?: string;
+  createdAt: Date;
+}
+
 const orderItemSchema = new mongoose.Schema({
   productId: { type: mongoose.Schema.Types.ObjectId, required: true }, // Changed to ObjectId
   name: { type: String, required: true },
@@ -54,4 +70,4 @@ const orderSchema = new mongoose.Schema({
   timestamps: true
 });
 
-export const Order = mongoose.model('Order', orderSchema);
+export const Order = mongoose.model<IOrder>('Order', orderSchema);
