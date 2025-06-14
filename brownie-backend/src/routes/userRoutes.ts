@@ -5,6 +5,8 @@ import { User, IUser } from '../models/User';
 import crypto from 'crypto';
 import { sendVerificationEmail, sendPasswordResetEmail } from '../utils/email';
 import { OAuth2Client } from 'google-auth-library';
+import { emitNotification } from '../services/socketService';
+import { Notification } from '../models/Notification';
 
 interface LoginBody {
   email: string;
@@ -80,6 +82,26 @@ const registerHandler: AsyncRequestHandler = async (req, res) => {
     
     await user.save();
     
+    // Create and emit notification
+    const notification = await Notification.create({
+      type: 'NEW_USER',
+      message: `New user registered: ${user.name}`,
+      data: {
+        userId: user._id,
+        userEmail: user.email
+      }
+    });
+
+    emitNotification({
+      type: 'NEW_USER',
+      message: `New user registered: ${user.name}`,
+      timestamp: new Date(),
+      data: {
+        userId: user._id,
+        userEmail: user.email
+      }
+    });
+
     try {
       await sendVerificationEmail(user.email, verificationToken);
       res.status(201).json({
@@ -294,8 +316,10 @@ const googleAuthHandler: AsyncRequestHandler = async (req, res) => {
     const { email, name, picture, sub: googleId } = payload;
 
     let user = await User.findOne({ email });
+    let isNewUser = false;
 
     if (!user) {
+      isNewUser = true;
       // Create new user if doesn't exist
       user = new User({
         email,
@@ -306,6 +330,28 @@ const googleAuthHandler: AsyncRequestHandler = async (req, res) => {
         isVerified: true // Google users are automatically verified
       });
       await user.save();
+
+      // Create and emit notification for new Google user
+      const notification = await Notification.create({
+        type: 'NEW_USER',
+        message: `New user registered via Google: ${user.name}`,
+        data: {
+          userId: user._id,
+          userEmail: user.email,
+          source: 'google'
+        }
+      });
+
+      emitNotification({
+        type: 'NEW_USER',
+        message: `New user registered via Google: ${user.name}`,
+        timestamp: new Date(),
+        data: {
+          userId: user._id,
+          userEmail: user.email,
+          source: 'google'
+        }
+      });
     } else if (!user.googleId) {
       // Link Google account to existing user
       user.googleId = googleId;
@@ -340,6 +386,43 @@ const googleAuthHandler: AsyncRequestHandler = async (req, res) => {
   }
 };
 
+// Add new endpoint to fetch notifications
+const getNotificationsHandler: AsyncRequestHandler = async (req, res) => {
+  try {
+    const page = parseInt(req.query.page as string) || 1;
+    const limit = parseInt(req.query.limit as string) || 10;
+    const skip = (page - 1) * limit;
+
+    const notifications = await Notification.find()
+      .sort({ createdAt: -1 })
+      .skip(skip)
+      .limit(limit);
+
+    res.json(notifications);
+  } catch (error) {
+    res.status(500).json({ message: 'Failed to fetch notifications' });
+  }
+};
+
+const markNotificationAsReadHandler: AsyncRequestHandler = async (req, res) => {
+  try {
+    const { id } = req.params;
+    await Notification.findByIdAndUpdate(id, { read: true });
+    res.json({ message: 'Notification marked as read' });
+  } catch (error) {
+    res.status(500).json({ message: 'Failed to mark notification as read' });
+  }
+};
+
+const clearAllNotificationsHandler: AsyncRequestHandler = async (req, res) => {
+  try {
+    await Notification.deleteMany({});
+    res.json({ message: 'All notifications cleared' });
+  } catch (error) {
+    res.status(500).json({ message: 'Failed to clear notifications' });
+  }
+};
+
 router.post('/register', registerHandler);
 router.post('/login', loginHandler);
 router.get('/verify-email/:token', verifyEmailHandler);
@@ -347,5 +430,8 @@ router.post('/resend-verification', resendVerificationHandler);
 router.post('/forgot-password', forgotPasswordHandler);
 router.post('/reset-password', resetPasswordHandler);
 router.post('/google', googleAuthHandler);
+router.get('/notifications', getNotificationsHandler);
+router.patch('/notifications/:id/read', markNotificationAsReadHandler);
+router.delete('/notifications', clearAllNotificationsHandler);
 
 export default router;

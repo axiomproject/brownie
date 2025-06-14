@@ -14,7 +14,7 @@ const orderSchema = new mongoose.Schema({
   totalAmount: { type: Number, required: true },
   status: { 
     type: String, 
-    enum: ['received', 'baking', 'out for delivery', 'delivered'],
+    enum: ['received', 'baking', 'out for delivery', 'delivered', 'refunded'],
     default: 'received'
   },
   shippingAddress: {
@@ -35,6 +35,14 @@ const orderSchema = new mongoose.Schema({
   },
   paymentSourceId: String, // Store PayMongo source ID
   email: String, // Add this field for guest orders
+  coupon: {
+    code: { type: String },
+    type: {
+      type: String,
+      enum: ['fixed', 'product']
+    },
+    value: { type: Number }
+  }
 }, {
   timestamps: true
 });

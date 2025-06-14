@@ -9,9 +9,11 @@ import {
   ShoppingCart,
   LogOut,
   ChevronLeft,
-  ChevronRight,
   Box,
-  Ticket // Add this import
+  Ticket, 
+  MessageSquare,
+  Settings as SettingsIcon,
+  ExternalLink, // Change from Home to ExternalLink
 } from "lucide-react";
 import { useAuth } from '@/context/AuthContext';
 import { ModeToggle } from "@/components/mode-toggle";
@@ -20,7 +22,7 @@ import { useSidebar } from '@/context/SidebarContext';
 export function AdminSidebar() {
   const { isCollapsed, setIsCollapsed } = useSidebar();
   const location = useLocation();
-  const { logout } = useAuth();
+  const { logout, user } = useAuth();  // Add user from useAuth
   const navigate = useNavigate();
 
   const handleLogout = () => {
@@ -29,12 +31,14 @@ export function AdminSidebar() {
   };
 
   const menuItems = [
-    { icon: LayoutDashboard, label: 'Dashboard', path: '/admin' },
-    { icon: Users, label: 'Users', path: '/admin/users' },
-    { icon: Package, label: 'Products', path: '/admin/products' },
-    { icon: ShoppingCart, label: 'Orders', path: '/admin/orders' },
-    { icon: Box, label: 'Inventory', path: '/admin/inventory' }, 
-    { icon: Ticket, label: 'Coupons', path: '/admin/coupons' }, // Add this line
+    { icon: LayoutDashboard, label: 'Dashboard', path: '/admin', external: false },
+    { icon: Users, label: 'Users', path: '/admin/users', external: false },
+    { icon: Package, label: 'Products', path: '/admin/products', external: false },
+    { icon: ShoppingCart, label: 'Orders', path: '/admin/orders', external: false },
+    { icon: Box, label: 'Inventory', path: '/admin/inventory', external: false }, 
+    { icon: Ticket, label: 'Coupons', path: '/admin/coupons', external: false }, 
+    { icon: MessageSquare, label: 'Feedbacks', path: '/admin/feedbacks', external: false }, 
+    { icon: SettingsIcon, label: 'Settings', path: '/admin/settings', external: false },
   ];
 
   return (
@@ -47,8 +51,8 @@ export function AdminSidebar() {
         isCollapsed ? "justify-center" : "justify-between"
       )}>
         {!isCollapsed && (
-          <h1 className="text-2xl font-bold text-foreground">
-            Admin
+          <h1 className="text-2xl font-bold text-foreground truncate">
+            {user?.name || 'Admin'}
           </h1>
         )}
         <Button
@@ -63,17 +67,24 @@ export function AdminSidebar() {
           <ChevronLeft className="h-4 w-4" />
         </Button>
       </div>
-      <nav className="flex-1 px-2 space-y-2">
+      <nav className="flex-1 px-2">
         {menuItems.map((item) => (
-          <Link key={item.path} to={item.path}>
+          <Link 
+            key={item.path} 
+            to={item.path} 
+            className="block mb-2"
+            target={item.external ? "_blank" : undefined} // Add this line
+            rel={item.external ? "noopener noreferrer" : undefined} // Add this line
+          >
             <Button
               variant="ghost"
               className={cn(
-                "w-full justify-start text-foreground text-lg py-6",
+                "w-full justify-start text-foreground text-lg h-12",
                 !isCollapsed && "space-x-3",
                 (location.pathname === item.path || 
                  (item.path === '/admin' && location.pathname === '/admin/')) && 
-                "bg-accent"
+                !item.external && // Add this condition
+                "bg-accent/90 hover:bg-accent"
               )}
             >
               <item.icon className="h-6 w-6" />
@@ -85,6 +96,13 @@ export function AdminSidebar() {
       <div className="p-4 border-t">
         {isCollapsed ? (
           <div className="flex flex-col gap-2">
+            <Button 
+              variant="ghost" 
+              className="w-full justify-center text-foreground hover:text-foreground/80"
+              onClick={() => window.open('/', '_blank')}
+            >
+              <ExternalLink className="h-5 w-5" />
+            </Button>
             <ModeToggle />
             <Button 
               variant="ghost" 
@@ -95,16 +113,26 @@ export function AdminSidebar() {
             </Button>
           </div>
         ) : (
-          <div className="flex items-center justify-between">
+          <div className="flex flex-col gap-2">
             <Button 
               variant="ghost" 
-              className="flex-1 justify-start space-x-2 text-red-500 hover:text-red-600 mr-2"
-              onClick={handleLogout}
+              className="w-full justify-start space-x-2 text-foreground hover:text-foreground/80"
+              onClick={() => window.open('/', '_blank')}
             >
-              <LogOut className="h-5 w-5" />
-              <span>Logout</span>
+              <ExternalLink className="h-5 w-5" />
+              <span>View Shop</span>
             </Button>
-            <ModeToggle />
+            <div className="flex items-center justify-between">
+              <Button 
+                variant="ghost" 
+                className="flex-1 justify-start space-x-2 text-red-500 hover:text-red-600 mr-2"
+                onClick={handleLogout}
+              >
+                <LogOut className="h-5 w-5" />
+                <span>Logout</span>
+              </Button>
+              <ModeToggle />
+            </div>
           </div>
         )}
       </div>

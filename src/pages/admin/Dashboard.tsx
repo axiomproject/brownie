@@ -142,7 +142,7 @@ export default function Dashboard() {
           <CardTitle>Monthly Revenue (Last 12 Months)</CardTitle>
         </CardHeader>
         <CardContent className="pl-2">
-          <ChartContainer config={chartConfig} className="min-h-[350px] w-full">
+          <ChartContainer config={chartConfig} className="max-h-[500px] w-full">
             <BarChart 
               data={stats.revenueData}
               margin={{ top: 20, right: 20, bottom: 40, left: 40 }}
@@ -152,19 +152,19 @@ export default function Dashboard() {
                 tick={{ fill: 'var(--muted-foreground)' }}
                 angle={-45}
                 textAnchor="end"
-                height={70}
+                height={50}
                 interval={0} // Force show all labels
               />
               <YAxis 
                 tick={{ fill: 'var(--muted-foreground)' }}
-                width={80}
+                width={20}
               />
               <Bar 
                 dataKey="total" 
                 fill="currentColor"
                 className="fill-current text-primary"
                 radius={[4, 4, 0, 0]}
-                maxBarSize={50} // Limit maximum width of bars
+                maxBarSize={35} // Limit maximum width of bars
               />
             </BarChart>
           </ChartContainer>

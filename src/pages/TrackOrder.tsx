@@ -7,7 +7,8 @@ import { Badge } from '@/components/ui/badge';
 import { 
   ScrollText, // For order received
   ChefHat,   // For baking
-  PartyPopper // For delivered
+  PartyPopper, // For delivered
+  RefreshCcw // Add this for refunded status
 } from 'lucide-react';
 
 interface OrderItem {
@@ -21,9 +22,14 @@ interface Order {
   _id: string;
   items: OrderItem[];
   totalAmount: number;
-  status: 'received' | 'baking' | 'out for delivery' | 'delivered';
+  status: 'received' | 'baking' | 'out for delivery' | 'delivered' | 'refunded'; // Add refunded
   paymentMethod: string;
   createdAt: string;
+  coupon?: {
+    code: string;
+    type: 'fixed' | 'product';
+    value: number;
+  };
 }
 
 export default function TrackOrder() {
@@ -87,7 +93,8 @@ export default function TrackOrder() {
       received: 'bg-blue-500',
       baking: 'bg-yellow-500',
       'out for delivery': 'bg-purple-500',
-      delivered: 'bg-green-500'
+      delivered: 'bg-green-500',
+      refunded: 'bg-red-500'
     };
     return colors[status];
   };
@@ -97,7 +104,8 @@ export default function TrackOrder() {
       received: ScrollText,
       baking: ChefHat,
       'out for delivery': Truck,
-      delivered: PartyPopper
+      delivered: PartyPopper,
+      refunded: RefreshCcw
     };
     const Icon = icons[status as keyof typeof icons];
     
@@ -140,6 +148,17 @@ export default function TrackOrder() {
                   <div className="bg-muted rounded-lg p-4 space-y-2">
                     <p>Date: {new Date(order.createdAt).toLocaleString()}</p>
                     <p>Payment Method: {order.paymentMethod.toUpperCase()}</p>
+                    {order.coupon && (
+                      <div className="flex items-center gap-2">
+                        <Badge variant="secondary">Coupon Applied</Badge>
+                        <span className="text-primary font-medium">
+                          {order.coupon.code} ({order.coupon.type === 'fixed' 
+                            ? `₱${order.coupon.value} OFF`
+                            : `${order.coupon.value}x Free Item`
+                          })
+                        </span>
+                      </div>
+                    )}
                   </div>
                 </div>
 
@@ -167,35 +186,53 @@ export default function TrackOrder() {
                   <h3 className="font-semibold mb-4">Order Timeline</h3>
                   <div className="bg-muted rounded-lg p-6">
                     <div className="grid grid-cols-4 gap-4">
-                      {['received', 'baking', 'out for delivery', 'delivered'].map((status, index) => {
-                        const isActive = ['received', 'baking', 'out for delivery', 'delivered']
-                          .indexOf(order.status) >= index;
-                        
-                        return (
-                          <div key={status} className="relative text-center">
-                            {/* Progress line */}
-                            {index < 3 && (
-                              <div 
-                                className={`absolute top-4 left-1/2 w-full h-0.5 ${
-                                  isActive ? 'bg-primary' : 'bg-muted-foreground'
-                                }`}
-                              />
-                            )}
-                            
-                            {/* Icon and label */}
-                            <div className="relative flex flex-col items-center gap-2">
-                              <div className="z-10 bg-muted rounded-full p-2">
-                                {getStatusIcon(status, isActive)}
-                              </div>
-                              <span className={`text-sm font-medium capitalize ${
-                                isActive ? 'text-primary' : 'text-muted-foreground'
-                              }`}>
-                                {status}
-                              </span>
+                      {order.status === 'refunded' ? (
+                        // Show only refunded status when order is refunded
+                        <div className="col-span-4 text-center">
+                          <div className="relative flex flex-col items-center gap-2">
+                            <div className="z-10 bg-muted rounded-full p-2">
+                              {getStatusIcon('refunded', true)}
                             </div>
+                            <span className="text-sm font-medium text-primary">
+                              Order Refunded
+                            </span>
+                            <p className="text-muted-foreground text-sm mt-2">
+                              This order has been refunded. If you have any questions, please contact our support.
+                            </p>
                           </div>
-                        );
-                      })}
+                        </div>
+                      ) : (
+                        // Show normal timeline for other statuses
+                        ['received', 'baking', 'out for delivery', 'delivered'].map((statusStep, index) => {
+                          const isActive = ['received', 'baking', 'out for delivery', 'delivered']
+                            .indexOf(order.status) >= index;
+                          
+                          return (
+                            <div key={statusStep} className="relative text-center">
+                              {/* Progress line */}
+                              {index < 3 && (
+                                <div 
+                                  className={`absolute top-4 left-1/2 w-full h-0.5 ${
+                                    isActive ? 'bg-primary' : 'bg-muted-foreground'
+                                  }`}
+                                />
+                              )}
+                              
+                              {/* Icon and label */}
+                              <div className="relative flex flex-col items-center gap-2">
+                                <div className="z-10 bg-muted rounded-full p-2">
+                                  {getStatusIcon(statusStep, isActive)}
+                                </div>
+                                <span className={`text-sm font-medium capitalize ${
+                                  isActive ? 'text-primary' : 'text-muted-foreground'
+                                }`}>
+                                  {statusStep}
+                                </span>
+                              </div>
+                            </div>
+                          );
+                        })
+                      )}
                     </div>
                   </div>
                 </div>

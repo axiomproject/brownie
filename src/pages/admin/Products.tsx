@@ -24,7 +24,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { MoreHorizontal, Loader2, Plus, ChevronUp, ChevronDown } from "lucide-react";
+import { MoreHorizontal, Loader2, Plus, ChevronUp, ChevronDown, Search } from "lucide-react";
 import { toast } from 'sonner';
 import { Checkbox } from "@/components/ui/checkbox";
 import {
@@ -91,6 +91,9 @@ export default function Products() {
   const itemsPerPage = 10;
   const [selectedProducts, setSelectedProducts] = useState<string[]>([]);
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [showSingleDeleteDialog, setShowSingleDeleteDialog] = useState(false);
+const [productToDelete, setProductToDelete] = useState<string | null>(null);
 
   const fetchProducts = async () => {
     try {
@@ -170,10 +173,15 @@ export default function Products() {
   };
 
   const handleDelete = async (productId: string) => {
-    if (!confirm('Are you sure you want to delete this product?')) return;
+    setProductToDelete(productId);
+    setShowSingleDeleteDialog(true);
+  };
+  
+  const executeSingleDelete = async () => {
+    if (!productToDelete) return;
     
     try {
-      const response = await fetch(`http://localhost:5000/api/admin/products/${productId}`, {
+      const response = await fetch(`http://localhost:5000/api/admin/products/${productToDelete}`, {
         method: 'DELETE',
         headers: {
           'Authorization': `Bearer ${localStorage.getItem('token')}`
@@ -182,10 +190,13 @@ export default function Products() {
       
       if (!response.ok) throw new Error('Failed to delete product');
       
-      setProducts(products.filter(product => product._id !== productId));
+      setProducts(products.filter(product => product._id !== productToDelete));
       toast.success("Product deleted successfully");
     } catch (error) {
       toast.error("Failed to delete product");
+    } finally {
+      setShowSingleDeleteDialog(false);
+      setProductToDelete(null);
     }
   };
 
@@ -218,8 +229,20 @@ export default function Products() {
       <ChevronDown className="w-4 h-4 inline ml-1" />;
   };
 
+  const filterProducts = (products: Product[]) => {
+    if (!searchQuery) return products;
+    
+    const query = searchQuery.toLowerCase();
+    return products.filter(product => 
+      product.name.toLowerCase().includes(query) ||
+      product.category.toLowerCase().includes(query) ||
+      product.variants.some(v => v.name.toLowerCase().includes(query))
+    );
+  };
+
   const paginatedProducts = () => {
-    const sortedData = sortData(products);
+    const filteredData = filterProducts(products);
+    const sortedData = sortData(filteredData);
     const startIndex = (currentPage - 1) * itemsPerPage;
     const endIndex = startIndex + itemsPerPage;
     return sortedData.slice(startIndex, endIndex);
@@ -311,6 +334,10 @@ export default function Products() {
     fetchProducts();
   }, []);
 
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchQuery]);
+
   if (loading) {
     return (
       <div className="flex justify-center items-center h-64">
@@ -321,8 +348,19 @@ export default function Products() {
 
   return (
     <div className="space-y-4">
-      <div className="flex justify-between items-center">
-        <h2 className="text-xl font-semibold text-foreground">Products List</h2>
+      <div className="flex justify-between items-center gap-4">
+        <div className="flex-1">
+          <h2 className="text-xl font-semibold text-foreground mb-4">Products List</h2>
+          <div className="relative w-full max-w-sm">
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+            <Input
+              placeholder="Search products..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="pl-10 w-full bg-background text-foreground placeholder:text-muted-foreground border-border"
+            />
+          </div>
+        </div>
         <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
           <DialogTrigger asChild>
             <Button onClick={() => {
@@ -379,52 +417,67 @@ export default function Products() {
                 <Label className="bg-background text-foreground">Variants</Label>
                 {formData.variants.map((variant, index) => (
                   <div key={index} className="grid grid-cols-4 gap-2 items-center"> {/* Change to grid-cols-4 */}
-                    <Input
-                      placeholder="Name"
-                      value={variant.name}
-                      onChange={e => {
-                        const newVariants = [...formData.variants];
-                        newVariants[index].name = e.target.value;
-                        setFormData({...formData, variants: newVariants});
-                      }}
-                       className="bg-background text-foreground"
-                    />
-                    <Input
-                      type="number"
-                      placeholder="Price"
-                      value={variant.price}
-                      onChange={e => {
-                        const newVariants = [...formData.variants];
-                        newVariants[index].price = Number(e.target.value);
-                        setFormData({...formData, variants: newVariants});
-                      }}
-                       className="bg-background text-foreground"
-                    />
-                    <Input
-                      type="number"
-                      placeholder="Stock"
-                      value={variant.stockQuantity}
-                      onChange={e => {
-                        const newVariants = [...formData.variants];
-                        newVariants[index].stockQuantity = Number(e.target.value);
-                        newVariants[index].inStock = Number(e.target.value) > 0;
-                        setFormData({...formData, variants: newVariants});
-                      }}
-                       className="bg-background text-foreground"
-                    />
-                    <div className="flex items-center space-x-2">
-                      <Checkbox 
-                        id={`inStock-${index}`}
-                        checked={variant.inStock}
-                        onCheckedChange={(checked) => {
+                    <div>
+                      <Label htmlFor={`variant-name-${index}`} className="text-xs text-muted-foreground">Name</Label>
+                      <Input
+                        id={`variant-name-${index}`}
+                        placeholder="Name"
+                        value={variant.name}
+                        onChange={e => {
                           const newVariants = [...formData.variants];
-                          newVariants[index].inStock = checked as boolean;
+                          newVariants[index].name = e.target.value;
                           setFormData({...formData, variants: newVariants});
                         }}
+                        className="bg-background text-foreground"
                       />
-                      <Label htmlFor={`inStock-${index}`} className="text-sm text-muted-foreground">
-                        In Stock
-                      </Label>
+                    </div>
+                    <div>
+                      <Label htmlFor={`variant-price-${index}`} className="text-xs text-muted-foreground">Price</Label>
+                      <Input
+                        id={`variant-price-${index}`}
+                        type="number"
+                        placeholder="Price"
+                        value={variant.price}
+                        onChange={e => {
+                          const newVariants = [...formData.variants];
+                          newVariants[index].price = Number(e.target.value);
+                          setFormData({...formData, variants: newVariants});
+                        }}
+                        className="bg-background text-foreground"
+                      />
+                    </div>
+                    <div>
+                      <Label htmlFor={`variant-stock-${index}`} className="text-xs text-muted-foreground">Stock</Label>
+                      <Input
+                        id={`variant-stock-${index}`}
+                        type="number"
+                        placeholder="Stock"
+                        value={variant.stockQuantity}
+                        onChange={e => {
+                          const newVariants = [...formData.variants];
+                          newVariants[index].stockQuantity = Number(e.target.value);
+                          newVariants[index].inStock = Number(e.target.value) > 0;
+                          setFormData({...formData, variants: newVariants});
+                        }}
+                        className="bg-background text-foreground"
+                      />
+                    </div>
+                    <div>
+                      <Label className="text-xs text-muted-foreground">Status</Label>
+                      <div className="flex items-center space-x-2 mt-2">
+                        <Checkbox 
+                          id={`inStock-${index}`}
+                          checked={variant.inStock}
+                          onCheckedChange={(checked) => {
+                            const newVariants = [...formData.variants];
+                            newVariants[index].inStock = checked as boolean;
+                            setFormData({...formData, variants: newVariants});
+                          }}
+                        />
+                        <Label htmlFor={`inStock-${index}`} className="text-sm text-muted-foreground">
+                          In Stock
+                        </Label>
+                      </div>
                     </div>
                   </div>
                 ))}
@@ -486,22 +539,22 @@ export default function Products() {
         </div>
       )}
 
-      <AlertDialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle className="text-foreground">Are you absolutely sure?</AlertDialogTitle>
-            <AlertDialogDescription className="text-muted-foreground">
-              This will permanently delete {selectedProducts.length} selected products and remove their data from the system.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel className="text-foreground">Cancel</AlertDialogCancel>
-            <AlertDialogAction onClick={executeBulkDelete}>
-              Continue
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+<AlertDialog open={showSingleDeleteDialog} onOpenChange={setShowSingleDeleteDialog}>
+  <AlertDialogContent>
+    <AlertDialogHeader>
+      <AlertDialogTitle className="text-foreground">Are you absolutely sure?</AlertDialogTitle>
+      <AlertDialogDescription className="text-muted-foreground">
+        This will permanently delete this product and remove its data from the system.
+      </AlertDialogDescription>
+    </AlertDialogHeader>
+    <AlertDialogFooter>
+      <AlertDialogCancel className="text-foreground">Cancel</AlertDialogCancel>
+      <AlertDialogAction onClick={executeSingleDelete}>
+        Continue
+      </AlertDialogAction>
+    </AlertDialogFooter>
+  </AlertDialogContent>
+</AlertDialog>
 
       <div className="rounded-md border border-border">
         <Table>

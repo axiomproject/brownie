@@ -7,36 +7,57 @@ import { paymentService } from '@/services/paymentService';
 import { toast } from 'sonner';
 import type { PaymentMethodType } from '@/types/payment';
 
-export function Checkout() {
+interface CheckoutProps {
+  appliedCoupon?: {
+    code: string;
+    type: 'fixed' | 'product';
+    value: number;
+  } | null;
+  finalTotal: number; // Add this prop
+}
+
+export function Checkout({ appliedCoupon, finalTotal }: CheckoutProps) {
   const [paymentMethod, setPaymentMethod] = useState<PaymentMethodType>('gcash');
   const [processing, setProcessing] = useState(false);
-  const { items, totalPrice,  } = useCart();
+  const { items } = useCart();
 
-  const handleCheckout = async () => {
+  const handleCheckout = async (paymentData: { totalPrice: number; paymentMethod: PaymentMethodType }) => {
     try {
       setProcessing(true);
+      localStorage.setItem('paymentMethod', paymentData.paymentMethod);
       
-      // Store payment method for order creation
-      localStorage.setItem('paymentMethod', paymentMethod);
-      
-      // Create a payment source
       const source = await paymentService.createPaymentSource(
-        totalPrice,
-        paymentMethod
+        paymentData.totalPrice, // Use the total price directly
+        paymentData.paymentMethod
       );
       
-      // Redirect to payment provider's checkout page
+      // Save coupon information for order creation
+      if (appliedCoupon) {
+        localStorage.setItem('appliedCoupon', JSON.stringify(appliedCoupon));
+      }
+
       if (source.attributes.redirect.checkout_url) {
         window.location.href = source.attributes.redirect.checkout_url;
       } else {
         throw new Error('No checkout URL provided');
       }
-
     } catch (error) {
       console.error('Checkout error:', error);
       toast.error(error instanceof Error ? error.message : "Failed to process payment");
     } finally {
       setProcessing(false);
+    }
+  };
+
+  const handlePayment = async () => {
+    try {
+      await handleCheckout({
+        totalPrice: finalTotal, // Use the final total directly
+        paymentMethod
+      });
+    } catch (error) {
+      console.error('Payment error:', error);
+      toast.error(error instanceof Error ? error.message : "Failed to process payment");
     }
   };
 
@@ -60,10 +81,10 @@ export function Checkout() {
         <Button 
           className="w-full" 
           size="lg" 
-          onClick={handleCheckout}
+          onClick={handlePayment}
           disabled={processing || items.length === 0}
         >
-          {processing ? 'Processing...' : `Pay ₱${totalPrice.toFixed(2)}`}
+          {processing ? 'Processing...' : `Pay ₱${finalTotal.toFixed(2)}`}
         </Button>
       </div>
     </div>

@@ -14,7 +14,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Button } from "@/components/ui/button";
-import { MoreHorizontal, Loader2, Plus, ChevronUp, ChevronDown } from "lucide-react";
+import { MoreHorizontal, Loader2, Plus, ChevronUp, ChevronDown, Search } from "lucide-react";
 import { toast } from 'sonner';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
@@ -40,6 +40,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+import { Switch } from "@/components/ui/switch";
 
 interface User {
   _id: string;
@@ -47,6 +48,7 @@ interface User {
   email: string;
   role: string;
   createdAt: string;
+  isVerified: boolean;  // Add this field
 }
 
 interface UserFormData {
@@ -54,17 +56,31 @@ interface UserFormData {
   email: string;
   password: string;
   role: 'admin' | 'customer';
+  isVerified: boolean; // Add this field
 }
 
 const initialFormData: UserFormData = {
   name: '',
   email: '',
   password: '',
-  role: 'customer'
+  role: 'customer',
+  isVerified: false // Add this field
 };
 
 type SortColumn = 'name' | 'email' | 'role' | 'createdAt';
 type SortDirection = 'asc' | 'desc';
+
+const validateName = (name: string): boolean => {
+  return /^[A-Za-z\s\-']+$/.test(name) && name.length >= 2;
+};
+
+const validateEmail = (email: string): boolean => {
+  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+};
+
+const validatePassword = (password: string): boolean => {
+  return password.length >= 6;
+};
 
 export default function Users() {
   const [users, setUsers] = useState<User[]>([]);
@@ -78,6 +94,14 @@ export default function Users() {
   const itemsPerPage = 10;
   const [selectedUsers, setSelectedUsers] = useState<string[]>([]);
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+  const [errors, setErrors] = useState({
+    name: '',
+    email: '',
+    password: ''
+  });
+  const [searchQuery, setSearchQuery] = useState('');
+  const [showSingleDeleteDialog, setShowSingleDeleteDialog] = useState(false);
+  const [userToDelete, setUserToDelete] = useState<string | null>(null);
 
   const fetchUsers = async () => {
     try {
@@ -127,11 +151,39 @@ export default function Users() {
     }
   };
 
+  const handleVerificationChange = async (userId: string, isVerified: boolean) => {
+    try {
+      const response = await fetch(`http://localhost:5000/api/admin/users/${userId}/verify`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('token')}`
+        },
+        body: JSON.stringify({ isVerified })
+      });
+      
+      if (!response.ok) throw new Error('Failed to update verification status');
+      
+      setUsers(users.map(user => 
+        user._id === userId ? { ...user, isVerified } : user
+      ));
+      
+      toast.success("User verification status updated successfully");
+    } catch (error) {
+      toast.error("Failed to update user verification status");
+    }
+  };
+
   const handleDeleteUser = async (userId: string) => {
-    if (!confirm('Are you sure you want to delete this user?')) return;
+    setUserToDelete(userId);
+    setShowSingleDeleteDialog(true);
+  };
+
+  const executeSingleDelete = async () => {
+    if (!userToDelete) return;
     
     try {
-      const response = await fetch(`http://localhost:5000/api/admin/users/${userId}`, {
+      const response = await fetch(`http://localhost:5000/api/admin/users/${userToDelete}`, {
         method: 'DELETE',
         headers: {
           'Authorization': `Bearer ${localStorage.getItem('token')}`
@@ -140,10 +192,13 @@ export default function Users() {
       
       if (!response.ok) throw new Error('Failed to delete user');
       
-      setUsers(users.filter(user => user._id !== userId));
+      setUsers(users.filter(user => user._id !== userToDelete));
       toast.success("User deleted successfully");
     } catch (error) {
-        toast.error("Failed to delete user");
+      toast.error("Failed to delete user");
+    } finally {
+      setShowSingleDeleteDialog(false);
+      setUserToDelete(null);
     }
   };
 
@@ -152,14 +207,41 @@ export default function Users() {
       name: user.name,
       email: user.email,
       password: '', // Leave blank for editing
-      role: user.role as UserFormData['role']
+      role: user.role as UserFormData['role'],
+      isVerified: user.isVerified // Add this field
     });
     setEditingId(user._id);
     setIsDialogOpen(true);
   };
 
+  const validateForm = (): boolean => {
+    const newErrors = {
+      name: '',
+      email: '',
+      password: ''
+    };
+
+    if (!validateName(formData.name)) {
+      newErrors.name = 'Name must contain only letters, spaces, hyphens, and apostrophes';
+    }
+
+    if (!validateEmail(formData.email)) {
+      newErrors.email = 'Please enter a valid email address';
+    }
+
+    if (!editingId && !validatePassword(formData.password)) {
+      newErrors.password = 'Password must be at least 6 characters long';
+    }
+
+    setErrors(newErrors);
+    return !Object.values(newErrors).some(error => error !== '');
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!validateForm()) {
+      return;
+    }
     try {
       const url = editingId 
         ? `http://localhost:5000/api/admin/users/${editingId}`
@@ -229,14 +311,30 @@ export default function Users() {
       <ChevronDown className="w-4 h-4 inline ml-1" />;
   };
 
+  const filterUsers = (users: User[]) => {
+    if (!searchQuery) return users;
+    
+    const query = searchQuery.toLowerCase();
+    return users.filter(user => 
+      user.name.toLowerCase().includes(query) ||
+      user.email.toLowerCase().includes(query) ||
+      user.role.toLowerCase().includes(query)
+    );
+  };
+
   const paginatedUsers = () => {
-    const sortedData = sortData(users);
+    const filteredData = filterUsers(users);
+    const sortedData = sortData(filteredData);
     const startIndex = (currentPage - 1) * itemsPerPage;
     const endIndex = startIndex + itemsPerPage;
     return sortedData.slice(startIndex, endIndex);
   };
 
-  const totalPages = Math.ceil(users.length / itemsPerPage);
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchQuery]);
+
+  const totalPages = Math.ceil(filterUsers(users).length / itemsPerPage);
 
   const renderPaginationItems = () => {
     const items = [];
@@ -332,11 +430,25 @@ export default function Users() {
 
   return (
     <div className="space-y-4">
-      <div className="flex justify-between items-center">
-        <h2 className="text-xl font-semibold text-foreground">Users List</h2>
+      <div className="flex justify-between items-center gap-4">
+        <div className="flex-1">
+          <h2 className="text-xl font-semibold text-foreground mb-4">Users List</h2>
+          <div className="relative w-full max-w-sm">
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+            <Input
+              placeholder="Search users..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="pl-10 w-full bg-background text-foreground placeholder:text-muted-foreground border-border"
+            />
+          </div>
+        </div>
         <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
           <DialogTrigger asChild>
-            <Button onClick={() => { setFormData(initialFormData); setEditingId(null); }}>
+            <Button 
+              onClick={() => { setFormData(initialFormData); setEditingId(null); }}
+              className="mt-8" // Add margin-top to align with search bar
+            >
               <Plus className="h-4 w-4 mr-2" />
               Add User
             </Button>
@@ -353,10 +465,20 @@ export default function Users() {
                 <Input
                   id="name"
                   value={formData.name}
-                  onChange={e => setFormData({...formData, name: e.target.value})}
-                  className="bg-background text-foreground"
+                  onChange={e => {
+                    const value = e.target.value;
+                    if (!value || value.match(/^[A-Za-z\s\-']*$/)) {
+                      setFormData({...formData, name: value});
+                      if (errors.name) setErrors({...errors, name: ''});
+                    }
+                  }}
+                  className={`bg-background text-foreground ${errors.name ? 'border-red-500' : ''}`}
+                  placeholder="Enter full name"
                   required
                 />
+                {errors.name && (
+                  <span className="text-sm text-red-500">{errors.name}</span>
+                )}
               </div>
               <div className="space-y-2">
                 <Label htmlFor="email" className="text-foreground">Email</Label>
@@ -364,10 +486,17 @@ export default function Users() {
                   id="email"
                   type="email"
                   value={formData.email}
-                  onChange={e => setFormData({...formData, email: e.target.value})}
-                  className="bg-background text-foreground"
+                  onChange={e => {
+                    setFormData({...formData, email: e.target.value});
+                    if (errors.email) setErrors({...errors, email: ''});
+                  }}
+                  className={`bg-background text-foreground ${errors.email ? 'border-red-500' : ''}`}
+                  placeholder="Enter email address"
                   required
                 />
+                {errors.email && (
+                  <span className="text-sm text-red-500">{errors.email}</span>
+                )}
               </div>
               <div className="space-y-2">
                 <Label htmlFor="password" className="text-foreground">
@@ -377,10 +506,17 @@ export default function Users() {
                   id="password"
                   type="password"
                   value={formData.password}
-                  onChange={e => setFormData({...formData, password: e.target.value})}
-                  className="bg-background text-foreground"
+                  onChange={e => {
+                    setFormData({...formData, password: e.target.value});
+                    if (errors.password) setErrors({...errors, password: ''});
+                  }}
+                  className={`bg-background text-foreground ${errors.password ? 'border-red-500' : ''}`}
+                  placeholder={editingId ? "Leave blank to keep current password" : "Enter password (min. 6 characters)"}
                   required={!editingId}
                 />
+                {errors.password && (
+                  <span className="text-sm text-red-500">{errors.password}</span>
+                )}
               </div>
               <div className="space-y-2">
                 <Label htmlFor="role" className="text-foreground">Role</Label>
@@ -394,6 +530,21 @@ export default function Users() {
                   <option value="customer">Customer</option>
                   <option value="admin">Admin</option>
                 </select>
+              </div>
+              <div className="flex items-center space-x-2">
+                <Checkbox
+                  id="isVerified"
+                  checked={formData.isVerified}
+                  onCheckedChange={(checked) => 
+                    setFormData({...formData, isVerified: checked as boolean})
+                  }
+                />
+                <Label 
+                  htmlFor="isVerified" 
+                  className="text-foreground"
+                >
+                  Verified User
+                </Label>
               </div>
               <Button type="submit" className="w-full">
                 {editingId ? 'Update User' : 'Create User'}
@@ -436,6 +587,24 @@ export default function Users() {
         </AlertDialogContent>
       </AlertDialog>
 
+      {/* Add Single Delete AlertDialog */}
+      <AlertDialog open={showSingleDeleteDialog} onOpenChange={setShowSingleDeleteDialog}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle className="text-foreground">Are you absolutely sure?</AlertDialogTitle>
+            <AlertDialogDescription className="text-muted-foreground">
+              This will permanently delete this user and remove their data from the system.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel className="text-foreground">Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={executeSingleDelete}>
+              Continue
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
       <div className="rounded-md border border-border">
         <Table>
           <TableHeader>
@@ -467,6 +636,7 @@ export default function Users() {
               >
                 Role <SortIcon column="role" />
               </TableHead>
+              <TableHead className="text-foreground">Verified</TableHead>
               <TableHead 
                 className="text-foreground cursor-pointer hover:bg-muted"
                 onClick={() => handleSort('createdAt')}
@@ -492,6 +662,13 @@ export default function Users() {
                 <TableCell className="text-foreground">{user.name}</TableCell>
                 <TableCell className="text-foreground">{user.email}</TableCell>
                 <TableCell className="capitalize text-foreground">{user.role}</TableCell>
+                <TableCell>
+                  <Switch
+                    checked={user.isVerified}
+                    onCheckedChange={(checked) => handleVerificationChange(user._id, checked)}
+                    aria-label="Verify user"
+                  />
+                </TableCell>
                 <TableCell className="text-foreground">{new Date(user.createdAt).toLocaleDateString()}</TableCell>
                 <TableCell className="text-right">
                   <DropdownMenu>

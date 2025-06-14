@@ -3,11 +3,21 @@ import { useParams, useNavigate } from "react-router-dom";
 import { Navbar } from "@/components/Navbar";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft, Star } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useCart } from "@/context/CartContext";
 import { toast } from "sonner";
 import type { Product } from "@/types/product";
+
+interface ProductFeedback {
+  rating: number;
+  comment: string;
+  productName: string;
+  variantName: string;
+  user?: {
+    name: string;
+  };
+}
 
 export default function ProductDetail() {
   const { id } = useParams();
@@ -16,6 +26,7 @@ export default function ProductDetail() {
   const [product, setProduct] = useState<Product | null>(null);
   const [loading, setLoading] = useState(true);
   const { addItem, items } = useCart();
+  const [feedbacks, setFeedbacks] = useState<ProductFeedback[]>([]);
   
   useEffect(() => {
     const fetchProduct = async () => {
@@ -34,6 +45,23 @@ export default function ProductDetail() {
 
     fetchProduct();
   }, [id, navigate]);
+
+  useEffect(() => {
+    const fetchFeedbacks = async () => {
+      try {
+        const response = await fetch(`http://localhost:5000/api/products/${id}/feedbacks`);
+        if (!response.ok) throw new Error('Failed to fetch feedbacks');
+        const data = await response.json();
+        setFeedbacks(data);
+      } catch (error) {
+        console.error('Error fetching feedbacks:', error);
+      }
+    };
+
+    if (id) {
+      fetchFeedbacks();
+    }
+  }, [id]);
 
   // Initialize selectedVariant with the only variant's name if there's just one variant
   const [selectedVariant, setSelectedVariant] = useState<string>(() => {
@@ -100,6 +128,21 @@ export default function ProductDetail() {
     addItem(product, selectedVariantDetails);
     toast.success('Added to cart!');
   };
+
+  const StarRating = ({ rating }: { rating: number }) => (
+    <div className="flex gap-0.5">
+      {[1, 2, 3, 4, 5].map((star) => (
+        <Star
+          key={star}
+          className={`w-4 h-4 ${
+            star <= rating
+              ? 'fill-yellow-400 text-yellow-400'
+              : 'text-gray-300'
+          }`}
+        />
+      ))}
+    </div>
+  );
 
   return (
     <>
@@ -205,6 +248,32 @@ export default function ProductDetail() {
               )}
             </div>
           </div>
+
+          {feedbacks.length > 0 && (
+            <div className="mt-12 border-t pt-8 pb-8">
+              <h2 className="text-2xl font-bold text-foreground mb-6">Customer Reviews</h2>
+              <div className="space-y-6">
+                {feedbacks.map((feedback, index) => (
+                  <div key={index} className="bg-muted p-4 rounded-lg">
+                    <div className="flex justify-between items-start mb-2">
+                      <div>
+                        <p className="font-semibold text-foreground">
+                          {feedback.user?.name || 'Customer'}
+                        </p>
+                        <StarRating rating={feedback.rating} />
+                      </div>
+                      <span className="text-sm text-muted-foreground">
+                        {feedback.variantName}
+                      </span>
+                    </div>
+                    {feedback.comment && (
+                      <p className="text-foreground mt-2">{feedback.comment}</p>
+                    )}
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
         </div>
       </div>
     </>
