@@ -105,7 +105,7 @@ export default function FeedbackPage() {
 
       console.log('Submitting feedback:', feedbackData); // Debug log
 
-      const response = await fetch('${API_URL}/api/feedback', {
+      const response = await fetch(`${API_URL}/api/feedback`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(feedbackData)

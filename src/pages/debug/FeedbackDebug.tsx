@@ -1,11 +1,12 @@
 import { useEffect, useState } from 'react';
+import { API_URL } from '@/config';
 
 export default function FeedbackDebug() {
   const [, setData] = useState<any>(null);
   const [, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    fetch('${API_URL}/api/feedback/all')
+    fetch(`${API_URL}/api/feedback/all`)
       .then(res => res.json())
       .then(data => {
         setData(data);

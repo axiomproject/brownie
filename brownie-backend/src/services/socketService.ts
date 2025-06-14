@@ -1,4 +1,3 @@
-
 import { Server as SocketIOServer } from 'socket.io';
 import { Server as HTTPServer } from 'http';
 
@@ -7,8 +6,12 @@ let io: SocketIOServer;
 export const initializeSocket = (server: HTTPServer) => {
   io = new SocketIOServer(server, {
     cors: {
-      origin: "http://localhost:5173",
-      methods: ["GET", "POST"]
+      origin: [
+        'http://localhost:5173',
+        process.env.FRONTEND_URL || 'https://brownie-jcv.netlify.app'
+      ],
+      methods: ["GET", "POST"],
+      credentials: true
     }
   });
 

@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '@/context/AuthContext';
+import { API_URL } from '@/config';
 import {
   Card,
   CardContent,
@@ -67,14 +68,19 @@ export default function Dashboard() {
   useEffect(() => {
     const fetchStats = async () => {
       try {
-        const response = await fetch('${API_URL}/api/admin/stats', {
+        const response = await fetch(`${API_URL}/api/admin/stats`, {
           headers: {
             'Authorization': `Bearer ${localStorage.getItem('token')}`,
             'Content-Type': 'application/json'
-          }
+          },
+          credentials: 'include'
         });
 
-        if (!response.ok) throw new Error('Failed to fetch stats');
+        if (!response.ok) {
+          const errorText = await response.text();
+          console.error('Server response:', errorText);
+          throw new Error('Failed to fetch stats');
+        }
         const data = await response.json();
         console.log('Fetched stats data:', data); // Add this debug log
         console.log('Most ordered items:', data.mostOrderedItems); // Add this debug log

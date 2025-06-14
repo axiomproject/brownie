@@ -39,8 +39,8 @@ export default function PaymentSuccess() {
           : totalPrice;
 
         const endpoint = token 
-          ? '${API_URL}/api/orders'
-          : '${API_URL}/api/orders/guest';
+          ? `${API_URL}/api/orders`
+          : `${API_URL}/api/orders/guest`;
 
         const headers = {
           'Content-Type': 'application/json',

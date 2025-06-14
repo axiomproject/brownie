@@ -62,7 +62,7 @@ export default function Contacts() {
 
   const fetchContacts = async () => {
     try {
-      const response = await fetch('${API_URL}/api/admin/contacts', {
+      const response = await fetch(`${API_URL}/api/admin/contacts`, {
         headers: {
           'Authorization': `Bearer ${localStorage.getItem('token')}`
         }

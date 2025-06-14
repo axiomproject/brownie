@@ -31,6 +31,7 @@ import {
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
+import { API_URL } from '@/config';
 
 interface Variant {
   name: string;
@@ -183,10 +184,10 @@ export default function Inventory() {
   const fetchData = async () => {
     try {
       const [productsRes, logsRes] = await Promise.all([
-        fetch('${API_URL}/api/admin/products', {
+        fetch(`${API_URL}/api/admin/products`, {
           headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
         }),
-        fetch('${API_URL}/api/admin/inventory/logs', {
+        fetch(`${API_URL}/api/admin/inventory/logs`, {
           headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
         })
       ]);
@@ -213,7 +214,7 @@ export default function Inventory() {
     
     try {
       const [updateResponse, logsResponse] = await Promise.all([
-        fetch('${API_URL}/api/admin/inventory/update', {
+        fetch(`${API_URL}/api/admin/inventory/update`, {
           method: 'PATCH',
           headers: {
             'Content-Type': 'application/json',
@@ -227,7 +228,7 @@ export default function Inventory() {
           })
         }),
         // Fetch latest logs after update
-        fetch('${API_URL}/api/admin/inventory/logs', {
+        fetch(`${API_URL}/api/admin/inventory/logs`, {
           headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
         })
       ]);
