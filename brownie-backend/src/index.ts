@@ -27,6 +27,7 @@ const allowedOrigins = [
 
 const corsOptions = {
   origin: function (origin: string | undefined, callback: (err: Error | null, allow?: boolean) => void) {
+    // Allow requests with no origin (like mobile apps or curl requests)
     if (!origin || allowedOrigins.includes(origin)) {
       callback(null, true);
     } else {
@@ -42,14 +43,17 @@ const corsOptions = {
 
 app.use(cors(corsOptions));
 
-// Remove the old headers middleware and replace with this:
+// Update the middleware to handle dynamic origin
 app.use((req, res, next) => {
-  res.header('Access-Control-Allow-Origin', allowedOrigins.join(', '));
+  const origin = req.headers.origin;
+  if (origin && allowedOrigins.includes(origin)) {
+    res.header('Access-Control-Allow-Origin', origin);
+  }
+  
   res.header('Access-Control-Allow-Credentials', 'true');
   res.header('Access-Control-Allow-Methods', 'GET,HEAD,PUT,PATCH,POST,DELETE,OPTIONS');
   res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept, Authorization');
   
-  // Handle preflight
   if (req.method === 'OPTIONS') {
     res.sendStatus(204);
     return;
