@@ -214,7 +214,7 @@ export default function Login() {
   const handleGoogleSignIn = async (response: any) => {
     setIsLoading(true);
     try {
-      const res = await fetch('${API_URL}/api/users/google', {
+      const res = await fetch(`${API_URL}/api/users/google`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

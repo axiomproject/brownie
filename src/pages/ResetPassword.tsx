@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Eye, EyeOff } from "lucide-react";
+import { API_URL } from '@/config';
 
 export default function ResetPassword() {
   const [searchParams] = useSearchParams();
@@ -28,7 +29,7 @@ export default function ResetPassword() {
 
     setIsLoading(true);
     try {
-      const response = await fetch('${API_URL}/api/users/reset-password', {
+      const response = await fetch(`${API_URL}/api/users/reset-password`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ token, newPassword: password })

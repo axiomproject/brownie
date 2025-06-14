@@ -12,7 +12,7 @@ export function useNotifications() {
   const LIMIT = 10;
 
   useEffect(() => {
-    const socketInstance = io('${API_URL}:5000');
+    const socketInstance = io(`${API_URL}:5000`);
     setSocket(socketInstance);
 
     fetchNotifications();
@@ -68,7 +68,7 @@ export function useNotifications() {
 
   const clearAll = async () => {
     try {
-      await axios.delete('${API_URL}/api/users/notifications');
+      await axios.delete(`${API_URL}/api/users/notifications`);
       setNotifications([]);
     } catch (error) {
       console.error('Failed to clear notifications:', error);

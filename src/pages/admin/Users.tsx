@@ -106,7 +106,7 @@ export default function Users() {
 
   const fetchUsers = async () => {
     try {
-      const response = await fetch('${API_URL}/api/admin/users', {
+      const response = await fetch(`${API_URL}/api/admin/users`, {
         headers: {
           'Authorization': `Bearer ${localStorage.getItem('token')}`,
           'Content-Type': 'application/json'
@@ -246,7 +246,7 @@ export default function Users() {
     try {
       const url = editingId 
         ? `${API_URL}/api/admin/users/${editingId}`
-        : '${API_URL}/api/admin/users';
+        : `${API_URL}/api/admin/users`;
 
       const method = editingId ? 'PATCH' : 'POST';
       

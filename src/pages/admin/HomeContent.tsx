@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { toast } from "sonner";
 import { Loader2 } from "lucide-react";
+import { API_URL } from '@/config';
 
 interface Value {
   title: string;
@@ -96,7 +97,7 @@ export default function HomeContent() {
     const fetchContent = async () => {
       setLoading(true);
       try {
-        const response = await fetch('${API_URL}/api/admin/home-content', {
+        const response = await fetch(`${API_URL}/api/admin/home-content`, {
           headers: {
             'Authorization': `Bearer ${localStorage.getItem('token')}`
           }
@@ -118,7 +119,7 @@ export default function HomeContent() {
   const handleSave = async () => {
     setSaving(true);
     try {
-      const response = await fetch('${API_URL}/api/admin/home-content', {
+      const response = await fetch(`${API_URL}/api/admin/home-content`, {
         method: 'PUT',
         headers: {
           'Authorization': `Bearer ${localStorage.getItem('token')}`,

@@ -76,7 +76,7 @@ export default function Feedback() {
 
   const fetchFeedbacks = async () => {
     try {
-      const response = await fetch('${API_URL}/api/admin/feedbacks', {
+      const response = await fetch(`${API_URL}/api/admin/feedbacks`, {
         headers: {
           'Authorization': `Bearer ${localStorage.getItem('token')}`,
         }

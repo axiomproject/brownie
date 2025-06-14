@@ -82,7 +82,7 @@ export default function Coupon() {
 
   const fetchCoupons = async () => {
     try {
-      const response = await fetch('${API_URL}/api/admin/coupons', {
+      const response = await fetch(`${API_URL}/api/admin/coupons`, {
         headers: {
           'Authorization': `Bearer ${localStorage.getItem('token')}`,
         }
@@ -99,7 +99,7 @@ export default function Coupon() {
 
   const createCoupon = async () => {
     try {
-      const response = await fetch('${API_URL}/api/admin/coupons', {
+      const response = await fetch(`${API_URL}/api/admin/coupons`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

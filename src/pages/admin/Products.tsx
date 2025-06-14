@@ -99,7 +99,7 @@ const [productToDelete, setProductToDelete] = useState<string | null>(null);
   const fetchProducts = async () => {
     try {
       console.log('Fetching products...');
-      const response = await fetch('${API_URL}/api/admin/products', {
+      const response = await fetch(`${API_URL}/api/admin/products`, {
         headers: {
           'Authorization': `Bearer ${localStorage.getItem('token')}`,
           'Content-Type': 'application/json'
@@ -127,7 +127,7 @@ const [productToDelete, setProductToDelete] = useState<string | null>(null);
     try {
       const url = editingId 
         ? `${API_URL}/api/admin/products/${editingId}`
-        : '${API_URL}/api/admin/products';
+        : `${API_URL}/api/admin/products`;
 
       const method = editingId ? 'PATCH' : 'POST';
       

@@ -19,6 +19,7 @@ import {
   PaginationPrevious,
 } from "@/components/ui/pagination"
 import React from "react";
+import { API_URL } from '@/config';
 
 interface InventoryLog {
   _id: string;
@@ -46,7 +47,7 @@ export default function InventoryLogs() {
   useEffect(() => {
     const fetchLogs = async () => {
       try {
-        const response = await fetch('${API_URL}/api/admin/inventory/logs', {
+        const response = await fetch(`${API_URL}/api/admin/inventory/logs`, {
           headers: {
             'Authorization': `Bearer ${localStorage.getItem('token')}`,
           }
