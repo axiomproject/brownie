@@ -6,10 +6,10 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "dev": "ts-node src/index.ts",
-    "build": "tsc -p tsconfig.json",
+    "clean": "rm -rf dist",
+    "build": "npm run clean && tsc",
     "start": "node dist/index.js",
-    "postinstall": "npm run build",
-    "render-start": "node dist/index.js"
+    "postinstall": "npm run build"
   },
   "keywords": [],
   "author": "",
