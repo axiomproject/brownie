@@ -18,8 +18,19 @@ dotenv.config();
 const app: Application = express();
 const httpServer = createServer(app);
 
+const allowedOrigins = [
+  'http://localhost:5173',
+  process.env.FRONTEND_URL || 'https://brownie-jcv.netlify.app'
+];
+
 app.use(cors({
-  origin: 'http://localhost:5173', // Update this to match your frontend URL
+  origin: (origin, callback) => {
+    if (!origin || allowedOrigins.includes(origin)) {
+      callback(null, true);
+    } else {
+      callback(new Error('Not allowed by CORS'));
+    }
+  },
   credentials: true
 }));
 app.use(express.json());
@@ -40,6 +51,7 @@ initializeSocket(httpServer);
 // Connect to MongoDB
 mongoose.connect(process.env.MONGODB_URI!)
   .then(() => {
+    console.log('Connected to MongoDB');
     httpServer.listen(PORT, () => {
       console.log(`Server running on port ${PORT}`);
     });
