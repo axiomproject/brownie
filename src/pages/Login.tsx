@@ -271,34 +271,21 @@ export default function Login() {
 
     if (window.google?.accounts?.id) {
       try {
-        // Cancel any existing initialization
-        window.google.accounts.id.cancel();
-        
-        // Initialize with updated configuration
         window.google.accounts.id.initialize({
           client_id: import.meta.env.VITE_GOOGLE_CLIENT_ID,
           callback: handleGoogleSignIn,
           auto_select: false,
           cancel_on_tap_outside: true,
-          // Add these options for better compatibility
-          ux_mode: 'popup',
-          context: 'signin',
-          // Use the current origin
-          origin: window.location.origin,
         });
 
         const buttonDiv = document.getElementById('googleButton');
         if (buttonDiv) {
-          // Clear existing content
-          buttonDiv.innerHTML = '';
-          // Render new button
           window.google.accounts.id.renderButton(buttonDiv, {
             type: 'standard',
-            theme: settings.theme === 'dark' ? 'filled_black' : 'outline',
+            theme: 'outline',
             size: 'large',
             text: 'continue_with',
             shape: 'rectangular',
-            width: buttonDiv.offsetWidth,
           });
         }
       } catch (error) {
@@ -306,11 +293,11 @@ export default function Login() {
         toast.error('Failed to initialize Google Sign-In');
       }
     } else {
-      // Retry with exponential backoff
+      // Retry with a limit
       const retryCount = (window as any).googleInitRetries || 0;
       if (retryCount < 5) {
         (window as any).googleInitRetries = retryCount + 1;
-        setTimeout(initializeGoogleSignIn, Math.pow(2, retryCount) * 100);
+        setTimeout(initializeGoogleSignIn, 100);
       } else {
         console.error('Failed to load Google Sign-In after multiple attempts');
         toast.error('Google Sign-In is temporarily unavailable');
@@ -320,28 +307,13 @@ export default function Login() {
 
   // Modify useEffect to use the new function
   useEffect(() => {
-    // Reset retry counter on each attempt
-    (window as any).googleInitRetries = 0;
-    
-    // Add script if not already present
-    if (!document.querySelector('script#google-signin')) {
-      const script = document.createElement('script');
-      script.id = 'google-signin';
-      script.src = 'https://accounts.google.com/gsi/client';
-      script.async = true;
-      script.defer = true;
-      script.onload = initializeGoogleSignIn;
-      document.body.appendChild(script);
-    } else {
-      initializeGoogleSignIn();
-    }
-
+    initializeGoogleSignIn();
     return () => {
       if (window.google?.accounts?.id) {
         window.google.accounts.id.cancel();
       }
     };
-  }, [isRegisterView, settings]); // Add settings.theme as dependency
+  }, [isRegisterView]); // Add isRegisterView as dependency
 
   // Modify the sign in button click handler
   const handleSignInClick = () => {
@@ -383,10 +355,7 @@ export default function Login() {
                     </CardDescription>
                   </CardHeader>
                   <CardContent className="space-y-4 px-0">
-                    <div 
-                      id="googleButton" 
-                      className="w-full h-10 flex justify-center items-center"
-                    />
+                    <div id="googleButton" className="w-0 h-0 opacity-0 overflow-hidden" />
                     
                     <Button
                       type="button"
