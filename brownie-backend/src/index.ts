@@ -19,20 +19,28 @@ const app: Application = express();
 const httpServer = createServer(app);
 
 const allowedOrigins = [
-  'http://localhost:5173',
-  process.env.FRONTEND_URL || 'https://brownie-jcv.netlify.app'
+  'http://localhost:5173',  // Local development
+  'http://localhost:3000',  // Alternative local port
+  'https://brownie-jcv.netlify.app', // Replace with your deployed frontend URL
 ];
 
-app.use(cors({
-  origin: (origin, callback) => {
-    if (!origin || allowedOrigins.includes(origin)) {
+const corsOptions = {
+  origin: function (origin: string | undefined, callback: (err: Error | null, allow?: boolean) => void) {
+    // Allow requests with no origin (like mobile apps or curl requests)
+    if (!origin) return callback(null, true);
+    
+    if (allowedOrigins.indexOf(origin) !== -1 || process.env.NODE_ENV === 'development') {
       callback(null, true);
     } else {
       callback(new Error('Not allowed by CORS'));
     }
   },
-  credentials: true
-}));
+  credentials: true, // Allow credentials (cookies, authorization headers, etc.)
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization']
+};
+
+app.use(cors(corsOptions));
 app.use(express.json());
 
 // Routes
