@@ -18,17 +18,6 @@ interface FeedbackItem {
   customerName: string;  // Add this field
 }
 
-interface ProductFeedbackDocument {
-  productFeedback: Array<{
-    isDisplayed: boolean;
-    productId: string;
-    productName: string;
-    variantName: string;
-    rating: number;
-    comment: string;
-  }>;
-  createdAt: string;
-}
 
 export default function ProductDetail() {
   const { id } = useParams();

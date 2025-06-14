@@ -1,4 +1,4 @@
-import { ShoppingCart, User } from "lucide-react";
+import { User } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   Sheet,
@@ -16,7 +16,7 @@ import { ModeToggle } from "@/components/mode-toggle";
 import { CartSheet } from "@/components/cart-sheet";
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from "@/context/AuthContext";
-import { useState, useEffect, memo, useCallback, useRef } from 'react';
+import { memo, useCallback, useRef } from 'react';
 import { useAppSettings } from '@/context/AppSettingsContext';
 import { motion, AnimatePresence } from "framer-motion";
 

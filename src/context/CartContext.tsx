@@ -31,7 +31,6 @@ export function CartProvider({ children, userId }: CartProviderProps) {
   }, [items, userId]);
 
   const addItem = (product: Product, variant: ProductVariant) => {
-    const itemId = `${product._id}-${variant.name}`;
     
     if (!variant.inStock || variant.stockQuantity === 0) {
       toast.error('This item is out of stock');

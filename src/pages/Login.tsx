@@ -1,6 +1,5 @@
 import { useState, useEffect } from "react";
 import { useSearchParams, useNavigate, useLocation } from 'react-router-dom';
-import { Navbar } from "@/components/Navbar";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -59,7 +58,6 @@ export default function Login() {
   const { login } = useAuth();
   const { settings } = useAppSettings();
   const navigate = useNavigate();
-  const location = useLocation();
   const [isLoading, setIsLoading] = useState(false);
   const [loginData, setLoginData] = useState<FormData>({
     email: "",
@@ -72,12 +70,11 @@ export default function Login() {
     name: "",
   });
   const [errors, setErrors] = useState<FormErrors>({});
-  const [searchParams] = useSearchParams();
-  const defaultTab = searchParams.get('tab') === 'register' ? 'register' : 'login';
+  const [] = useSearchParams();
   const [showPassword, setShowPassword] = useState(false);
   const [isRegisterView, setIsRegisterView] = useState(false);
-  const [appName, setAppName] = useState('');
-  const [loading, setLoading] = useState(true);
+  const [, setAppName] = useState('');
+  const [, setLoading] = useState(true);
 
   useEffect(() => {
     const fetchContent = async () => {

@@ -28,7 +28,6 @@ import {
   PaginationNext,
   PaginationPrevious,
 } from "@/components/ui/pagination";
-import React from "react";
 
 interface Contact {
   _id: string;
