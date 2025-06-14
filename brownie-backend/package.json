@@ -6,9 +6,10 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "dev": "ts-node src/index.ts",
-    "clean": "rm -rf dist",
-    "build": "npm run clean && tsc",
-    "start": "node dist/index.js",
+    "clean": "rimraf dist",
+    "copy-files": "cp package.json dist/ && cp .env dist/",
+    "build": "npm run clean && tsc && npm run copy-files",
+    "start": "cd dist && node index.js",
     "postinstall": "npm run build"
   },
   "keywords": [],
@@ -34,7 +35,8 @@
     "@types/express": "^5.0.3",
     "@types/cors": "^2.8.19",
     "@types/bcryptjs": "^2.4.6",
-    "@types/jsonwebtoken": "^9.0.9"
+    "@types/jsonwebtoken": "^9.0.9",
+    "rimraf": "^5.0.5"
   },
   "devDependencies": {},
   "engines": {

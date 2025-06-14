@@ -2,6 +2,6 @@ services:
   - type: web
     name: brownie-backend
     env: node
-    buildCommand: npm install && rm -rf dist && npm run build
-    startCommand: node dist/index.js
+    buildCommand: npm install && npm run build
+    startCommand: cd dist && node index.js
     nodeVersion: 18.x
