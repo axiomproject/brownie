@@ -15,17 +15,29 @@ export const initializeSocket = (server: HTTPServer) => {
     },
     pingTimeout: 60000, // 60 seconds
     pingInterval: 25000, // 25 seconds
-    upgradeTimeout: 30000, // 30 seconds
     transports: ['websocket', 'polling'],
-    allowUpgrades: true
+    connectTimeout: 45000,
+    path: '/socket.io'
   });
 
   io.on('connection', (socket) => {
     console.log('Client connected');
 
-    socket.on('disconnect', () => {
-      console.log('Client disconnected');
+    socket.on('error', (error) => {
+      console.error('Socket error:', error);
     });
+
+    socket.on('disconnect', (reason) => {
+      console.log('Client disconnected:', reason);
+    });
+
+    socket.on('reconnect_attempt', () => {
+      console.log('Attempting to reconnect...');
+    });
+  });
+
+  io.engine.on('connection_error', (err) => {
+    console.error('Connection error:', err);
   });
 };
 
