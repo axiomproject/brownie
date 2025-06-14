@@ -5,6 +5,7 @@ import { Navbar } from "@/components/Navbar";
 import { Link, useNavigate } from "react-router-dom";
 import { useState, useEffect } from "react";
 import type { Product } from "@/types/product";
+import { API_URL } from '@/config';
 
 export default function Home() {
   const navigate = useNavigate();
@@ -22,7 +23,13 @@ export default function Home() {
   useEffect(() => {
     const fetchPopularProducts = async () => {
       try {
-        const response = await fetch('http://localhost:5000/api/products');
+        const response = await fetch(`${API_URL}/api/products`, {
+          method: 'GET',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          credentials: 'include'
+        });
         if (!response.ok) throw new Error('Failed to fetch products');
         const data = await response.json();
         // Filter for popular products and take first 3
@@ -30,6 +37,7 @@ export default function Home() {
         setPopularProducts(popular);
       } catch (error) {
         console.error('Error fetching popular products:', error);
+        setError('Failed to load products');
       } finally {
         setLoading(false);
       }
@@ -43,7 +51,13 @@ export default function Home() {
       try {
         setLoading(true);
         setError(null);
-        const response = await fetch('http://localhost:5000/api/content/home-content');
+        const response = await fetch(`${API_URL}/api/content/home-content`, {
+          method: 'GET',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          credentials: 'include'
+        });
         if (!response.ok) throw new Error('Failed to fetch content');
         const data = await response.json();
         console.log('Home content received:', data);
