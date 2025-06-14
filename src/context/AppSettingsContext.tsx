@@ -23,8 +23,20 @@ export function AppSettingsProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     const fetchSettings = async () => {
       try {
-        const response = await fetch(`${API_URL}/api/content/home-content`);
-        if (!response.ok) throw new Error('Failed to fetch content');
+        const response = await fetch(`${API_URL}/api/content/home-content`, {
+          method: 'GET',
+          headers: {
+            'Accept': 'application/json',
+            'Content-Type': 'application/json'
+          },
+          // Don't include credentials for now
+          // credentials: 'include' 
+        });
+
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        
         const data = await response.json();
         setSettings({ appName: data?.appSettings?.appName || 'Brownie' });
       } catch (error) {

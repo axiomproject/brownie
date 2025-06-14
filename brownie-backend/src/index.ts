@@ -5,7 +5,7 @@ import mongoose from 'mongoose';
 import orderRoutes from './routes/orderRoutes';
 import userRoutes from './routes/userRoutes';
 import adminRoutes from './routes/adminRoutes';
-import productRoutes from './routes/productRoutes'; // Add this line
+import productRoutes from './routes/productRoutes';
 import couponRoutes from './routes/couponRoutes';
 import feedbackRoutes from './routes/feedbackRoutes';
 import contactRoutes from './routes/contactRoutes';
@@ -18,33 +18,45 @@ dotenv.config();
 const app: Application = express();
 const httpServer = createServer(app);
 
-const allowedOrigins = [
-  'http://localhost:5173',  // Local development
-  'http://localhost:3000',  // Alternative local port
-  'https://brownie-jcv.netlify.app', // Replace with your deployed frontend URL
-];
+// Move PORT declaration before usage
+const PORT = process.env.PORT || 5000;
 
-const corsOptions = {
-  origin: function (origin: string | undefined, callback: (err: Error | null, allow?: boolean) => void) {
-    // Allow requests with no origin (like mobile apps or curl requests)
-    if (!origin) return callback(null, true);
-    
-    if (allowedOrigins.indexOf(origin) !== -1 || process.env.NODE_ENV === 'development') {
-      callback(null, true);
-    } else {
-      callback(new Error('Not allowed by CORS'));
-    }
-  },
-  credentials: true, // Allow credentials (cookies, authorization headers, etc.)
+// Updated CORS configuration
+app.use(cors({
+  origin: '*', // Allow all origins in development
+  credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization']
-};
+  allowedHeaders: ['Content-Type', 'Authorization', 'Origin', 'Accept'],
+}));
 
-app.use(cors(corsOptions));
+// Add headers middleware
+app.use((req, res, next) => {
+  res.header('Access-Control-Allow-Credentials', 'true');
+  res.header('Access-Control-Allow-Methods', 'GET,HEAD,PUT,PATCH,POST,DELETE');
+  res.header('Access-Control-Expose-Headers', 'Content-Length');
+  res.header('Access-Control-Allow-Headers', 'Accept, Authorization, Content-Type, X-Requested-With, Range');
+  next();
+});
+
+// Add error handling middleware
+app.use((err: any, req: any, res: any, next: any) => {
+  console.error('Global error:', err);
+  res.status(500).json({ 
+    message: 'Internal server error',
+    error: process.env.NODE_ENV === 'development' ? err.message : undefined
+  });
+});
+
+// Debugging middleware
+app.use((req, res, next) => {
+  console.log(`${req.method} ${req.path}`);
+  next();
+});
+
 app.use(express.json());
 
 // Routes
-app.use('/api/products', productRoutes); // Add this line
+app.use('/api/products', productRoutes);
 app.use('/api/content', contentRoutes);
 app.use('/api/orders', orderRoutes);
 app.use('/api/users', userRoutes);
@@ -65,5 +77,3 @@ mongoose.connect(process.env.MONGODB_URI!)
     });
   })
   .catch((err) => console.error('MongoDB connection error:', err));
-
-const PORT = process.env.PORT || 5000;

@@ -36,6 +36,16 @@ export function AdminLayout({ children }: AdminLayoutProps) {
         return 'Orders Management';
         case '/admin/inventory':
         return 'Inventory Management';
+        case '/admin/coupons':
+        return 'Coupon Management';
+        case '/admin/feedbacks':
+        return 'Feedback Management';
+        case '/admin/contacts':
+        return 'Contact Management';
+        case '/admin/content':
+          return 'Content Management';
+          case '/admin/settings':
+            return 'Admin Settings';
       default:
         return 'Admin Panel';
     }
