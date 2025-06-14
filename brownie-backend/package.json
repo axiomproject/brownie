@@ -5,9 +5,9 @@
   "main": "index.js",
   "scripts": {
     "dev": "ts-node src/index.ts",
-    "build": "rimraf dist && tsc --project tsconfig.json",
+    "build": "tsc",
     "start": "node index.js",
-    "postinstall": "npm run build"
+    "postinstall": "tsc && cp package.json dist/ && cp .env dist/ || true"
   },
   "keywords": [],
   "author": "",
