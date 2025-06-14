@@ -3,6 +3,7 @@ import { useSearchParams, Link, useNavigate } from 'react-router-dom';
 import { toast } from "sonner";
 import { Navbar } from "@/components/Navbar";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { API_URL } from '@/config';
 
 export default function VerifyEmail() {
   const [searchParams] = useSearchParams();
@@ -18,7 +19,7 @@ export default function VerifyEmail() {
       verificationAttempted.current = true;
       
       try {
-        const response = await fetch(`http://localhost:5000/api/users/verify-email/${token}`, {
+        const response = await fetch(`${API_URL}/api/users/verify-email/${token}`, {
           method: 'GET',
           headers: {
             'Content-Type': 'application/json'

@@ -7,6 +7,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Star } from 'lucide-react';
 import { toast } from 'sonner';
 import { Loader2 } from 'lucide-react';
+import { API_URL } from '@/config';
 
 interface OrderItem {
   productId: string;
@@ -42,7 +43,7 @@ export default function FeedbackPage() {
   useEffect(() => {
     const fetchOrder = async () => {
       try {
-        const response = await fetch(`http://localhost:5000/api/orders/track/${orderId}`);
+        const response = await fetch(`${API_URL}/api/orders/track/${orderId}`);
         if (!response.ok) throw new Error('Failed to fetch order');
         const data = await response.json();
         setOrder(data);
@@ -104,7 +105,7 @@ export default function FeedbackPage() {
 
       console.log('Submitting feedback:', feedbackData); // Debug log
 
-      const response = await fetch('http://localhost:5000/api/feedback', {
+      const response = await fetch('${API_URL}/api/feedback', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(feedbackData)

@@ -37,6 +37,7 @@ import {
   PaginationPrevious,
 } from "@/components/ui/pagination"
 import React from "react";
+import { API_URL } from '@/config';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 
 interface Variant {
@@ -98,7 +99,7 @@ const [productToDelete, setProductToDelete] = useState<string | null>(null);
   const fetchProducts = async () => {
     try {
       console.log('Fetching products...');
-      const response = await fetch('http://localhost:5000/api/admin/products', {
+      const response = await fetch('${API_URL}/api/admin/products', {
         headers: {
           'Authorization': `Bearer ${localStorage.getItem('token')}`,
           'Content-Type': 'application/json'
@@ -125,8 +126,8 @@ const [productToDelete, setProductToDelete] = useState<string | null>(null);
     e.preventDefault();
     try {
       const url = editingId 
-        ? `http://localhost:5000/api/admin/products/${editingId}`
-        : 'http://localhost:5000/api/admin/products';
+        ? `${API_URL}/api/admin/products/${editingId}`
+        : '${API_URL}/api/admin/products';
 
       const method = editingId ? 'PATCH' : 'POST';
       
@@ -181,7 +182,7 @@ const [productToDelete, setProductToDelete] = useState<string | null>(null);
     if (!productToDelete) return;
     
     try {
-      const response = await fetch(`http://localhost:5000/api/admin/products/${productToDelete}`, {
+      const response = await fetch(`${API_URL}/api/admin/products/${productToDelete}`, {
         method: 'DELETE',
         headers: {
           'Authorization': `Bearer ${localStorage.getItem('token')}`

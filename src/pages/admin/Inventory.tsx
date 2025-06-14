@@ -183,10 +183,10 @@ export default function Inventory() {
   const fetchData = async () => {
     try {
       const [productsRes, logsRes] = await Promise.all([
-        fetch('http://localhost:5000/api/admin/products', {
+        fetch('${API_URL}/api/admin/products', {
           headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
         }),
-        fetch('http://localhost:5000/api/admin/inventory/logs', {
+        fetch('${API_URL}/api/admin/inventory/logs', {
           headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
         })
       ]);
@@ -213,7 +213,7 @@ export default function Inventory() {
     
     try {
       const [updateResponse, logsResponse] = await Promise.all([
-        fetch('http://localhost:5000/api/admin/inventory/update', {
+        fetch('${API_URL}/api/admin/inventory/update', {
           method: 'PATCH',
           headers: {
             'Content-Type': 'application/json',
@@ -227,7 +227,7 @@ export default function Inventory() {
           })
         }),
         // Fetch latest logs after update
-        fetch('http://localhost:5000/api/admin/inventory/logs', {
+        fetch('${API_URL}/api/admin/inventory/logs', {
           headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
         })
       ]);

@@ -15,6 +15,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Checkout } from "@/components/checkout";
 import { toast } from "sonner"; 
 import { useNavigate } from "react-router-dom";
+import { API_URL } from '@/config';
 
 interface CouponResponse {
   code: string;
@@ -49,7 +50,7 @@ export function CartSheet() {
 
   const handleApplyCoupon = async () => {
     try {
-      const response = await fetch(`http://localhost:5000/api/coupons/validate`, {
+      const response = await fetch(`${API_URL}/api/coupons/validate`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

@@ -23,6 +23,7 @@ import { toast } from "sonner";
 import { Star, Search, ChevronUp, ChevronDown } from "lucide-react";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { Switch } from "@/components/ui/switch";
+import { API_URL } from '@/config';
 
 interface ProductFeedback {
   productId: string;
@@ -75,7 +76,7 @@ export default function Feedback() {
 
   const fetchFeedbacks = async () => {
     try {
-      const response = await fetch('http://localhost:5000/api/admin/feedbacks', {
+      const response = await fetch('${API_URL}/api/admin/feedbacks', {
         headers: {
           'Authorization': `Bearer ${localStorage.getItem('token')}`,
         }
@@ -92,7 +93,7 @@ export default function Feedback() {
 
   const toggleFeedbackDisplay = async (feedbackId: string, productId: string) => {
     try {
-      const response = await fetch(`http://localhost:5000/api/admin/feedbacks/${feedbackId}/display`, {
+      const response = await fetch(`${API_URL}/api/admin/feedbacks/${feedbackId}/display`, {
         method: 'PATCH',
         headers: {
           'Authorization': `Bearer ${localStorage.getItem('token')}`,
@@ -234,7 +235,7 @@ export default function Feedback() {
 
     for (const feedbackId of selectedFeedbacks) {
       try {
-        const response = await fetch(`http://localhost:5000/api/admin/feedbacks/${feedbackId}`, {
+        const response = await fetch(`${API_URL}/api/admin/feedbacks/${feedbackId}`, {
           method: 'DELETE',
           headers: {
             'Authorization': `Bearer ${localStorage.getItem('token')}`,

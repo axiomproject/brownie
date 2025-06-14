@@ -39,6 +39,7 @@ import {
 import React from "react";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { Checkbox } from "@/components/ui/checkbox";
+import { API_URL } from '@/config';
 
 interface Coupon {
   _id: string;
@@ -81,7 +82,7 @@ export default function Coupon() {
 
   const fetchCoupons = async () => {
     try {
-      const response = await fetch('http://localhost:5000/api/admin/coupons', {
+      const response = await fetch('${API_URL}/api/admin/coupons', {
         headers: {
           'Authorization': `Bearer ${localStorage.getItem('token')}`,
         }
@@ -98,7 +99,7 @@ export default function Coupon() {
 
   const createCoupon = async () => {
     try {
-      const response = await fetch('http://localhost:5000/api/admin/coupons', {
+      const response = await fetch('${API_URL}/api/admin/coupons', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -124,7 +125,7 @@ export default function Coupon() {
 
   const toggleCouponStatus = async (couponId: string, isActive: boolean) => {
     try {
-      const response = await fetch(`http://localhost:5000/api/admin/coupons/${couponId}`, {
+      const response = await fetch(`${API_URL}/api/admin/coupons/${couponId}`, {
         method: 'PATCH',
         headers: {
           'Content-Type': 'application/json',
@@ -153,7 +154,7 @@ export default function Coupon() {
     if (!editingCoupon) return;
 
     try {
-      const response = await fetch(`http://localhost:5000/api/admin/coupons/${editingCoupon._id}`, {
+      const response = await fetch(`${API_URL}/api/admin/coupons/${editingCoupon._id}`, {
         method: 'PATCH',
         headers: {
           'Content-Type': 'application/json',
@@ -289,7 +290,7 @@ export default function Coupon() {
 
     for (const couponId of selectedCoupons) {
       try {
-        const response = await fetch(`http://localhost:5000/api/admin/coupons/${couponId}`, {
+        const response = await fetch(`${API_URL}/api/admin/coupons/${couponId}`, {
           method: 'DELETE',
           headers: {
             'Authorization': `Bearer ${localStorage.getItem('token')}`,

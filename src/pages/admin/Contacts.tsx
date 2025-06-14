@@ -28,6 +28,7 @@ import {
   PaginationNext,
   PaginationPrevious,
 } from "@/components/ui/pagination";
+import { API_URL } from '@/config';
 
 interface Contact {
   _id: string;
@@ -61,7 +62,7 @@ export default function Contacts() {
 
   const fetchContacts = async () => {
     try {
-      const response = await fetch('http://localhost:5000/api/admin/contacts', {
+      const response = await fetch('${API_URL}/api/admin/contacts', {
         headers: {
           'Authorization': `Bearer ${localStorage.getItem('token')}`
         }
@@ -85,7 +86,7 @@ export default function Contacts() {
     if (!contactToDelete) return;
 
     try {
-      const response = await fetch(`http://localhost:5000/api/admin/contacts/${contactToDelete}`, {
+      const response = await fetch(`${API_URL}/api/admin/contacts/${contactToDelete}`, {
         method: 'DELETE',
         headers: {
           'Authorization': `Bearer ${localStorage.getItem('token')}`
@@ -114,7 +115,7 @@ export default function Contacts() {
 
     for (const contactId of selectedContacts) {
       try {
-        const response = await fetch(`http://localhost:5000/api/admin/contacts/${contactId}`, {
+        const response = await fetch(`${API_URL}/api/admin/contacts/${contactId}`, {
           method: 'DELETE',
           headers: {
             'Authorization': `Bearer ${localStorage.getItem('token')}`
