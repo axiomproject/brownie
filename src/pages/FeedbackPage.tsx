@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { useParams } from 'react-router-dom';
+import { useParams, useNavigate } from 'react-router-dom';
 import { Navbar } from '@/components/Navbar';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -31,6 +31,7 @@ interface ProductFeedback {
 }
 
 export default function FeedbackPage() {
+  const navigate = useNavigate();
   const { orderId } = useParams();
   const [order, setOrder] = useState<Order | null>(null);
   const [loading, setLoading] = useState(true);
@@ -82,31 +83,37 @@ export default function FeedbackPage() {
     );
   };
 
-  const handleSubmit = async () => {
-    // Validate that all products have ratings
-    if (feedback.some(f => f.rating === 0)) {
-      toast.error('Please rate all products');
-      return;
-    }
-
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!order) return;
     setSubmitting(true);
+
     try {
+      const feedbackData = {
+        orderId: orderId,
+        feedback: feedback.map(item => ({
+          productId: item.productId,
+          productName: item.productName,
+          variantName: item.variantName,
+          rating: item.rating,
+          comment: item.comment // Ensure comment is included
+        }))
+      };
+
+      console.log('Submitting feedback:', feedbackData); // Debug log
+
       const response = await fetch('http://localhost:5000/api/feedback', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          orderId,
-          feedback
-        }),
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(feedbackData)
       });
 
       if (!response.ok) throw new Error('Failed to submit feedback');
       
       toast.success('Thank you for your feedback!');
-      // Optionally redirect to home page or order confirmation
+      navigate('/');
     } catch (error) {
+      console.error('Error submitting feedback:', error);
       toast.error('Failed to submit feedback');
     } finally {
       setSubmitting(false);

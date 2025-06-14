@@ -40,6 +40,12 @@ interface OrderItem {
   variantName: string;
 }
 
+interface DeliveryDetails {
+  riderName: string;
+  riderContact: string;
+  trackingLink: string;
+}
+
 interface Order {
   _id: string;
   user: {
@@ -64,6 +70,7 @@ interface Order {
     type: 'fixed' | 'product';
     value: number;
   };
+  deliveryDetails?: DeliveryDetails;
 }
 
 interface CustomerDetails {
@@ -97,6 +104,13 @@ export default function Orders() {
   const [selectedOrders, setSelectedOrders] = useState<string[]>([]);
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
+  const [showDeliveryDialog, setShowDeliveryDialog] = useState(false);
+  const [selectedOrderId, setSelectedOrderId] = useState<string>('');
+  const [deliveryDetails, setDeliveryDetails] = useState<DeliveryDetails>({
+    riderName: '',
+    riderContact: '',
+    trackingLink: ''
+  });
 
   const fetchOrders = async () => {
     try {
@@ -141,6 +155,12 @@ export default function Orders() {
   };
 
   const updateOrderStatus = async (orderId: string, newStatus: string) => {
+    if (newStatus === 'out for delivery') {
+      setSelectedOrderId(orderId);
+      setShowDeliveryDialog(true);
+      return;
+    }
+  
     try {
       const response = await fetch(`http://localhost:5000/api/admin/orders/${orderId}/status`, {
         method: 'PATCH',
@@ -150,15 +170,14 @@ export default function Orders() {
         },
         body: JSON.stringify({ status: newStatus })
       });
-
+  
       if (!response.ok) throw new Error('Failed to update order status');
-
+  
       const updatedOrder = await response.json();
       setOrders(orders.map(order => 
         order._id === orderId ? updatedOrder : order
       ));
-
-      // Handle different status changes
+  
       if (newStatus === 'refunded') {
         const emailResponse = await fetch(`http://localhost:5000/api/admin/orders/${orderId}/refund-email`, {
           method: 'POST',
@@ -172,10 +191,64 @@ export default function Orders() {
           throw new Error('Failed to send refund email');
         }
       }
-
+  
       toast.success(`Order status updated to ${newStatus}`);
     } catch (error) {
       toast.error("Failed to update order status");
+    }
+  };
+
+  const handleDeliverySubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    try {
+      if (!selectedOrderId) {
+        throw new Error('No order selected');
+      }
+  
+      const response = await fetch(`http://localhost:5000/api/orders/${selectedOrderId}/delivery`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('token')}`
+        },
+        body: JSON.stringify({
+          status: 'out for delivery',
+          deliveryDetails
+        })
+      });
+  
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || 'Failed to update delivery details');
+      }
+  
+      const updatedOrder = await response.json();
+      
+      // Find the existing order to preserve user data
+      const existingOrder = orders.find(order => order._id === selectedOrderId);
+      
+      // Merge the updated order with existing user data
+      const mergedOrder = {
+        ...updatedOrder,
+        user: existingOrder?.user || null
+      };
+  
+      // Update orders state with merged data
+      setOrders(orders.map(order => 
+        order._id === selectedOrderId ? mergedOrder : order
+      ));
+  
+      setShowDeliveryDialog(false);
+      setDeliveryDetails({
+        riderName: '',
+        riderContact: '',
+        trackingLink: ''
+      });
+      toast.success('Order status updated and delivery details added');
+    } catch (error) {
+      console.error('Delivery update error:', error);
+      toast.error(error instanceof Error ? error.message : "Failed to update delivery details");
     }
   };
 
@@ -410,6 +483,78 @@ export default function Orders() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      <Dialog open={showDeliveryDialog} onOpenChange={setShowDeliveryDialog}>
+        <DialogContent className="sm:max-w-[425px] bg-background">
+          <DialogHeader>
+            <DialogTitle className="text-foreground">Enter Delivery Details</DialogTitle>
+          </DialogHeader>
+          <form onSubmit={handleDeliverySubmit} className="space-y-4">
+            <div className="space-y-4">
+              <div className="space-y-2">
+                <label htmlFor="riderName" className="text-sm font-medium text-foreground">
+                  Rider Name
+                </label>
+                <Input
+                  id="riderName"
+                  className="text-foreground"
+                  value={deliveryDetails.riderName}
+                  onChange={(e) => setDeliveryDetails(prev => ({
+                    ...prev,
+                    riderName: e.target.value
+                  }))}
+                  placeholder="Enter rider's name"
+                  required
+                />
+              </div>
+              <div className="space-y-2">
+                <label htmlFor="riderContact" className="text-sm font-medium text-foreground">
+                  Contact Number
+                </label>
+                <Input
+                  id="riderContact"
+                  className="text-foreground"
+                  value={deliveryDetails.riderContact}
+                  onChange={(e) => setDeliveryDetails(prev => ({
+                    ...prev,
+                    riderContact: e.target.value
+                  }))}
+                  placeholder="Enter contact number"
+                  required
+                />
+              </div>
+              <div className="space-y-2">
+                <label htmlFor="trackingLink" className="text-sm font-medium text-foreground">
+                  Tracking Link
+                </label>
+                <Input
+                  id="trackingLink"
+                  className="text-foreground"
+                  value={deliveryDetails.trackingLink}
+                  onChange={(e) => setDeliveryDetails(prev => ({
+                    ...prev,
+                    trackingLink: e.target.value
+                  }))}
+                  placeholder="Enter tracking link (optional)"
+                />
+              </div>
+            </div>
+            <div className="flex justify-end space-x-2">
+              <Button
+                type="button"
+                className="text-foreground"
+                variant="ghost"
+                onClick={() => setShowDeliveryDialog(false)}
+              >
+                Cancel
+              </Button>
+              <Button type="submit">
+                Confirm Delivery
+              </Button>
+            </div>
+          </form>
+        </DialogContent>
+      </Dialog>
 
       <div className="rounded-md border border-border">
         <Table>

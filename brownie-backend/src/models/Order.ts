@@ -8,6 +8,12 @@ const orderItemSchema = new mongoose.Schema({
   variantName: { type: String, required: true } // Made required
 });
 
+const deliveryDetailsSchema = new mongoose.Schema({
+  riderName: { type: String, required: true },
+  riderContact: { type: String, required: true },
+  trackingLink: { type: String, default: '' }
+});
+
 const orderSchema = new mongoose.Schema({
   user: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: false }, // Made user optional
   items: [orderItemSchema],
@@ -42,7 +48,8 @@ const orderSchema = new mongoose.Schema({
       enum: ['fixed', 'product']
     },
     value: { type: Number }
-  }
+  },
+  deliveryDetails: deliveryDetailsSchema
 }, {
   timestamps: true
 });

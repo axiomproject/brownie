@@ -3,6 +3,7 @@ import { authenticateToken, requireAdmin, AuthRequest } from '../middleware/auth
 import { User } from '../models/User';
 import { Product } from '../models/Product';
 import { Order } from '../models/Order';
+import { Contact } from '../models/Contact';
 import { InventoryLog } from '../models/InventoryLog';
 import { Coupon } from '../models/Coupon';
 import { Feedback } from '../models/Feedback';
@@ -704,6 +705,25 @@ const updateAdminPassword: RequestHandler = async (req, res) => {
   }
 };
 
+// Add these handlers before the route definitions
+const getContacts: RequestHandler = async (req, res) => {
+  try {
+    const contacts = await Contact.find().sort({ createdAt: -1 });
+    res.json(contacts);
+  } catch (error) {
+    res.status(500).json({ message: 'Error fetching contacts' });
+  }
+};
+
+const deleteContact: RequestHandler = async (req, res) => {
+  try {
+    await Contact.findByIdAndDelete(req.params.id);
+    res.status(204).send();
+  } catch (error) {
+    res.status(500).json({ message: 'Error deleting contact' });
+  }
+};
+
 // Route definitions
 router.get('/stats', getStats);
 router.get('/users', getUsers);
@@ -733,5 +753,7 @@ router.patch('/feedbacks/:feedbackId/display', toggleFeedbackDisplay);
 router.delete('/feedbacks/:id', deleteFeedback);
 router.patch('/profile/:id', updateAdminProfile);
 router.patch('/profile/:id/password', updateAdminPassword);
+router.get('/contacts', getContacts);
+router.delete('/contacts/:id', deleteContact);
 
 export default router;

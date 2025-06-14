@@ -12,6 +12,7 @@ import {
   Boxes,  // Change from Box to Boxes
   Ticket, 
   MessageSquare,
+  MessageCircle, // Add this import
   Settings as SettingsIcon,
   ExternalLink, // Change from Home to ExternalLink
 } from "lucide-react";
@@ -38,7 +39,9 @@ export function AdminSidebar() {
     { icon: Boxes, label: 'Inventory', path: '/admin/inventory', external: false },  // Change from Box to Boxes
     { icon: Ticket, label: 'Coupons', path: '/admin/coupons', external: false }, 
     { icon: MessageSquare, label: 'Feedbacks', path: '/admin/feedbacks', external: false }, 
+    { icon: MessageCircle, label: 'Contacts', path: '/admin/contacts', external: false }, // Changed icon to MessageCircle
     { icon: SettingsIcon, label: 'Settings', path: '/admin/settings', external: false },
+   
   ];
 
   return (

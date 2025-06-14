@@ -86,13 +86,14 @@ export default function ProductDetail() {
     }
   }, [id, product]); // Add product as a dependency
 
-  // Initialize selectedVariant with the only variant's name if there's just one variant
-  const [selectedVariant, setSelectedVariant] = useState<string>(() => {
+  const [selectedVariant, setSelectedVariant] = useState<string>("");
+
+  // Update selectedVariant when product loads and has only one variant
+  useEffect(() => {
     if (product?.variants?.length === 1) {
-      return product.variants[0].name;
+      setSelectedVariant(product.variants[0].name);
     }
-    return "";
-  });
+  }, [product]);
 
   // Preload image
   useEffect(() => {

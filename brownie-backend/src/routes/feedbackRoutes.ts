@@ -24,48 +24,37 @@ router.post('/', async (req, res) => {
     }
 
     // Ensure orderId is a valid MongoDB ObjectId
-    let orderObjectId;
-    try {
-      orderObjectId = new mongoose.Types.ObjectId(orderId);
-    } catch (error) {
-      res.status(400).json({ message: 'Invalid order ID format' });
-      return;
-    }
+    const orderObjectId = new mongoose.Types.ObjectId(orderId);
+
+    // Log incoming productIds for debugging
+    console.log('Debug: Incoming product IDs:', feedback.map(f => f.productId));
 
     // Validate each feedback item
     const validatedFeedback = feedback.map(item => {
-      // Convert productId to ObjectId and validate
-      let productObjectId;
       try {
-        productObjectId = new mongoose.Types.ObjectId(item.productId);
+        // Important: Use the exact productId from the request without creating a new one
+        const productObjectId = new mongoose.Types.ObjectId(item.productId);
+        console.log('Debug: Processing feedback for product:', productObjectId.toString());
+        console.log('Debug: Feedback comment:', item.comment); // Add debug log
+
+        return {
+          productId: productObjectId,
+          productName: item.productName,
+          variantName: item.variantName,
+          rating: item.rating,
+          comment: item.comment || '', // Ensure comment is included, default to empty string if undefined
+          isDisplayed: true
+        };
       } catch (error) {
+        console.error('Error processing feedback item:', error);
         throw new Error(`Invalid product ID format: ${item.productId}`);
       }
-
-      if (!item.productName || typeof item.productName !== 'string') {
-        throw new Error('Product name is required');
-      }
-
-      if (!item.variantName || typeof item.variantName !== 'string') {
-        throw new Error('Variant name is required');
-      }
-
-      if (!item.rating || typeof item.rating !== 'number' || item.rating < 1 || item.rating > 5) {
-        throw new Error('Rating must be a number between 1 and 5');
-      }
-
-      if (!item.comment || typeof item.comment !== 'string') {
-        throw new Error('Comment is required and must be a string');
-      }
-
-      return {
-        productId: productObjectId,
-        productName: item.productName,
-        variantName: item.variantName,
-        rating: item.rating,
-        comment: item.comment
-      };
     });
+
+    // Log the validated feedback
+    console.log('Debug: Validated feedback product IDs:', 
+      validatedFeedback.map(f => f.productId.toString())
+    );
 
     const newFeedback = new Feedback({
       orderId: orderObjectId,
@@ -73,7 +62,9 @@ router.post('/', async (req, res) => {
     });
 
     const savedFeedback = await newFeedback.save();
-    console.log('Saved feedback:', savedFeedback); // Debug log
+    console.log('Debug: Saved feedback product IDs:', 
+      savedFeedback.productFeedback.map(f => f.productId.toString())
+    );
 
     // Create notification
     const notification = await Notification.create({
@@ -131,8 +122,20 @@ router.get('/product/:productId', async (req, res) => {
     const { productId } = req.params;
     console.log('Debug: Starting feedback fetch for productId:', productId);
 
+    // Convert productId to ObjectId
+    const productObjectId = new mongoose.Types.ObjectId(productId);
+
+    // Find feedbacks with detailed debug logging
     const feedbacks = await Feedback.aggregate([
-      // First lookup orders
+      { 
+        $unwind: '$productFeedback' 
+      },
+      {
+        $match: {
+          'productFeedback.productId': productObjectId,
+          'productFeedback.isDisplayed': true
+        }
+      },
       {
         $lookup: {
           from: 'orders',
@@ -141,7 +144,6 @@ router.get('/product/:productId', async (req, res) => {
           as: 'order'
         }
       },
-      // Then lookup users from orders
       {
         $lookup: {
           from: 'users',
@@ -150,27 +152,31 @@ router.get('/product/:productId', async (req, res) => {
           as: 'userInfo'
         }
       },
-      { $unwind: { path: '$order', preserveNullAndEmptyArrays: true } },
-      { $unwind: '$productFeedback' },
       {
-        $match: {
-          'productFeedback.isDisplayed': true,
-          'productFeedback.productName': 'Triple Chocolate Brownie'
+        $addFields: {
+          debugInfo: {
+            queryProductId: { $toString: productObjectId },
+            feedbackProductId: { $toString: '$productFeedback.productId' },
+            isMatch: { $eq: ['$productFeedback.productId', productObjectId] }
+          }
         }
       },
       {
         $project: {
+          _id: 1,
           rating: '$productFeedback.rating',
           comment: '$productFeedback.comment',
           productName: '$productFeedback.productName',
           variantName: '$productFeedback.variantName',
+          createdAt: 1,
+          debugInfo: 1,
           customerName: {
             $cond: {
               if: { $gt: [{ $size: '$userInfo' }, 0] },
               then: { $arrayElemAt: ['$userInfo.name', 0] },
               else: {
                 $cond: {
-                  if: '$order.email',
+                  if: { $gt: [{ $size: '$order' }, 0] },
                   then: 'Guest Order',
                   else: 'Unknown Customer'
                 }
@@ -178,10 +184,30 @@ router.get('/product/:productId', async (req, res) => {
             }
           }
         }
-      }
+      },
+      { $sort: { createdAt: -1 } }
     ]);
 
-    console.log('Debug: Processed feedbacks:', JSON.stringify(feedbacks, null, 2));
+    // Add more detailed debug logging
+    console.log('Debug: Query productId:', productId);
+    console.log('Debug: Query ObjectId:', productObjectId);
+    console.log('Debug: First stage matches:', await Feedback.find({
+      'productFeedback.productId': productObjectId
+    }).lean());
+    console.log('Debug: Final aggregation result:', feedbacks);
+
+    // Add verification of data
+    const allFeedbacks = await Feedback.find().lean();
+    console.log('Debug: All feedbacks in system:', 
+      allFeedbacks.map(f => ({
+        id: f._id,
+        productFeedbacks: f.productFeedback.map(pf => ({
+          productId: pf.productId.toString(),
+          productName: pf.productName
+        }))
+      }))
+    );
+
     res.json(feedbacks);
   } catch (error) {
     console.error('Error in feedback route:', error);
@@ -209,6 +235,25 @@ router.get('/debug/:productId', async (req, res) => {
     });
   } catch (error) {
     res.status(500).json({ error: error instanceof Error ? error.message : 'Unknown error' });
+  }
+});
+
+// Add this helper route to assist in debugging
+router.get('/all', async (req, res) => {
+  try {
+    const allFeedbacks = await Feedback.find().lean();
+    res.json({
+      feedbacks: allFeedbacks,
+      productIds: allFeedbacks.flatMap(f => 
+        f.productFeedback.map(pf => ({
+          feedbackId: f._id,
+          productId: pf.productId.toString(),
+          productName: pf.productName
+        }))
+      )
+    });
+  } catch (error) {
+    res.status(500).json({ error: 'Error fetching all feedbacks' });
   }
 });
 

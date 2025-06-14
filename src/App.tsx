@@ -27,6 +27,8 @@ import ResetPassword from "@/pages/ResetPassword";
 import TrackOrder from '@/pages/TrackOrder';
 import FeedbackPage from '@/pages/FeedbackPage';
 import Settings from '@/pages/admin/Settings';
+import FeedbackDebug from '@/pages/debug/FeedbackDebug';
+import Contacts from '@/pages/admin/Contacts';
 
 function App() {
   return (
@@ -57,6 +59,9 @@ function App() {
                 <Route path="/payment/success" element={<PaymentSuccess />} />
                 <Route path="/payment/failed" element={<PaymentFailed />} />
 
+                {/* Debug routes */}
+                <Route path="/debug/feedbacks" element={<FeedbackDebug />} />
+
                 {/* Admin routes */}
                 <Route path="/admin/*" element={
                   <AdminRoute>
@@ -70,6 +75,7 @@ function App() {
                           <Route path="inventory" element={<Inventory />} />
                           <Route path="coupons" element={<Coupon />} />
                           <Route path="feedbacks" element={<Feedback />} />
+                          <Route path="contacts" element={<Contacts />} /> {/* Add this line */}
                           <Route path="settings" element={<Settings />} />
                         </Routes>
                       </AdminLayout>
@@ -83,6 +89,8 @@ function App() {
       </Router>
     </ThemeProvider>
   );
+             
 }
 
 export default App
+
