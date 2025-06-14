@@ -21,6 +21,16 @@ import {
   PaginationPrevious,
 } from "@/components/ui/pagination";
 import React from "react";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
+import { Label } from "@/components/ui/label";
 
 interface Variant {
   name: string;
@@ -54,6 +64,99 @@ type SortDirection = 'asc' | 'desc';
 // Add these types after the existing interfaces
 type LogSortColumn = 'createdAt' | 'productId.name' | 'variantName' | 'newQuantity' | 'reason' | 'updatedBy.name';
 
+const StockUpdateDialog = ({
+  open,
+  onOpenChange,
+  selectedUpdate,
+  onUpdate,
+  onCancel,
+}: {
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  selectedUpdate: {
+    productId: string;
+    variantName: string;
+    currentQuantity: number;
+    newQuantity: number;
+  } | null;
+  onUpdate: (reason: string) => void;
+  onCancel: () => void;
+}) => {
+  const [reason, setReason] = useState("");
+
+  const handleSubmit = () => {
+    if (reason.trim()) {
+      onUpdate(reason.trim());
+      setReason("");
+    }
+  };
+
+  // Reset reason when dialog opens
+  useEffect(() => {
+    if (open) {
+      setReason("");
+    }
+  }, [open]);
+
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle className="text-foreground">Update Stock Quantity</DialogTitle>
+          <DialogDescription>
+            Enter a reason for updating the stock quantity.
+          </DialogDescription>
+        </DialogHeader>
+        <div className="grid gap-4 py-4">
+          <div className="grid grid-cols-4 items-center gap-4">
+            <Label htmlFor="reason" className="text-right text-foreground">
+              Reason
+            </Label>
+            <Input
+              id="reason"
+              value={reason}
+              onChange={(e) => setReason(e.target.value)}
+              className="col-span-3 text-foreground"
+              autoFocus
+              placeholder="Enter reason for stock update"
+            />
+          </div>
+          {selectedUpdate && (
+            <div className="grid grid-cols-4 items-center gap-4">
+              <Label className="text-right text-foreground">Change</Label>
+              <div className="col-span-3">
+                <span className={`font-mono ${
+                  selectedUpdate.newQuantity > selectedUpdate.currentQuantity
+                    ? 'text-green-500'
+                    : 'text-red-500'
+                }`}>
+                  {selectedUpdate.currentQuantity} → {selectedUpdate.newQuantity}
+                </span>
+              </div>
+            </div>
+          )}
+        </div>
+        <DialogFooter>
+          <Button
+            className="text-foreground"
+            variant="outline"
+            onClick={onCancel}
+          >
+            Cancel
+          </Button>
+          <Button
+            type="submit"
+            onClick={handleSubmit}
+            disabled={!reason.trim()}
+          >
+            Update Stock
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+};
+
 export default function Inventory() {
   const [products, setProducts] = useState<Product[]>([]);
   const [logs, setLogs] = useState<InventoryLog[]>([]);
@@ -67,6 +170,15 @@ export default function Inventory() {
   const [logsCurrentPage, setLogsCurrentPage] = useState(1);
   const [searchQuery, setSearchQuery] = useState('');
   const itemsPerPage = 10;
+
+  const [updateDialogOpen, setUpdateDialogOpen] = useState(false);
+  const [selectedUpdate, setSelectedUpdate] = useState<{
+    productId: string;
+    variantName: string;
+    currentQuantity: number;
+    newQuantity: number;
+  } | null>(null);
+  const [updateReason, setUpdateReason] = useState("");
 
   const fetchData = async () => {
     try {
@@ -100,26 +212,38 @@ export default function Inventory() {
     setUpdatingStock(stockId);
     
     try {
-      const response = await fetch('http://localhost:5000/api/admin/inventory/update', {
-        method: 'PATCH',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${localStorage.getItem('token')}`,
-        },
-        body: JSON.stringify({
-          productId,
-          variantName,
-          stockQuantity,
-          reason
+      const [updateResponse, logsResponse] = await Promise.all([
+        fetch('http://localhost:5000/api/admin/inventory/update', {
+          method: 'PATCH',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${localStorage.getItem('token')}`,
+          },
+          body: JSON.stringify({
+            productId,
+            variantName,
+            stockQuantity,
+            reason
+          })
+        }),
+        // Fetch latest logs after update
+        fetch('http://localhost:5000/api/admin/inventory/logs', {
+          headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
         })
-      });
+      ]);
 
-      if (!response.ok) throw new Error('Failed to update stock');
+      if (!updateResponse.ok || !logsResponse.ok) throw new Error('Failed to update stock');
       
-      const updatedProduct = await response.json();
+      const [updatedProduct, newLogs] = await Promise.all([
+        updateResponse.json(),
+        logsResponse.json()
+      ]);
+
+      // Update both products and logs states
       setProducts(products.map(p => 
         p._id === productId ? updatedProduct : p
       ));
+      setLogs(newLogs);
       
       toast.success("Stock updated successfully");
     } catch (error) {
@@ -133,30 +257,25 @@ export default function Inventory() {
     return [...data].sort((a, b) => {
       let aValue: any, bValue: any;
 
-      switch (sortColumn) {
-        case 'stockQuantity':
-          // Convert to numbers for proper numeric sorting
-          aValue = a.variants.reduce((sum, v) => sum + Number(v.stockQuantity || 0), 0);
-          bValue = b.variants.reduce((sum, v) => sum + Number(v.stockQuantity || 0), 0);
-          break;
-        default:
-          aValue = String(a[sortColumn]).toLowerCase();
-          bValue = String(b[sortColumn]).toLowerCase();
-      }
-      
       if (sortColumn === 'stockQuantity') {
-        // Use numeric comparison for stockQuantity
-        return sortDirection === 'asc' 
-          ? Number(aValue) - Number(bValue)
-          : Number(bValue) - Number(aValue);
+        // For stockQuantity, sum up all variants
+        aValue = a.variants.reduce((sum, v) => sum + (v.stockQuantity || 0), 0);
+        bValue = b.variants.reduce((sum, v) => sum + (v.stockQuantity || 0), 0);
+      } else {
+        // For other columns, compare directly
+        aValue = a[sortColumn]?.toString().toLowerCase();
+        bValue = b[sortColumn]?.toString().toLowerCase();
       }
 
-      // Use string comparison for other columns
-      if (sortDirection === 'asc') {
-        return aValue < bValue ? -1 : aValue > bValue ? 1 : 0;
-      } else {
-        return bValue < aValue ? -1 : bValue > aValue ? 1 : 0;
+      // Numeric comparison for stockQuantity
+      if (sortColumn === 'stockQuantity') {
+        return sortDirection === 'asc' ? aValue - bValue : bValue - aValue;
       }
+
+      // String comparison for other columns
+      return sortDirection === 'asc'
+        ? aValue.localeCompare(bValue)
+        : bValue.localeCompare(aValue);
     });
   };
 
@@ -219,15 +338,33 @@ export default function Inventory() {
   const filterProducts = (products: Product[]) => {
     if (!searchQuery) return products;
     
-    const query = searchQuery.toLowerCase();
+    const query = searchQuery.toLowerCase().trim();
     return products.filter(product => 
       product.name.toLowerCase().includes(query) ||
       product.category.toLowerCase().includes(query) ||
-      product.variants.some(v => v.name.toLowerCase().includes(query))
+      product.variants.some(variant => 
+        variant.name.toLowerCase().includes(query) ||
+        variant.stockQuantity.toString().includes(query)
+      )
+    );
+  };
+
+  const filterLogs = (logs: InventoryLog[]) => {
+    if (!searchQuery) return logs;
+    
+    const query = searchQuery.toLowerCase().trim();
+    return logs.filter(log => 
+      log.productId.name.toLowerCase().includes(query) ||
+      log.variantName.toLowerCase().includes(query) ||
+      log.reason.toLowerCase().includes(query) ||
+      log.updatedBy.name.toLowerCase().includes(query) ||
+      log.previousQuantity.toString().includes(query) ||
+      log.newQuantity.toString().includes(query)
     );
   };
 
   const paginatedProducts = () => {
+    // First filter, then sort, then paginate
     const filteredData = filterProducts(products);
     const sortedData = sortData(filteredData);
     const startIndex = (currentPage - 1) * itemsPerPage;
@@ -236,14 +373,15 @@ export default function Inventory() {
   };
 
   const paginatedLogs = () => {
-    const sortedData = sortLogs(logs);
+    const filteredData = filterLogs(logs);
+    const sortedData = sortLogs(filteredData);
     const startIndex = (logsCurrentPage - 1) * itemsPerPage;
     const endIndex = startIndex + itemsPerPage;
     return sortedData.slice(startIndex, endIndex);
   };
 
-  const totalPages = Math.ceil(products.length / itemsPerPage);
-  const totalLogsPages = Math.ceil(logs.length / itemsPerPage);
+  const totalPages = Math.ceil(filterProducts(products).length / itemsPerPage);
+  const totalLogsPages = Math.ceil(filterLogs(logs).length / itemsPerPage);
 
   const renderPaginationItems = (currentPage: number, totalPages: number, setPage: (page: number) => void) => {
     const items = [];
@@ -280,7 +418,26 @@ export default function Inventory() {
 
   useEffect(() => {
     setCurrentPage(1);
-  }, [searchQuery]);
+    setLogsCurrentPage(1);
+  }, [searchQuery, sortColumn, sortDirection, logSortColumn, logSortDirection]);
+
+  const handleUpdateStock = (reason: string) => {
+    if (selectedUpdate) {
+      updateStock(
+        selectedUpdate.productId,
+        selectedUpdate.variantName,
+        selectedUpdate.newQuantity,
+        reason
+      );
+      setUpdateDialogOpen(false);
+      setSelectedUpdate(null);
+    }
+  };
+
+  const handleCancelUpdate = () => {
+    setUpdateDialogOpen(false);
+    setSelectedUpdate(null);
+  };
 
   if (loading) {
     return (
@@ -362,15 +519,34 @@ export default function Inventory() {
                         <div className="flex items-center gap-2">
                           <Input
                             type="number"
-                            className="w-20 text-foreground"
+                            className="w-24 text-foreground"
                             defaultValue={variant.stockQuantity}
-                            onChange={(e) => {
-                              const newQuantity = parseInt(e.target.value);
-                              if (newQuantity >= 0) {
-                                const reason = prompt('Reason for stock update:');
-                                if (reason) {
-                                  updateStock(product._id, variant.name, newQuantity, reason);
+                            onKeyDown={(e) => {
+                              if (e.key === 'Enter') {
+                                const newQuantity = parseInt((e.target as HTMLInputElement).value);
+                                if (!isNaN(newQuantity) && newQuantity >= 0) {
+                                  setSelectedUpdate({
+                                    productId: product._id,
+                                    variantName: variant.name,
+                                    currentQuantity: variant.stockQuantity,
+                                    newQuantity
+                                  });
+                                  setUpdateDialogOpen(true);
                                 }
+                              }
+                            }}
+                            onBlur={(e) => {
+                              const newQuantity = parseInt(e.target.value);
+                              if (!isNaN(newQuantity) && 
+                                  newQuantity >= 0 && 
+                                  newQuantity !== variant.stockQuantity) {
+                                setSelectedUpdate({
+                                  productId: product._id,
+                                  variantName: variant.name,
+                                  currentQuantity: variant.stockQuantity,
+                                  newQuantity
+                                });
+                                setUpdateDialogOpen(true);
                               }
                             }}
                           />
@@ -508,6 +684,13 @@ export default function Inventory() {
           )}
         </TabsContent>
       </Tabs>
+      <StockUpdateDialog
+        open={updateDialogOpen}
+        onOpenChange={setUpdateDialogOpen}
+        selectedUpdate={selectedUpdate}
+        onUpdate={handleUpdateStock}
+        onCancel={handleCancelUpdate}
+      />
     </div>
   );
 }

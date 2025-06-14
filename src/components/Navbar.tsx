@@ -16,31 +16,68 @@ import { ModeToggle } from "@/components/mode-toggle";
 import { CartSheet } from "@/components/cart-sheet";
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from "@/context/AuthContext";
+import { useState, useEffect, memo, useCallback, useRef } from 'react';
+import { useAppSettings } from '@/context/AppSettingsContext';
+import { motion, AnimatePresence } from "framer-motion";
+
+// Create a constant animated component that only mounts once
+const StaticAnimatedLogo = memo(({ appName }: { appName: string }) => {
+  const hasAnimated = useRef(false);
+
+  if (hasAnimated.current) {
+    return (
+      <div className="font-bold text-2xl text-foreground w-[100px]">
+        <Link to="/">{appName}</Link>
+      </div>
+    );
+  }
+
+  hasAnimated.current = true;
+
+  return (
+    <AnimatePresence>
+      <motion.div
+        key="logo"
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ duration: 0.5 }}
+        className="font-bold text-2xl text-foreground w-[100px]"
+      >
+        <Link to="/">{appName}</Link>
+      </motion.div>
+    </AnimatePresence>
+  );
+});
+
+// Memoized Navigation Links with useCallback
+const NavigationLinks = memo(() => {
+  const navLinks = useCallback(() => (
+    <div className="hidden md:flex items-center space-x-8 absolute left-1/2 -translate-x-1/2">
+      <Link to="/" className="text-foreground hover:text-primary transition">Home</Link>
+      <Link to="/menu" className="text-foreground hover:text-primary transition">Menu</Link>
+      <Link to="/about" className="text-foreground hover:text-primary transition">About</Link>
+      <Link to="/contact" className="text-foreground hover:text-primary transition">Contact</Link>
+    </div>
+  ), []);
+
+  return navLinks();
+});
 
 export function Navbar() {
   const { user, isAuthenticated, logout } = useAuth();
   const navigate = useNavigate();
+  const { settings } = useAppSettings();
 
-  const handleLogout = () => {
+  const handleLogout = useCallback(() => {
     logout();
     navigate('/');
-  };
+  }, [logout, navigate]);
 
   return (
-    <nav className="border-b bg-background/75 backdrop-blur-md fixed w-full z-50">
+    <nav className="border-b bg-background/50 backdrop-blur-md fixed w-full z-50">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex items-center justify-between h-16">
-        {/* Logo */}
-        <a href="/" className="font-bold text-2xl text-foreground">
-          Brownie
-        </a>
-
-        {/* Desktop Navigation - Updated with absolute positioning and transform */}
-        <div className="hidden md:flex items-center space-x-8 absolute left-1/2 -translate-x-1/2">
-          <a href="/" className="text-foreground hover:text-primary transition">Home</a>
-          <a href="/menu" className="text-foreground hover:text-primary transition">Menu</a>
-          <a href="/about" className="text-foreground hover:text-primary transition">About</a>
-          <a href="/contact" className="text-foreground hover:text-primary transition">Contact</a>
-        </div>
+        <StaticAnimatedLogo appName={settings.appName} />
+        <NavigationLinks />
 
         <div className="flex items-center space-x-4">
           <div className="hidden md:flex space-x-2">

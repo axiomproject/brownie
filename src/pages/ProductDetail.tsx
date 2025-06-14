@@ -8,6 +8,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { useCart } from "@/context/CartContext";
 import { toast } from "sonner";
 import type { Product } from "@/types/product";
+import { motion } from "framer-motion";
 
 interface FeedbackItem {
   rating: number;
@@ -118,17 +119,23 @@ export default function ProductDetail() {
         <Navbar />
         <div className="min-h-screen pt-24 bg-background">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <Button 
-              variant="ghost" 
-              onClick={() => navigate('/menu')}
-              className="mb-8"
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ duration: 0.3 }}
             >
-              <ArrowLeft className="mr-2 h-4 w-4" />
-              Back to Menu
-            </Button>
-            <div className="text-center text-foreground">
-              Loading product...
-            </div>
+              <Button 
+                variant="ghost" 
+                onClick={() => navigate('/menu')}
+                className="mb-8"
+              >
+                <ArrowLeft className="mr-2 h-4 w-4" />
+                Back to Menu
+              </Button>
+              <div className="text-center text-foreground">
+                Loading product...
+              </div>
+            </motion.div>
           </div>
         </div>
       </>
@@ -180,7 +187,12 @@ export default function ProductDetail() {
     <>
       <Navbar />
       <div className="min-h-screen pt-24 bg-background">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <motion.div 
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ duration: 0.4 }}
+          className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8"
+        >
           <Button 
             variant="ghost" 
             onClick={() => navigate('/menu')}
@@ -192,7 +204,12 @@ export default function ProductDetail() {
 
           <div className="grid md:grid-cols-2 gap-12">
             {/* Product Image */}
-            <div className="aspect-square bg-muted rounded-lg overflow-hidden relative">
+            <motion.div
+              initial={{ opacity: 0, x: -20 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ duration: 0.6 }}
+              className="aspect-square bg-muted rounded-lg overflow-hidden relative"
+            >
               {imageLoading && (
                 <Skeleton className="w-full h-full absolute inset-0" />
               )}
@@ -212,10 +229,15 @@ export default function ProductDetail() {
                   </span>
                 </div>
               )}
-            </div>
+            </motion.div>
 
             {/* Product Info */}
-            <div className="space-y-6">
+            <motion.div
+              initial={{ opacity: 0, x: 20 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ duration: 0.6 }}
+              className="space-y-6"
+            >
               <div>
                 <h1 className="text-4xl font-bold text-foreground">{product.name}</h1>
                 <p className="text-muted-foreground mt-2">{product.category}</p>
@@ -278,37 +300,55 @@ export default function ProductDetail() {
                   </Button>
                 </div>
               )}
-            </div>
+            </motion.div>
           </div>
 
           {feedbacks && feedbacks.length > 0 && (
-            <div className="mt-12 border-t pt-8 pb-8">
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.6 }}
+              className="mt-12 border-t pt-8 pb-8"
+            >
               <h2 className="text-2xl font-bold text-foreground mb-6">
                 Customer Reviews ({feedbacks.length})
               </h2>
-              <div className="space-y-6">
-                {feedbacks.map((feedback, index) => (
-                  <div key={index} className="bg-muted p-4 rounded-lg">
-                    <div className="flex justify-between items-start mb-2">
-                      <div>
-                        <p className="font-semibold text-foreground">
-                          {feedback.customerName}
-                        </p>
-                        <StarRating rating={feedback.rating} />
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {/* Only take the first 3 feedbacks */}
+                {feedbacks.slice(0, 3).map((feedback, index) => (
+                  <motion.div
+                    key={index}
+                    initial={{ opacity: 0, y: 20 }}
+                    whileInView={{ opacity: 1, y: 0 }}
+                    viewport={{ once: true }}
+                    transition={{ duration: 0.5, delay: index * 0.1 }}
+                    className="bg-muted p-4 rounded-lg flex flex-col justify-between h-full"
+                  >
+                    <div>
+                      <div className="flex justify-between items-start mb-2">
+                        <div>
+                          <p className="font-semibold text-foreground">
+                            {feedback.customerName}
+                          </p>
+                          <StarRating rating={feedback.rating} />
+                        </div>
+                        <span className="text-sm text-muted-foreground">
+                          {feedback.variantName}
+                        </span>
                       </div>
-                      <span className="text-sm text-muted-foreground">
-                        {feedback.variantName}
-                      </span>
+                      {feedback.comment && (
+                        <p className="text-foreground mt-2 line-clamp-4">
+                          {feedback.comment}
+                        </p>
+                      )}
                     </div>
-                    {feedback.comment && (
-                      <p className="text-foreground mt-2">{feedback.comment}</p>
-                    )}
-                  </div>
+                  </motion.div>
                 ))}
               </div>
-            </div>
+            </motion.div>
           )}
-        </div>
+        </motion.div>
       </div>
     </>
   );

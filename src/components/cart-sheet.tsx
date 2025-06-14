@@ -14,6 +14,7 @@ import { useCart } from "@/context/CartContext";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Checkout } from "@/components/checkout";
 import { toast } from "sonner"; 
+import { useNavigate } from "react-router-dom";
 
 interface CouponResponse {
   code: string;
@@ -28,6 +29,7 @@ export function CartSheet() {
   const [couponCode, setCouponCode] = useState('');
   const [appliedCoupon, setAppliedCoupon] = useState<CouponResponse | null>(null);
   const [couponError, setCouponError] = useState('');
+  const navigate = useNavigate();
 
   // Modified to only clear when switching between different authenticated users
   useEffect(() => {
@@ -79,6 +81,13 @@ export function CartSheet() {
       setCouponCode('');
       setCouponError(error instanceof Error ? error.message : 'Failed to apply coupon');
       toast.error(error instanceof Error ? error.message : 'Failed to apply coupon');
+    }
+  };
+
+  const handleCouponClick = () => {
+    if (!user) {
+      toast.info("Please login to use coupons");
+      navigate("/login");
     }
   };
 
@@ -170,20 +179,30 @@ export function CartSheet() {
             <div className="space-y-4">
               {/* Add coupon input section */}
               <div className="space-y-2">
-                <div className="flex gap-2">
-                  <Input
-                    placeholder="Enter coupon code"
-                    value={couponCode}
-                    onChange={(e) => setCouponCode(e.target.value.toUpperCase())}
-                    className="bg-background text-foreground placeholder:text-muted-foreground"
-                  />
+                {user ? (
+                  <div className="flex gap-2">
+                    <Input
+                      placeholder="Enter coupon code"
+                      value={couponCode}
+                      onChange={(e) => setCouponCode(e.target.value.toUpperCase())}
+                      className="bg-background text-foreground placeholder:text-muted-foreground"
+                    />
+                    <Button 
+                      onClick={handleApplyCoupon}
+                      disabled={!couponCode || appliedCoupon !== null}
+                    >
+                      Apply
+                    </Button>
+                  </div>
+                ) : (
                   <Button 
-                    onClick={handleApplyCoupon}
-                    disabled={!couponCode || appliedCoupon !== null}
+                    onClick={handleCouponClick}
+                    className="w-full"
+                    variant="outline"
                   >
-                    Apply
+                    Login to Use Coupon
                   </Button>
-                </div>
+                )}
                 {couponError && (
                   <p className="text-sm text-destructive">{couponError}</p>
                 )}
