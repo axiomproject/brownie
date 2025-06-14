@@ -4,7 +4,8 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { toast } from "sonner";
-import { Eye, EyeOff } from "lucide-react"; // Add this import
+import { Eye, EyeOff } from "lucide-react"; 
+import { API_URL } from '@/config';
 
 interface AdminProfile {
   name: string;
@@ -89,7 +90,7 @@ export default function Settings() {
 
     try {
       const userId = JSON.parse(localStorage.getItem('user') || '{}')._id;
-      const response = await fetch(`http://localhost:5000/api/admin/profile/${userId}`, {
+      const response = await fetch(`${API_URL}/api/admin/profile/${userId}`, {
         method: 'PATCH',
         headers: {
           'Content-Type': 'application/json',
@@ -136,7 +137,7 @@ export default function Settings() {
 
     try {
       const userId = JSON.parse(localStorage.getItem('user') || '{}')._id;
-      const response = await fetch(`http://localhost:5000/api/admin/profile/${userId}/password`, {
+      const response = await fetch(`${API_URL}/api/admin/profile/${userId}/password`, {
         method: 'PATCH',
         headers: {
           'Content-Type': 'application/json',

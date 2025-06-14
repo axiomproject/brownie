@@ -5,7 +5,7 @@ export default function FeedbackDebug() {
   const [, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    fetch('http://localhost:5000/api/feedback/all')
+    fetch('${API_URL}/api/feedback/all')
       .then(res => res.json())
       .then(data => {
         setData(data);

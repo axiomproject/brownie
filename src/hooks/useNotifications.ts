@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { io, Socket } from 'socket.io-client';
 import axios from 'axios';
 import type { Notification } from '@/types/notification';
+import { API_URL } from '@/config';
 
 export function useNotifications() {
   const [notifications, setNotifications] = useState<Notification[]>([]);
@@ -11,7 +12,7 @@ export function useNotifications() {
   const LIMIT = 10;
 
   useEffect(() => {
-    const socketInstance = io('http://localhost:5000');
+    const socketInstance = io('${API_URL}:5000');
     setSocket(socketInstance);
 
     fetchNotifications();
@@ -29,7 +30,7 @@ export function useNotifications() {
     try {
       const currentPage = reset ? 1 : page;
       const response = await axios.get<Notification[]>(
-        `http://localhost:5000/api/users/notifications?page=${currentPage}&limit=${LIMIT}`
+        `${API_URL}/api/users/notifications?page=${currentPage}&limit=${LIMIT}`
       );
       
       if (reset) {
@@ -54,7 +55,7 @@ export function useNotifications() {
 
   const markAsRead = async (notificationId: string) => {
     try {
-      await axios.patch(`http://localhost:5000/api/users/notifications/${notificationId}/read`);
+      await axios.patch(`${API_URL}/api/users/notifications/${notificationId}/read`);
       setNotifications(notifications.map(notification => 
         notification._id === notificationId 
           ? { ...notification, read: true }
@@ -67,7 +68,7 @@ export function useNotifications() {
 
   const clearAll = async () => {
     try {
-      await axios.delete('http://localhost:5000/api/users/notifications');
+      await axios.delete('${API_URL}/api/users/notifications');
       setNotifications([]);
     } catch (error) {
       console.error('Failed to clear notifications:', error);

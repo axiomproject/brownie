@@ -41,6 +41,7 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { Switch } from "@/components/ui/switch";
+import { API_URL } from '@/config';
 
 interface User {
   _id: string;
@@ -105,7 +106,7 @@ export default function Users() {
 
   const fetchUsers = async () => {
     try {
-      const response = await fetch('http://localhost:5000/api/admin/users', {
+      const response = await fetch('${API_URL}/api/admin/users', {
         headers: {
           'Authorization': `Bearer ${localStorage.getItem('token')}`,
           'Content-Type': 'application/json'
@@ -130,7 +131,7 @@ export default function Users() {
 
   const handleRoleChange = async (userId: string, newRole: string) => {
     try {
-      const response = await fetch(`http://localhost:5000/api/admin/users/${userId}/role`, {
+      const response = await fetch(`${API_URL}/api/admin/users/${userId}/role`, {
         method: 'PATCH',
         headers: {
           'Content-Type': 'application/json',
@@ -153,7 +154,7 @@ export default function Users() {
 
   const handleVerificationChange = async (userId: string, isVerified: boolean) => {
     try {
-      const response = await fetch(`http://localhost:5000/api/admin/users/${userId}/verify`, {
+      const response = await fetch(`${API_URL}/api/admin/users/${userId}/verify`, {
         method: 'PATCH',
         headers: {
           'Content-Type': 'application/json',
@@ -183,7 +184,7 @@ export default function Users() {
     if (!userToDelete) return;
     
     try {
-      const response = await fetch(`http://localhost:5000/api/admin/users/${userToDelete}`, {
+      const response = await fetch(`${API_URL}/api/admin/users/${userToDelete}`, {
         method: 'DELETE',
         headers: {
           'Authorization': `Bearer ${localStorage.getItem('token')}`
@@ -244,8 +245,8 @@ export default function Users() {
     }
     try {
       const url = editingId 
-        ? `http://localhost:5000/api/admin/users/${editingId}`
-        : 'http://localhost:5000/api/admin/users';
+        ? `${API_URL}/api/admin/users/${editingId}`
+        : '${API_URL}/api/admin/users';
 
       const method = editingId ? 'PATCH' : 'POST';
       
@@ -375,7 +376,7 @@ export default function Users() {
 
     for (const userId of selectedUsers) {
       try {
-        const response = await fetch(`http://localhost:5000/api/admin/users/${userId}`, {
+        const response = await fetch(`${API_URL}/api/admin/users/${userId}`, {
           method: 'DELETE',
           headers: {
             'Authorization': `Bearer ${localStorage.getItem('token')}`

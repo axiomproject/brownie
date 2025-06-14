@@ -1,6 +1,7 @@
 import { createContext, useContext, useState, useEffect } from 'react';
 import type { ReactNode } from 'react';
 
+
 interface AppSettings {
   appName: string;
 }
@@ -22,7 +23,7 @@ export function AppSettingsProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     const fetchSettings = async () => {
       try {
-        const response = await fetch('http://localhost:5000/api/content/home-content');
+        const response = await fetch('${API_URL}/api/content/home-content');
         if (!response.ok) throw new Error('Failed to fetch content');
         const data = await response.json();
         setSettings({ appName: data?.appSettings?.appName || 'Brownie' });

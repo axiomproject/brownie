@@ -10,6 +10,7 @@ import {
   PartyPopper, // For delivered 
   RefreshCcw // Add this for refunded status
 } from 'lucide-react';
+import { API_URL } from '@/config';
 
 interface OrderItem {
   name: string;
@@ -57,7 +58,7 @@ export default function TrackOrder() {
           return;
         }
 
-        const response = await fetch(`http://localhost:5000/api/orders/track/${orderId}`);
+        const response = await fetch(`${API_URL}/api/orders/track/${orderId}`);
         const data = await response.json();
 
         if (!response.ok) {

@@ -31,6 +31,7 @@ import React from "react";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
+import { API_URL } from '@/config';
 
 interface OrderItem {
   productId: number;
@@ -114,7 +115,7 @@ export default function Orders() {
 
   const fetchOrders = async () => {
     try {
-      const response = await fetch('http://localhost:5000/api/admin/orders', {
+      const response = await fetch('${API_URL}/api/admin/orders', {
         headers: {
           'Authorization': `Bearer ${localStorage.getItem('token')}`,
           'Content-Type': 'application/json'
@@ -133,7 +134,7 @@ export default function Orders() {
 
   const fetchCustomerDetails = async (userId: string) => {
     try {
-      const response = await fetch(`http://localhost:5000/api/admin/users/${userId}/orders`, {
+      const response = await fetch(`${API_URL}/api/admin/users/${userId}/orders`, {
         headers: {
           'Authorization': `Bearer ${localStorage.getItem('token')}`,
           'Content-Type': 'application/json'
@@ -162,7 +163,7 @@ export default function Orders() {
     }
   
     try {
-      const response = await fetch(`http://localhost:5000/api/admin/orders/${orderId}/status`, {
+      const response = await fetch(`${API_URL}/api/admin/orders/${orderId}/status`, {
         method: 'PATCH',
         headers: {
           'Content-Type': 'application/json',
@@ -179,7 +180,7 @@ export default function Orders() {
       ));
   
       if (newStatus === 'refunded') {
-        const emailResponse = await fetch(`http://localhost:5000/api/admin/orders/${orderId}/refund-email`, {
+        const emailResponse = await fetch(`${API_URL}/api/admin/orders/${orderId}/refund-email`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
@@ -206,7 +207,7 @@ export default function Orders() {
         throw new Error('No order selected');
       }
   
-      const response = await fetch(`http://localhost:5000/api/orders/${selectedOrderId}/delivery`, {
+      const response = await fetch(`${API_URL}/api/orders/${selectedOrderId}/delivery`, {
         method: 'PATCH',
         headers: {
           'Content-Type': 'application/json',
@@ -373,7 +374,7 @@ export default function Orders() {
 
     for (const orderId of selectedOrders) {
       try {
-        const response = await fetch(`http://localhost:5000/api/admin/orders/${orderId}`, {
+        const response = await fetch(`${API_URL}/api/admin/orders/${orderId}`, {
           method: 'DELETE',
           headers: {
             'Authorization': `Bearer ${localStorage.getItem('token')}`,

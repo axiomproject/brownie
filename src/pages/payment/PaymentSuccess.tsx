@@ -12,6 +12,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import { API_URL } from '@/config';
 
 export default function PaymentSuccess() {
   const { items, clearCart, totalPrice } = useCart();
@@ -38,8 +39,8 @@ export default function PaymentSuccess() {
           : totalPrice;
 
         const endpoint = token 
-          ? 'http://localhost:5000/api/orders'
-          : 'http://localhost:5000/api/orders/guest';
+          ? '${API_URL}/api/orders'
+          : '${API_URL}/api/orders/guest';
 
         const headers = {
           'Content-Type': 'application/json',
@@ -169,13 +170,13 @@ export default function PaymentSuccess() {
           </DialogHeader>
           <div className="space-y-4">
             <p className="text-sm bg-muted p-2 rounded break-all">
-              http://localhost:5173/track-order/{orderId}
+              http://${API_URL}/track-order/{orderId}
             </p>
             <div className="flex justify-end space-x-2">
               <Button
                 variant="outline"
                 onClick={() => {
-                  navigator.clipboard.writeText(`http://localhost:5173/track-order/${orderId}`);
+                  navigator.clipboard.writeText(`${API_URL}/track-order/${orderId}`);
                   toast.success('Tracking link copied to clipboard');
                 }}
               >

@@ -96,7 +96,7 @@ export default function HomeContent() {
     const fetchContent = async () => {
       setLoading(true);
       try {
-        const response = await fetch('http://localhost:5000/api/admin/home-content', {
+        const response = await fetch('${API_URL}/api/admin/home-content', {
           headers: {
             'Authorization': `Bearer ${localStorage.getItem('token')}`
           }
@@ -118,7 +118,7 @@ export default function HomeContent() {
   const handleSave = async () => {
     setSaving(true);
     try {
-      const response = await fetch('http://localhost:5000/api/admin/home-content', {
+      const response = await fetch('${API_URL}/api/admin/home-content', {
         method: 'PUT',
         headers: {
           'Authorization': `Bearer ${localStorage.getItem('token')}`,
