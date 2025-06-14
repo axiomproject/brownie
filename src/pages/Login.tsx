@@ -167,6 +167,7 @@ export default function Login() {
     try {
       const endpoint = type === 'login' ? '/login' : '/register';
       const response = await fetch(`${API_URL}/api/users${endpoint}`, {
+        credentials: 'include',
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -215,6 +216,7 @@ export default function Login() {
     setIsLoading(true);
     try {
       const res = await fetch(`${API_URL}/api/users/google`, {
+        credentials: 'include',
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
