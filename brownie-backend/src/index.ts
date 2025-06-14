@@ -9,6 +9,7 @@ import productRoutes from './routes/productRoutes'; // Add this line
 import couponRoutes from './routes/couponRoutes';
 import feedbackRoutes from './routes/feedbackRoutes';
 import contactRoutes from './routes/contactRoutes';
+import contentRoutes from './routes/contentRoutes';
 import { createServer } from 'http';
 import { initializeSocket } from './services/socketService';
 
@@ -25,6 +26,7 @@ app.use(express.json());
 
 // Routes
 app.use('/api/products', productRoutes); // Add this line
+app.use('/api/content', contentRoutes);
 app.use('/api/orders', orderRoutes);
 app.use('/api/users', userRoutes);
 app.use('/api/admin', adminRoutes);

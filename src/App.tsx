@@ -29,63 +29,68 @@ import FeedbackPage from '@/pages/FeedbackPage';
 import Settings from '@/pages/admin/Settings';
 import FeedbackDebug from '@/pages/debug/FeedbackDebug';
 import Contacts from '@/pages/admin/Contacts';
+import HomeContent from '@/pages/admin/HomeContent';
+import { AppSettingsProvider } from '@/context/AppSettingsContext';
 
 function App() {
   return (
     <ThemeProvider defaultTheme="dark" storageKey="vite-ui-theme">
       <Router>
-        <AuthProvider>
-          {({ user }) => (
-            <CartProvider userId={user?._id}>
-              <Toaster richColors closeButton position="top-right" />
-              <Routes>
-                {/* Public routes with Navbar */}
-                <Route element={<PublicRoute />}>
-                  <Route path="/" element={<Home />} />
-                  <Route path="/menu" element={<Menu />} />
-                  <Route path="/menu/:id" element={<ProductDetail />} />
-                  <Route path="/about" element={<About />} />
-                  <Route path="/contact" element={<Contact />} />
-                </Route>
+        <AppSettingsProvider>
+          <AuthProvider>
+            {({ user }) => (
+              <CartProvider userId={user?._id}>
+                <Toaster richColors closeButton position="top-right" />
+                <Routes>
+                  {/* Public routes with Navbar */}
+                  <Route element={<PublicRoute />}>
+                    <Route path="/" element={<Home />} />
+                    <Route path="/menu" element={<Menu />} />
+                    <Route path="/menu/:id" element={<ProductDetail />} />
+                    <Route path="/about" element={<About />} />
+                    <Route path="/contact" element={<Contact />} />
+                  </Route>
 
-                {/* Standalone routes (no navbar) */}
-                <Route path="/login" element={<Login />} />
-                <Route path="/verify-email" element={<VerifyEmail />} />
-                <Route path="/reset-password" element={<ResetPassword />} />
-                <Route path="/track-order/:orderId" element={<TrackOrder />} />
-                <Route path="/feedback/:orderId" element={<FeedbackPage />} />
-                
-                {/* Payment routes */}
-                <Route path="/payment/success" element={<PaymentSuccess />} />
-                <Route path="/payment/failed" element={<PaymentFailed />} />
+                  {/* Standalone routes (no navbar) */}
+                  <Route path="/login" element={<Login />} />
+                  <Route path="/verify-email" element={<VerifyEmail />} />
+                  <Route path="/reset-password" element={<ResetPassword />} />
+                  <Route path="/track-order/:orderId" element={<TrackOrder />} />
+                  <Route path="/feedback/:orderId" element={<FeedbackPage />} />
+                  
+                  {/* Payment routes */}
+                  <Route path="/payment/success" element={<PaymentSuccess />} />
+                  <Route path="/payment/failed" element={<PaymentFailed />} />
 
-                {/* Debug routes */}
-                <Route path="/debug/feedbacks" element={<FeedbackDebug />} />
+                  {/* Debug routes */}
+                  <Route path="/debug/feedbacks" element={<FeedbackDebug />} />
 
-                {/* Admin routes */}
-                <Route path="/admin/*" element={
-                  <AdminRoute>
-                    <SidebarProvider>
-                      <AdminLayout>
-                        <Routes>
-                          <Route index element={<Dashboard />} />
-                          <Route path="users" element={<Users />} />
-                          <Route path="products" element={<Products />} />
-                          <Route path="orders" element={<Orders />} />
-                          <Route path="inventory" element={<Inventory />} />
-                          <Route path="coupons" element={<Coupon />} />
-                          <Route path="feedbacks" element={<Feedback />} />
-                          <Route path="contacts" element={<Contacts />} /> {/* Add this line */}
-                          <Route path="settings" element={<Settings />} />
-                        </Routes>
-                      </AdminLayout>
-                    </SidebarProvider>
-                  </AdminRoute>
-                } />
-              </Routes>
-            </CartProvider>
-          )}
-        </AuthProvider>
+                  {/* Admin routes */}
+                  <Route path="/admin/*" element={
+                    <AdminRoute>
+                      <SidebarProvider>
+                        <AdminLayout>
+                          <Routes>
+                            <Route index element={<Dashboard />} />
+                            <Route path="users" element={<Users />} />
+                            <Route path="products" element={<Products />} />
+                            <Route path="orders" element={<Orders />} />
+                            <Route path="inventory" element={<Inventory />} />
+                            <Route path="coupons" element={<Coupon />} />
+                            <Route path="feedbacks" element={<Feedback />} />
+                            <Route path="contacts" element={<Contacts />} /> {/* Add this line */}
+                            <Route path="settings" element={<Settings />} />
+                            <Route path="content" element={<HomeContent />} /> {/* Add this line */}
+                          </Routes>
+                        </AdminLayout>
+                      </SidebarProvider>
+                    </AdminRoute>
+                  } />
+                </Routes>
+              </CartProvider>
+            )}
+          </AuthProvider>
+        </AppSettingsProvider>
       </Router>
     </ThemeProvider>
   );

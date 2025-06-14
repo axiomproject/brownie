@@ -11,6 +11,7 @@ import bcrypt from 'bcryptjs';
 import { sendOrderRefundEmail, sendDeliveryConfirmationEmail } from '../utils/email';
 import { emitNotification } from '../services/socketService';
 import { Notification } from '../models/Notification';
+import HomeContent from '../models/HomeContent';
 
 const router = Router();
 
@@ -723,6 +724,80 @@ const deleteContact: RequestHandler = async (req, res) => {
     res.status(500).json({ message: 'Error deleting contact' });
   }
 };
+
+// Add these new routes inside your router
+router.get('/home-content', async (req, res) => {
+  try {
+    console.log('Fetching home content...');
+    let content = await HomeContent.findOne({ isActive: true });
+    console.log('Found content:', content);
+    
+    if (!content) {
+      console.log('Creating new content...');
+      await HomeContent.deleteMany({}); // Clear any existing content
+      content = await HomeContent.create({
+        heroTitle: 'Heavenly Brownies',
+        heroSubtitle: 'Indulge in our handcrafted, gourmet brownies',
+        heroImage: '',
+        aboutTitle: 'Our Story',
+        aboutContent: 'Crafting perfect brownies since 2010...',
+        aboutPageHero: {
+          title: 'Our Story',
+          subtitle: 'From a small kitchen to your favorite brownie destination'
+        },
+        aboutPageStory: {
+          title: 'Started in 2010',
+          content: 'What began as a passion project in our family kitchen has grown into a beloved destination for brownie enthusiasts. Our commitment to quality ingredients and traditional baking methods remains unchanged.',
+          additionalContent: 'Every brownie is crafted with care, using time-tested recipes and the finest ingredients sourced from local suppliers whenever possible.',
+          image: 'https://images.unsplash.com/photo-1604761483402-1e07d167c09b?auto=format&fit=crop&w=600'
+        },
+        values: [
+          {
+            title: "Quality First",
+            description: "Only the finest ingredients make it into our brownies"
+          },
+          {
+            title: "Made with Love",
+            description: "Each brownie is crafted with attention to detail"
+          },
+          {
+            title: "Community Focus",
+            description: "Supporting local suppliers and our neighborhood"
+          }
+        ],
+        isActive: true
+      });
+      console.log('Created new content:', content);
+    }
+
+    // Transform the document to a plain object and send
+    const contentObject = content.toObject();
+    console.log('Sending content:', contentObject);
+    res.json(contentObject);
+  } catch (error) {
+    console.error('Error in /home-content:', error);
+    res.status(500).json({ 
+      message: 'Error fetching home content',
+      error: error instanceof Error ? error.message : 'Unknown error'
+    });
+  }
+});
+
+router.put('/home-content', async (req, res) => {
+  try {
+    console.log('Updating content with:', req.body); // Add this debug log
+    const content = await HomeContent.findOneAndUpdate(
+      { isActive: true },
+      { ...req.body, updatedAt: Date.now() },
+      { new: true, upsert: true }
+    );
+    console.log('Updated content:', content); // Add this debug log
+    res.json(content);
+  } catch (error) {
+    console.error('Error updating home content:', error);
+    res.status(500).json({ message: 'Error updating home content' });
+  }
+});
 
 // Route definitions
 router.get('/stats', getStats);

@@ -15,6 +15,7 @@ import {
   MessageCircle, // Add this import
   Settings as SettingsIcon,
   ExternalLink, // Change from Home to ExternalLink
+  Home, // Add this import
 } from "lucide-react";
 import { useAuth } from '@/context/AuthContext';
 import { ModeToggle } from "@/components/mode-toggle";
@@ -36,12 +37,13 @@ export function AdminSidebar() {
     { icon: Users, label: 'Users', path: '/admin/users', external: false },
     { icon: Package, label: 'Products', path: '/admin/products', external: false },
     { icon: ShoppingCart, label: 'Orders', path: '/admin/orders', external: false },
-    { icon: Boxes, label: 'Inventory', path: '/admin/inventory', external: false },  // Change from Box to Boxes
+    { icon: Boxes, label: 'Inventory', path: '/admin/inventory', external: false },  
     { icon: Ticket, label: 'Coupons', path: '/admin/coupons', external: false }, 
     { icon: MessageSquare, label: 'Feedbacks', path: '/admin/feedbacks', external: false }, 
-    { icon: MessageCircle, label: 'Contacts', path: '/admin/contacts', external: false }, // Changed icon to MessageCircle
+    { icon: MessageCircle, label: 'Contacts', path: '/admin/contacts', external: false },
+    { icon: Home, label: 'Content', path: '/admin/content', external: false },
     { icon: SettingsIcon, label: 'Settings', path: '/admin/settings', external: false },
-   
+ 
   ];
 
   return (

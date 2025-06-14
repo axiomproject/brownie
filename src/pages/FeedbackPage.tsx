@@ -23,6 +23,7 @@ interface Order {
 
 interface ProductFeedback {
   productId: string;
+  feedbackId: string; // Add this new field
   rating: number;
   comment: string;
   productName: string;
@@ -46,9 +47,10 @@ export default function FeedbackPage() {
         const data = await response.json();
         setOrder(data);
         
-        // Initialize feedback state with product images directly from the order data
+        // Create unique feedbackId for each variant
         setFeedback(data.items.map((item: any) => ({
-          productId: item.productId._id, // Use the actual product ID
+          productId: item.productId._id,
+          feedbackId: `${item.productId._id}-${item.variantName}`, // Unique identifier
           rating: 0,
           comment: '',
           productName: item.name,
@@ -67,18 +69,18 @@ export default function FeedbackPage() {
     }
   }, [orderId]);
 
-  const handleRatingChange = (productId: string, rating: number) => {
+  const handleRatingChange = (feedbackId: string, rating: number) => {
     setFeedback(current =>
       current.map(item =>
-        item.productId === productId ? { ...item, rating } : item
+        item.feedbackId === feedbackId ? { ...item, rating } : item
       )
     );
   };
 
-  const handleCommentChange = (productId: string, comment: string) => {
+  const handleCommentChange = (feedbackId: string, comment: string) => {
     setFeedback(current =>
       current.map(item =>
-        item.productId === productId ? { ...item, comment } : item
+        item.feedbackId === feedbackId ? { ...item, comment } : item
       )
     );
   };
@@ -158,7 +160,7 @@ export default function FeedbackPage() {
             </CardHeader>
             <CardContent className="space-y-6">
               {feedback.map((item) => (
-                <div key={item.productId} className="space-y-4 pb-6 border-b last:border-0">
+                <div key={item.feedbackId} className="space-y-4 pb-6 border-b last:border-0">
                   <div className="flex gap-4 items-start">
                     {item.image && (
                       <div className="w-24 h-24 rounded-lg overflow-hidden flex-shrink-0">
@@ -178,7 +180,7 @@ export default function FeedbackPage() {
                         {[1, 2, 3, 4, 5].map((star) => (
                           <button
                             key={star}
-                            onClick={() => handleRatingChange(item.productId, star)}
+                            onClick={() => handleRatingChange(item.feedbackId, star)}
                             className="focus:outline-none"
                           >
                             <Star
@@ -197,7 +199,7 @@ export default function FeedbackPage() {
                   <Textarea
                     placeholder="Share your thoughts about this product..."
                     value={item.comment}
-                    onChange={(e) => handleCommentChange(item.productId, e.target.value)}
+                    onChange={(e) => handleCommentChange(item.feedbackId, e.target.value)}
                     className="w-full"
                   />
                 </div>
