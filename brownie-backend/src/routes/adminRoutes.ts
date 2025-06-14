@@ -213,8 +213,12 @@ const updateUserRole: RequestHandler = async (req, res) => {
       { role },
       { new: true }
     ).select('-password');
-    res.json(user);
-    return;
+
+    if (!user) {
+      res.status(404).json({ message: 'User not found' });
+      return;
+    }
+
     res.json(user);
   } catch (error) {
     res.status(500).json({ message: 'Error updating user role' });
@@ -449,11 +453,17 @@ const updateInventory: RequestHandler = async (req, res) => {
   try {
     const { productId, variantName, stockQuantity, reason } = req.body;
     const user = (req as AuthRequest).user;
-    if (!user) {
-      throw new Error('User not authenticated');
-    }
-    const userId = user.id;
     
+    if (!user || !user.id) {
+      res.status(401).json({ message: 'User not authenticated' });
+      return;
+    }
+
+    if (!productId || !variantName || typeof stockQuantity !== 'number') {
+      res.status(400).json({ message: 'Missing required fields' });
+      return;
+    }
+
     const product = await Product.findById(productId);
     if (!product) {
       res.status(404).json({ message: 'Product not found' });
@@ -474,7 +484,7 @@ const updateInventory: RequestHandler = async (req, res) => {
       newQuantity: stockQuantity,
       changeType: 'manual',
       reason: reason || 'Manual stock update',
-      updatedBy: userId
+      updatedBy: user.id
     });
 
     // Update stock
@@ -512,6 +522,7 @@ const updateInventory: RequestHandler = async (req, res) => {
     await product.save();
     res.json(product);
   } catch (error) {
+    console.error('Error updating inventory:', error);
     res.status(500).json({ message: 'Error updating inventory' });
   }
 };
