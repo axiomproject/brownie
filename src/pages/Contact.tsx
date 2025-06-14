@@ -8,6 +8,7 @@ import { toast } from "sonner";
 import { z } from "zod";
 import { motion } from "framer-motion";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { API_URL } from '@/config';
 
 const contactSchema = z.object({
   name: z.string().min(2, "Name must be at least 2 characters"),
@@ -42,7 +43,13 @@ export default function Contact() {
   useEffect(() => {
     const fetchContent = async () => {
       try {
-        const response = await fetch('http://localhost:5000/api/content/home-content');
+        const response = await fetch(`${API_URL}/api/content/home-content`, {
+          method: 'GET',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          credentials: 'include'
+        });
         if (!response.ok) throw new Error('Failed to fetch content');
         const data = await response.json();
         if (data) {
@@ -95,12 +102,12 @@ export default function Contact() {
     }
 
     try {
-      const response = await fetch("http://localhost:5000/api/contact", {
-        method: "POST",
+      const response = await fetch(`${API_URL}/api/contact`, {
+        method: 'GET',
         headers: {
-          "Content-Type": "application/json",
+          'Content-Type': 'application/json'
         },
-        body: JSON.stringify(formData),
+        credentials: 'include'
       });
 
       if (!response.ok) throw new Error("Failed to send message");

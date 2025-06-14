@@ -9,6 +9,7 @@ import { useCart } from "@/context/CartContext";
 import { toast } from "sonner";
 import type { Product } from "@/types/product";
 import { motion } from "framer-motion";
+import { API_URL } from '@/config';
 
 interface FeedbackItem {
   rating: number;
@@ -31,7 +32,13 @@ export default function ProductDetail() {
   useEffect(() => {
     const fetchProduct = async () => {
       try {
-        const response = await fetch(`http://localhost:5000/api/products/${id}`);
+        const response = await fetch(`${API_URL}/api/products/${id}`, {
+          method: 'GET',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          credentials: 'include'
+        });
         if (!response.ok) throw new Error('Failed to fetch product');
         const data = await response.json();
         setProduct(data);
@@ -58,7 +65,13 @@ export default function ProductDetail() {
         }
 
         console.log('Fetching feedbacks for product ID:', id);
-        const response = await fetch(`http://localhost:5000/api/feedback/product/${id}`);
+        const response = await fetch(`${API_URL}/api/feedback/product/${id}`, {
+          method: 'GET',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          credentials: 'include'
+        });
         
         if (!response.ok) {
           throw new Error('Failed to fetch feedbacks');

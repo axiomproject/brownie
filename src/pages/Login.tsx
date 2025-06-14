@@ -9,6 +9,7 @@ import { Eye, EyeOff } from "lucide-react"; // Add this import
 import { ModeToggle } from "@/components/mode-toggle";
 import { useAppSettings } from '@/context/AppSettingsContext';
 import { motion, AnimatePresence } from "framer-motion";
+import { API_URL } from '@/config';
 
 declare global {
   interface Window {
@@ -80,7 +81,13 @@ export default function Login() {
     const fetchContent = async () => {
       try {
         setLoading(true);
-        const response = await fetch('http://localhost:5000/api/content/home-content');
+        const response = await fetch(`${API_URL}/api/content/home-content`, {
+          method: 'GET',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          credentials: 'include'
+        });
         if (!response.ok) throw new Error('Failed to fetch content');
         const data = await response.json();
         setAppName(data?.appSettings?.appName || 'Brownie');
@@ -106,7 +113,7 @@ export default function Login() {
     
     setIsLoading(true);
     try {
-      const response = await fetch('http://localhost:5000/api/users/forgot-password', {
+      const response = await fetch(`${API_URL}/api/users/forgot-password`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email })
@@ -159,7 +166,7 @@ export default function Login() {
     setIsLoading(true);
     try {
       const endpoint = type === 'login' ? '/login' : '/register';
-      const response = await fetch(`http://localhost:5000/api/users${endpoint}`, {
+      const response = await fetch(`${API_URL}/api/users${endpoint}`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -207,7 +214,7 @@ export default function Login() {
   const handleGoogleSignIn = async (response: any) => {
     setIsLoading(true);
     try {
-      const res = await fetch('http://localhost:5000/api/users/google', {
+      const res = await fetch('${API_URL}/api/users/google', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
