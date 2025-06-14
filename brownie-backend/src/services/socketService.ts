@@ -12,7 +12,12 @@ export const initializeSocket = (server: HTTPServer) => {
       ],
       methods: ["GET", "POST"],
       credentials: true
-    }
+    },
+    pingTimeout: 60000, // 60 seconds
+    pingInterval: 25000, // 25 seconds
+    upgradeTimeout: 30000, // 30 seconds
+    transports: ['websocket', 'polling'],
+    allowUpgrades: true
   });
 
   io.on('connection', (socket) => {
