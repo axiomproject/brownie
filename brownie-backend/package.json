@@ -4,13 +4,10 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
     "dev": "ts-node src/index.ts",
-    "clean": "rimraf dist",
-    "copy-files": "cp package.json dist/ && cp .env dist/ || true",
-    "build": "npm run clean && tsc && ls -la dist",
+    "build": "tsc",
     "start": "node dist/index.js",
-    "postinstall": "npm run build"
+    "postinstall": "tsc"
   },
   "keywords": [],
   "author": "",
