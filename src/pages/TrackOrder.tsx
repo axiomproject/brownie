@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import { Navbar } from '@/components/Navbar';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Loader2, Truck, CheckCircle } from 'lucide-react';
+import { Loader2, Truck, CheckCircle, Phone } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { 
   ScrollText, // For order received
@@ -18,6 +18,12 @@ interface OrderItem {
   variantName: string;
 }
 
+interface DeliveryDetails {
+  riderName: string;
+  riderContact: string;
+  trackingLink: string;
+}
+
 interface Order {
   _id: string;
   items: OrderItem[];
@@ -30,6 +36,7 @@ interface Order {
     type: 'fixed' | 'product';
     value: number;
   };
+  deliveryDetails?: DeliveryDetails;
 }
 
 export default function TrackOrder() {
@@ -41,6 +48,15 @@ export default function TrackOrder() {
   useEffect(() => {
     const fetchOrder = async () => {
       try {
+        // Check if orderId is a valid MongoDB ObjectId (24 hex characters)
+        const isValidObjectId = /^[0-9a-fA-F]{24}$/.test(orderId || '');
+        
+        if (!isValidObjectId) {
+          setError('Invalid order ID format');
+          setLoading(false);
+          return;
+        }
+
         const response = await fetch(`http://localhost:5000/api/orders/track/${orderId}`);
         const data = await response.json();
 
@@ -126,6 +142,43 @@ export default function TrackOrder() {
       </div>
     );
   };
+
+  const DeliveryInfo = ({ details }: { details: DeliveryDetails }) => (
+    <div className="bg-primary/10 rounded-lg p-4 mt-4 border border-primary/20">
+      <h4 className="font-semibold text-primary mb-3">Delivery Information</h4>
+      <div className="space-y-2">
+        <div>
+          <span className="text-muted-foreground">Rider Name:</span>
+          <span className="ml-2 text-foreground">{details.riderName}</span>
+        </div>
+        <div className="flex items-center">
+          <span className="text-muted-foreground">Contact:</span>
+          <div className="ml-2 flex items-center gap-2">
+            <Phone className="h-4 w-4 text-primary" />
+            <a 
+              href={`tel:${details.riderContact}`}
+              className="text-primary hover:underline"
+            >
+              {details.riderContact}
+            </a>
+          </div>
+        </div>
+        {details.trackingLink && (
+          <div>
+            <span className="text-muted-foreground">Track:</span>
+            <a 
+              href={details.trackingLink}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="ml-2 text-primary hover:underline"
+            >
+              View Live Location
+            </a>
+          </div>
+        )}
+      </div>
+    </div>
+  );
 
   return (
     <>
@@ -235,6 +288,10 @@ export default function TrackOrder() {
                       )}
                     </div>
                   </div>
+                  {/* Add the delivery info here */}
+                  {order.status === 'out for delivery' && order.deliveryDetails && (
+                    <DeliveryInfo details={order.deliveryDetails} />
+                  )}
                 </div>
               </div>
             </CardContent>

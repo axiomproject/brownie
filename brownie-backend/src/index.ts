@@ -8,6 +8,7 @@ import adminRoutes from './routes/adminRoutes';
 import productRoutes from './routes/productRoutes'; // Add this line
 import couponRoutes from './routes/couponRoutes';
 import feedbackRoutes from './routes/feedbackRoutes';
+import contactRoutes from './routes/contactRoutes';
 import { createServer } from 'http';
 import { initializeSocket } from './services/socketService';
 
@@ -29,6 +30,7 @@ app.use('/api/users', userRoutes);
 app.use('/api/admin', adminRoutes);
 app.use('/api/coupons', couponRoutes);
 app.use('/api/feedback', feedbackRoutes);
+app.use('/api/contact', contactRoutes);
 
 // Initialize Socket.IO
 initializeSocket(httpServer);

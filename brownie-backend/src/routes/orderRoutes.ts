@@ -1,5 +1,6 @@
 import { Router } from 'express';
 import type { Request, Response, RequestHandler } from 'express';
+import mongoose from 'mongoose';
 import { Order } from '../models/Order';
 import { Product } from '../models/Product';
 import { authenticateToken } from '../middleware/auth';
@@ -267,6 +268,13 @@ router.get('/my-orders', authenticateToken, async (req: AuthRequest, res: Respon
 router.get('/track/:orderId', async (req: Request, res: Response): Promise<void> => {
   try {
     const { orderId } = req.params;
+
+    // Add ObjectId validation
+    if (!mongoose.Types.ObjectId.isValid(orderId)) {
+      res.status(400).json({ message: 'Invalid order ID format' });
+      return;
+    }
+
     const order = await Order.findById(orderId);
 
     if (!order) {
@@ -294,7 +302,11 @@ router.get('/track/:orderId', async (req: Request, res: Response): Promise<void>
     res.json(orderWithImages);
   } catch (error) {
     console.error('Error fetching order:', error);
-    res.status(500).json({ message: 'Error fetching order details' });
+    res.status(500).json({ 
+      message: error instanceof mongoose.Error.CastError 
+        ? 'Invalid order ID format' 
+        : 'Error fetching order details'
+    });
   }
 });
 
@@ -320,6 +332,51 @@ router.post('/:orderId/refund-email', authenticateToken, async (req: AuthRequest
   } catch (error) {
     console.error('Error sending refund email:', error);
     res.status(500).json({ message: 'Error sending refund email' });
+  }
+});
+
+// Fix the route path to match the frontend request
+router.patch('/:orderId/delivery', authenticateToken, async (req: Request, res: Response): Promise<void> => {
+  try {
+    const { orderId } = req.params;
+    const { status, deliveryDetails } = req.body;
+
+    if (!deliveryDetails.riderName || !deliveryDetails.riderContact) {
+      res.status(400).json({ message: 'Rider name and contact are required' });
+      return;
+    }
+
+    // Validate orderId
+    if (!mongoose.Types.ObjectId.isValid(orderId)) {
+      res.status(400).json({ message: 'Invalid order ID' });
+      return;
+    }
+
+    const updatedOrder = await Order.findByIdAndUpdate(
+      orderId,
+      {
+        $set: {
+          status,
+          deliveryDetails
+        }
+      },
+      { 
+        new: true,
+        runValidators: true
+      }
+    ).populate('user'); // Add this to populate user data
+
+    if (!updatedOrder) {
+      res.status(404).json({ message: 'Order not found' });
+      return;
+    }
+
+    res.json(updatedOrder);
+  } catch (error) {
+    console.error('Error updating delivery details:', error);
+    res.status(500).json({ 
+      message: error instanceof Error ? error.message : 'Error updating delivery details' 
+    });
   }
 });
 
