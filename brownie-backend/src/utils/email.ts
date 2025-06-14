@@ -1,5 +1,7 @@
 import nodemailer from 'nodemailer';
 import dotenv from 'dotenv';
+import type { Error } from 'mongoose';
+import { type IOrder } from '../models/Order'; // Change this line
 
 // Ensure environment variables are loaded
 dotenv.config();
@@ -35,136 +37,97 @@ transporter.verify((error, success) => {
   }
 });
 
-export const sendVerificationEmail = async (email: string, verificationToken: string) => {
-  const verificationUrl = `http://localhost:5173/verify-email?token=${verificationToken}`;
-  
+interface EmailCallback {
+  (error: Error | null, success?: any): void;
+}
+
+async function sendEmail(to: string, subject: string, html: string, callback?: EmailCallback) {
   const mailOptions = {
-    from: `"Brownie Shop" <${process.env.GMAIL_USER}>`,
-    to: email,
-    subject: 'Verify your email address',
-    html: `
-      <h1>Welcome to Brownie Shop!</h1>
-      <p>Please verify your email address by clicking the link below:</p>
-      <a href="${verificationUrl}">Verify Email</a>
-      <p>This link will expire in 24 hours.</p>
-    `
+    from: process.env.GMAIL_USER,
+    to,
+    subject,
+    html
   };
 
-  await transporter.sendMail(mailOptions);
-};
+  try {
+    const info = await transporter.sendMail(mailOptions);
+    if (callback) callback(null, info);
+    return info;
+  } catch (error) {
+    if (callback) callback(error as Error);
+    throw error;
+  }
+}
 
-export const sendPasswordResetEmail = async (email: string, resetToken: string) => {
-  const resetUrl = `http://localhost:5173/reset-password?token=${resetToken}`;
-  
-  const mailOptions = {
-    from: `"Brownie Shop" <${process.env.GMAIL_USER}>`,
-    to: email,
-    subject: 'Reset your password',
-    html: `
-      <h1>Password Reset Request</h1>
-      <p>Click the link below to reset your password:</p>
-      <a href="${resetUrl}">Reset Password</a>
-      <p>This link will expire in 1 hour.</p>
-      <p>If you didn't request this, please ignore this email.</p>
-    `
-  };
+interface OrderItem {
+  name: string;
+  variantName: string;
+  quantity: number;
+}
 
-  await transporter.sendMail(mailOptions);
-};
+export async function sendOrderConfirmationEmail(email: string, order: IOrder): Promise<void> {
+  const subject = 'Order Confirmation';
+  const html = `
+    <h1>Thank you for your order!</h1>
+    <p>Your order #${order._id} has been received and is being processed.</p>
+    <h2>Order Details:</h2>
+    <ul>
+      ${order.items.map((item: OrderItem) => `
+        <li>${item.name} (${item.variantName}) - Quantity: ${item.quantity}</li>
+      `).join('')}
+    </ul>
+    <p>Total Amount: ₱${order.totalAmount}</p>
+  `;
 
-export const sendOrderConfirmationEmail = async (email: string, orderDetails: any) => {
-  const mailOptions = {
-    from: `"Brownie Shop" <${process.env.GMAIL_USER}>`,
-    to: email,
-    subject: 'Order Confirmation - Brownie Shop',
-    html: `
-      <h1>Thank you for your order!</h1>
-      <p>Your order has been successfully placed and paid.</p>
-      
-      <h2>Order Details:</h2>
-      <ul>
-        ${orderDetails.items.map((item: any) => `
-          <li>${item.name} (${item.variantName}) - ${item.quantity}x - ₱${item.price}</li>
-        `).join('')}
-      </ul>
-      
-      <p><strong>Total Amount:</strong> ₱${orderDetails.totalAmount.toFixed(2)}</p>
-      <p><strong>Payment Method:</strong> ${orderDetails.paymentMethod}</p>
-      
-      <p>You can track your order status here:</p>
-      <a href="http://localhost:5173/track-order/${orderDetails._id}">Track Order</a>
-    `
-  };
+  await sendEmail(email, subject, html);
+}
 
-  await transporter.sendMail(mailOptions);
-};
+export async function sendDeliveryConfirmationEmail(email: string, order: IOrder): Promise<void> {
+  const subject = 'Order Delivered';
+  const html = `
+    <h1>Your order has been delivered!</h1>
+    <p>Order #${order._id} has been successfully delivered.</p>
+    <p>Thank you for choosing our service!</p>
+  `;
 
-export const sendOrderRefundEmail = async (email: string, orderDetails: any) => {
-  const mailOptions = {
-    from: `"Brownie Shop" <${process.env.GMAIL_USER}>`,
-    to: email,
-    subject: 'Order Refund Notification - Brownie Shop',
-    html: `
-      <h1>Order Refund Notification</h1>
-      <p>Dear Customer,</p>
-      <p>We apologize for any inconvenience caused. Your order #${orderDetails._id.toString().slice(-6)} has been refunded.</p>
-      
-      <h2>Refunded Order Details:</h2>
-      <ul>
-        ${orderDetails.items.map((item: any) => `
-          <li>${item.name} (${item.variantName}) - ${item.quantity}x - ₱${item.price}</li>
-        `).join('')}
-      </ul>
-      
-      <p><strong>Refunded Amount:</strong> ₱${orderDetails.totalAmount.toFixed(2)}</p>
-      
-      <p>We value your business and hope to serve you better in the future. If you have any questions, please don't hesitate to contact us.</p>
-      
-      <p>Best regards,<br>Brownie Shop Team</p>
-    `
-  };
+  await sendEmail(email, subject, html);
+}
 
-  await transporter.sendMail(mailOptions);
-};
+export async function sendOrderRefundEmail(email: string, order: IOrder): Promise<void> {
+  const subject = 'Order Refund Confirmation';
+  const html = `
+    <h1>Refund Confirmation</h1>
+    <p>Your refund for order #${order._id} has been processed.</p>
+    <p>Amount: ₱${order.totalAmount}</p>
+    <p>The refund will be processed according to your original payment method.</p>
+    <p>If you have any questions, please contact our support team.</p>
+  `;
 
-export const sendDeliveryConfirmationEmail = async (email: string, orderDetails: any) => {
-  const feedbackUrl = `http://localhost:5173/feedback/${orderDetails._id.toString()}`;
-  
-  const mailOptions = {
-    from: `"Brownie Shop" <${process.env.GMAIL_USER}>`,
-    to: email,
-    subject: 'Order Delivered - We Value Your Feedback!',
-    html: `
-      <h1>Your Order Has Been Delivered!</h1>
-      <p>Dear Customer,</p>
-      <p>We're happy to confirm that your order #${orderDetails._id.toString().slice(-6)} has been delivered.</p>
-      
-      <h2>Order Details:</h2>
-      <ul>
-        ${orderDetails.items.map((item: any) => `
-          <li>${item.name} (${item.variantName}) - ${item.quantity}x</li>
-        `).join('')}
-      </ul>
-      
-      <p>We hope you enjoy your brownies! Your feedback is important to us.</p>
-      <p>Please take a moment to share your experience:</p>
-      
-      <div style="text-align: center; margin: 30px 0;">
-        <a href="${feedbackUrl}" style="
-          background-color: #7c3aed;
-          color: white;
-          padding: 12px 24px;
-          text-decoration: none;
-          border-radius: 6px;
-          display: inline-block;
-        ">Leave Feedback</a>
-      </div>
-      
-      <p>Thank you for choosing Brownie Shop!</p>
-      
-      <p>Best regards,<br>Brownie Shop Team</p>
-    `
-  };
+  await sendEmail(email, subject, html);
+}
 
-  await transporter.sendMail(mailOptions);
-};
+export async function sendPasswordResetEmail(email: string, resetToken: string): Promise<void> {
+  const resetLink = `${process.env.FRONTEND_URL}/reset-password?token=${resetToken}`;
+  const subject = 'Password Reset Request';
+  const html = `
+    <h1>Password Reset Request</h1>
+    <p>You requested to reset your password. Click the link below to reset it:</p>
+    <a href="${resetLink}">Reset Password</a>
+    <p>If you didn't request this, please ignore this email.</p>
+  `;
+
+  await sendEmail(email, subject, html);
+}
+
+export async function sendVerificationEmail(email: string, verificationToken: string): Promise<void> {
+  const verificationLink = `${process.env.FRONTEND_URL}/verify-email?token=${verificationToken}`;
+  const subject = 'Verify Your Email';
+  const html = `
+    <h1>Welcome!</h1>
+    <p>Please click the link below to verify your email address:</p>
+    <a href="${verificationLink}">Verify Email</a>
+    <p>If you didn't create an account, please ignore this email.</p>
+  `;
+
+  await sendEmail(email, subject, html);
+}
