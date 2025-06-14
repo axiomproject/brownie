@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '@/context/AuthContext';
 import { API_URL } from '@/config';
+import { Loader } from "lucide-react";
 import {
   Card,
   CardContent,
@@ -116,7 +117,11 @@ export default function Dashboard() {
   } satisfies ChartConfig;
 
   if (loading) {
-    return <div>Loading...</div>;
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <Loader className="h-8 w-8 animate-spin text-primary" />
+      </div>
+    );
   }
 
   return (
