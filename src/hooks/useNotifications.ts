@@ -12,8 +12,25 @@ export function useNotifications() {
   const LIMIT = 10;
 
   useEffect(() => {
-    const socketInstance = io(`${API_URL}:5000`);
+    const socketInstance = io(API_URL, {
+      path: '/socket.io',
+      transports: ['websocket', 'polling'],
+      autoConnect: true,
+      reconnection: true,
+      reconnectionAttempts: 5,
+      reconnectionDelay: 1000,
+      timeout: 20000
+    });
+
     setSocket(socketInstance);
+
+    socketInstance.on('connect', () => {
+      console.log('Socket connected successfully');
+    });
+
+    socketInstance.on('connect_error', (error) => {
+      console.error('Socket connection error:', error);
+    });
 
     fetchNotifications();
 
