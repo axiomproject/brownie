@@ -284,18 +284,20 @@ export default function Inventory() {
 
   const sortLogs = (data: InventoryLog[]): InventoryLog[] => {
     return [...data].sort((a, b) => {
+      if (!a || !b || !a.productId || !b.productId || !a.updatedBy || !b.updatedBy) return 0;
+      
       let aValue, bValue;
 
       // Handle nested properties
       if (logSortColumn === 'productId.name') {
-        aValue = a.productId.name;
-        bValue = b.productId.name;
+        aValue = a.productId.name || '';
+        bValue = b.productId.name || '';
       } else if (logSortColumn === 'updatedBy.name') {
-        aValue = a.updatedBy.name;
-        bValue = b.updatedBy.name;
+        aValue = a.updatedBy.name || '';
+        bValue = b.updatedBy.name || '';
       } else {
-        aValue = a[logSortColumn as keyof InventoryLog];
-        bValue = b[logSortColumn as keyof InventoryLog];
+        aValue = a[logSortColumn as keyof InventoryLog] || '';
+        bValue = b[logSortColumn as keyof InventoryLog] || '';
       }
       
       if (logSortDirection === 'asc') {
@@ -358,14 +360,18 @@ export default function Inventory() {
     if (!searchQuery) return logs;
     
     const query = searchQuery.toLowerCase().trim();
-    return logs.filter(log => 
-      log.productId.name.toLowerCase().includes(query) ||
-      log.variantName.toLowerCase().includes(query) ||
-      log.reason.toLowerCase().includes(query) ||
-      log.updatedBy.name.toLowerCase().includes(query) ||
-      log.previousQuantity.toString().includes(query) ||
-      log.newQuantity.toString().includes(query)
-    );
+    return logs.filter(log => {
+      if (!log || !log.productId || !log.updatedBy) return false;
+      
+      return (
+        log.productId.name?.toLowerCase().includes(query) ||
+        log.variantName?.toLowerCase().includes(query) ||
+        log.reason?.toLowerCase().includes(query) ||
+        log.updatedBy.name?.toLowerCase().includes(query) ||
+        log.previousQuantity?.toString().includes(query) ||
+        log.newQuantity?.toString().includes(query)
+      );
+    });
   };
 
   const paginatedProducts = () => {
@@ -383,7 +389,16 @@ export default function Inventory() {
   };
 
   const paginatedLogs = () => {
-    const filteredData = filterLogs(logs);
+    // Filter out invalid logs first
+    const validLogs = logs.filter(log => 
+      log && 
+      log.productId && 
+      log.productId.name && 
+      log.updatedBy && 
+      log.updatedBy.name
+    );
+    
+    const filteredData = filterLogs(validLogs);
     const sortedData = sortLogs(filteredData);
     const startIndex = (logsCurrentPage - 1) * itemsPerPage;
     const endIndex = startIndex + itemsPerPage;
