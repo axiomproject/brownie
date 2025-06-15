@@ -255,11 +255,22 @@ export default function Login() {
   };
 
   const triggerGoogleSignIn = () => {
-    // Programmatically click the hidden Google button
-    const googleBtn = document.querySelector<HTMLElement>('[id^="googleButton"] div[role="button"]');
-    if (googleBtn) {
-      googleBtn.click();
+    if (!window.google?.accounts?.id) {
+      toast.error('Google Sign-In is not available');
+      return;
     }
+
+    // Use the prompt method instead of clicking the button
+    window.google.accounts.id.prompt((notification) => {
+      if (notification.isNotDisplayed()) {
+        console.error('One Tap not displayed:', notification.getNotDisplayedReason());
+        toast.error('Google Sign-In popup was blocked. Please check your browser settings.');
+      } else if (notification.isSkippedMoment()) {
+        console.log('User skipped sign in');
+      } else if (notification.isDismissedMoment()) {
+        console.log('User dismissed sign in');
+      }
+    });
   };
 
   // Add this function to reinitialize Google button
@@ -269,8 +280,12 @@ export default function Login() {
       return;
     }
 
-    if (window.google?.accounts?.id) {
+    const initGoogle = () => {
       try {
+        if (!window.google?.accounts?.id) {
+          throw new Error('Google API not loaded');
+        }
+
         window.google.accounts.id.initialize({
           client_id: import.meta.env.VITE_GOOGLE_CLIENT_ID,
           callback: handleGoogleSignIn,
@@ -280,28 +295,44 @@ export default function Login() {
 
         const buttonDiv = document.getElementById('googleButton');
         if (buttonDiv) {
+          // Make sure the container is visible and sized properly
+          buttonDiv.style.width = '100%';
+          buttonDiv.style.height = '40px';
+          buttonDiv.className = 'block w-full h-[40px]';
+          
           window.google.accounts.id.renderButton(buttonDiv, {
             type: 'standard',
-            theme: 'outline',
+            theme: settings.theme === 'dark' ? 'filled_black' : 'outline',
             size: 'large',
-            text: 'continue_with',
+            text: 'signin_with',
             shape: 'rectangular',
+            width: '100%',
           });
         }
       } catch (error) {
         console.error('Error initializing Google Sign-In:', error);
         toast.error('Failed to initialize Google Sign-In');
       }
+    };
+
+    // Clear any existing button first
+    const buttonDiv = document.getElementById('googleButton');
+    if (buttonDiv) {
+      buttonDiv.innerHTML = '';
+    }
+
+    if (window.google?.accounts?.id) {
+      initGoogle();
     } else {
-      // Retry with a limit
-      const retryCount = (window as any).googleInitRetries || 0;
-      if (retryCount < 5) {
-        (window as any).googleInitRetries = retryCount + 1;
-        setTimeout(initializeGoogleSignIn, 100);
-      } else {
-        console.error('Failed to load Google Sign-In after multiple attempts');
-        toast.error('Google Sign-In is temporarily unavailable');
-      }
+      const checkGoogleInterval = setInterval(() => {
+        if (window.google?.accounts?.id) {
+          clearInterval(checkGoogleInterval);
+          initGoogle();
+        }
+      }, 100);
+
+      // Clear interval after 5 seconds if Google doesn't load
+      setTimeout(() => clearInterval(checkGoogleInterval), 5000);
     }
   };
 
@@ -355,17 +386,21 @@ export default function Login() {
                     </CardDescription>
                   </CardHeader>
                   <CardContent className="space-y-4 px-0">
-                    <div id="googleButton" className="w-0 h-0 opacity-0 overflow-hidden" />
-                    
-                    <Button
-                      type="button"
-                      variant="outline"
-                      className="w-full flex items-center justify-center gap-2"
-                      onClick={triggerGoogleSignIn}
-                    >
-                      <GoogleLogo />
-                      Continue with Google
-                    </Button>
+                    <div className="space-y-4">
+                      <div 
+                        id="googleButton"
+                        className="block w-full h-[40px]"
+                      />
+                      <Button
+                        type="button"
+                        variant="outline"
+                        className="w-full flex items-center justify-center gap-2"
+                        onClick={triggerGoogleSignIn}
+                      >
+                        <GoogleLogo />
+                        Continue with Google
+                      </Button>
+                    </div>
 
                     <div className="relative my-4">
                       <div className="absolute inset-0 flex items-center">
