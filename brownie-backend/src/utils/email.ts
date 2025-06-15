@@ -69,7 +69,7 @@ const emailStyles = `
     }
     .button {
       display: inline-block;
-      background-color: #7c3aed;
+      background-color:rgb(255, 255, 255);
       color: #ffffff;
       padding: 12px 24px;
       text-decoration: none;
@@ -78,7 +78,7 @@ const emailStyles = `
       margin: 16px 0;
     }
     .button:hover {
-      background-color: #6d28d9;
+      background-color:rgb(255, 255, 255);
     }
     .footer {
       margin-top: 32px;
@@ -123,7 +123,7 @@ async function sendEmail(to: string, subject: string, content: string, callback?
         <div class="email-container">
           ${content}
           <div class="footer">
-            <p>© ${new Date().getFullYear()} ${process.env.APP_NAME || 'Shop'}. All rights reserved.</p>
+            <p>© ${new Date().getFullYear()} ${process.env.APP_NAME || 'Brownie'}. All rights reserved.</p>
           </div>
         </div>
       </body>

@@ -16,7 +16,7 @@ export default function About() {
     },
     aboutPageStory: {
       title: 'Started in 2010',
-      content: 'What began as a passion project...',
+      content: '',
       additionalContent: 'Every brownie is crafted with care...',
       image: 'https://images.unsplash.com/photo-1604761483402-1e07d167c09b?auto=format&fit=crop&w=600'
     },

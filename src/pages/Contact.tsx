@@ -30,7 +30,7 @@ export default function Contact() {
   const [pageContent, setPageContent] = useState({
     contactPageHero: {
       title: 'Get in Touch',
-      subtitle: 'Have questions? We\'d love to hear from you.'
+      subtitle: 'Have questions? We would love to hear from you.'
     },
     contactPageInfo: {
       address: '123 Brownie Street, Sweet City',
