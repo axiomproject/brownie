@@ -145,7 +145,7 @@ export default function Home() {
               transition={{ duration: 0.6 }}
               className="text-4xl md:text-6xl font-bold mb-4 text-white"
             >
-              {pageContent.heroTitle || 'Welcome to Our Shop'}
+              {pageContent.heroTitle || 'Heavenly Brownies'}
             </motion.h1>
             <motion.p 
               initial={{ opacity: 0, y: 20 }}
@@ -153,7 +153,7 @@ export default function Home() {
               transition={{ duration: 0.6, delay: 0.2 }}
               className="text-lg md:text-xl mb-8 text-white/90 max-w-2xl"
             >
-              {pageContent.heroSubtitle || 'Discover our delicious treats'}
+              {pageContent.heroSubtitle || 'Indulge in our handcrafted, gourmet brownies'}
             </motion.p>
             <motion.div
               initial={{ opacity: 0, y: 20 }}
