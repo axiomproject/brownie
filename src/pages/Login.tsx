@@ -262,58 +262,58 @@ export default function Login() {
     }
   };
 
-  // Add this function to reinitialize Google button
+  // Replace the initializeGoogleSignIn function with this updated version
   const initializeGoogleSignIn = () => {
     if (!import.meta.env.VITE_GOOGLE_CLIENT_ID) {
       console.error('Google Client ID is not configured');
       return;
     }
 
-    if (window.google?.accounts?.id) {
-      try {
-        window.google.accounts.id.initialize({
-          client_id: import.meta.env.VITE_GOOGLE_CLIENT_ID,
-          callback: handleGoogleSignIn,
-          auto_select: false,
-          cancel_on_tap_outside: true,
-        });
-
-        const buttonDiv = document.getElementById('googleButton');
-        if (buttonDiv) {
-          window.google.accounts.id.renderButton(buttonDiv, {
-            type: 'standard',
-            theme: 'outline',
-            size: 'large',
-            text: 'continue_with',
-            shape: 'rectangular',
+    const initInterval = setInterval(() => {
+      if (window.google?.accounts?.id) {
+        clearInterval(initInterval);
+        try {
+          window.google.accounts.id.initialize({
+            client_id: import.meta.env.VITE_GOOGLE_CLIENT_ID,
+            callback: handleGoogleSignIn,
+            auto_select: false,
+            cancel_on_tap_outside: true,
+            context: 'signin' // Add this line
           });
+
+          const buttonDiv = document.getElementById('googleButton');
+          if (buttonDiv) {
+            window.google.accounts.id.renderButton(buttonDiv, {
+              type: 'standard',
+              theme: settings.theme === 'dark' ? 'filled_black' : 'outline',
+              size: 'large',
+              text: 'continue_with',
+              shape: 'rectangular',
+              width: buttonDiv.offsetWidth,
+            });
+          }
+        } catch (error) {
+          console.error('Error initializing Google Sign-In:', error);
         }
-      } catch (error) {
-        console.error('Error initializing Google Sign-In:', error);
-        toast.error('Failed to initialize Google Sign-In');
       }
-    } else {
-      // Retry with a limit
-      const retryCount = (window as any).googleInitRetries || 0;
-      if (retryCount < 5) {
-        (window as any).googleInitRetries = retryCount + 1;
-        setTimeout(initializeGoogleSignIn, 100);
-      } else {
-        console.error('Failed to load Google Sign-In after multiple attempts');
-        toast.error('Google Sign-In is temporarily unavailable');
-      }
-    }
+    }, 100);
+
+    // Clear interval after 10 seconds to prevent infinite checking
+    setTimeout(() => clearInterval(initInterval), 10000);
   };
 
-  // Modify useEffect to use the new function
+  // Update the useEffect for Google Sign-In
   useEffect(() => {
-    initializeGoogleSignIn();
+    // Small delay to ensure DOM is ready
+    const timer = setTimeout(initializeGoogleSignIn, 500);
+    
     return () => {
+      clearTimeout(timer);
       if (window.google?.accounts?.id) {
         window.google.accounts.id.cancel();
       }
     };
-  }, [isRegisterView]); // Add isRegisterView as dependency
+  }, [isRegisterView, settings.theme]); // Add settings.theme as dependency
 
   // Modify the sign in button click handler
   const handleSignInClick = () => {
