@@ -83,11 +83,37 @@ export async function sendOrderConfirmationEmail(email: string, order: IOrder | 
 }
 
 export async function sendDeliveryConfirmationEmail(email: string, order: IOrder | IOrderPopulated): Promise<void> {
-  const subject = 'Order Delivered';
+  const feedbackUrl = `${process.env.FRONTEND_URL}/feedback/${order._id.toString()}`;
+  const subject = 'Order Delivered - We Value Your Feedback!';
   const html = `
-    <h1>Your order has been delivered!</h1>
-    <p>Order #${order._id} has been successfully delivered.</p>
-    <p>Thank you for choosing our service!</p>
+    <h1>Your Order Has Been Delivered!</h1>
+    <p>Dear Customer,</p>
+    <p>We're happy to confirm that your order #${order._id.toString().slice(-6)} has been delivered.</p>
+    
+    <h2>Order Details:</h2>
+    <ul>
+      ${order.items.map((item: OrderItem) => `
+        <li>${item.name} (${item.variantName}) - ${item.quantity}x</li>
+      `).join('')}
+    </ul>
+    
+    <p>We hope you enjoy your brownies! Your feedback is important to us.</p>
+    <p>Please take a moment to share your experience:</p>
+    
+    <div style="text-align: center; margin: 30px 0;">
+      <a href="${feedbackUrl}" style="
+        background-color: #7c3aed;
+        color: white;
+        padding: 12px 24px;
+        text-decoration: none;
+        border-radius: 6px;
+        display: inline-block;
+      ">Leave Feedback</a>
+    </div>
+    
+    <p>Thank you for choosing ${process.env.APP_NAME || 'our shop'}!</p>
+    
+    <p>Best regards,<br>${process.env.APP_NAME || 'Shop'} Team</p>
   `;
 
   await sendEmail(email, subject, html);
