@@ -4,12 +4,13 @@
     <meta charset="UTF-8" />
     <link rel="icon" type="image/svg+xml" href="/brownie.png" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="google-signin-client_id" content="%VITE_GOOGLE_CLIENT_ID%" />
     <title>Brownie</title>
-    <!-- Move Google script to head and remove async/defer for this case -->
-    <script src="https://accounts.google.com/gsi/client" async defer></script>
   </head>
   <body>
     <div id="root"></div>
     <script type="module" src="/src/main.tsx"></script>
+    <!-- Move script to end of body and remove async/defer -->
+    <script src="https://accounts.google.com/gsi/client"></script>
   </body>
 </html>
