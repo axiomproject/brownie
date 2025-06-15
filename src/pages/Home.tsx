@@ -100,70 +100,75 @@ export default function Home() {
   }, []);
 
   return (
-    <>
+    <div className="flex flex-col min-h-screen">
       <Navbar />
-      <div className="min-h-screen bg-background">
+      <main className="flex-1 pt-16"> {/* Add padding-top to account for navbar */}
         {/* Hero Section */}
-        <section className="relative h-[80vh] bg-muted">
-          <Carousel
-            opts={{
-              loop: true,
-            }}
-            plugins={[plugin.current]}
-            className="w-full h-full relative" // Added relative
-          >
-            <CarouselContent className="h-full">
-              {heroImages.map((image, id) => (
-                <CarouselItem key={id} className="h-full">
-                  <div className="relative h-full"> {/* Added wrapper div */}
-                    <img
-                      src={image}
-                      alt={`Hero slide ${id + 1}`}
-                      className="absolute inset-0 w-full h-full object-cover"
-                      onError={(e) => {
-                        console.error(`Failed to load image: ${image}`);
-                      }}
-                    />
-                    <div className="absolute inset-0 bg-black/50" /> {/* Simplified overlay */}
-                    <div className="relative h-full flex flex-col items-center justify-center text-center p-4"> {/* Changed to relative */}
-                      <motion.h1 
-                        initial={{ opacity: 0, y: 20 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ duration: 0.6 }}
-                        className="text-4xl md:text-6xl font-bold mb-4 text-white z-10"
-                      >
-                        {pageContent.heroTitle || 'Welcome to Our Shop'}
-                      </motion.h1>
-                      <motion.p 
-                        initial={{ opacity: 0, y: 20 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ duration: 0.6, delay: 0.2 }}
-                        className="text-lg md:text-xl mb-8 text-white z-10 max-w-2xl"
-                      >
-                        {pageContent.heroSubtitle || 'Discover our delicious treats'}
-                      </motion.p>
-                      <motion.div
-                        initial={{ opacity: 0, y: 20 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ duration: 0.6, delay: 0.4 }}
-                        className="z-10"
-                      >
-                        <Button 
-                          size="lg" 
-                          onClick={() => navigate('/menu')}
-                          className="bg-white text-foreground hover:bg-white/90"
-                        >
-                          Order Now
-                        </Button>
-                      </motion.div>
+        <section className="h-[calc(100vh-4rem)]"> {/* Updated height calculation */}
+          <div className="relative w-full h-full"> {/* Changed to relative and full height */}
+            <Carousel
+              opts={{
+                loop: true,
+                skipSnaps: false,
+                align: 'start',
+              }}
+              plugins={[plugin.current]}
+              className="w-full h-full"
+            >
+              <CarouselContent className="-ml-0">
+                {heroImages.map((image, id) => (
+                  <CarouselItem key={id} className="pl-0">
+                    <div className="relative w-full h-[calc(100vh-4rem)]"> {/* Updated height calculation */}
+                      <img
+                        src={image}
+                        alt={`Hero slide ${id + 1}`}
+                        className="absolute inset-0 w-full h-full object-cover"
+                        onError={(e) => {
+                          console.error(`Failed to load image: ${image}`);
+                        }}
+                      />
+                      <div className="absolute inset-0 bg-black/50" />
                     </div>
-                  </div>
-                </CarouselItem>
-              ))}
-            </CarouselContent>
-            <CarouselPrevious className="left-4 z-20" />
-            <CarouselNext className="right-4 z-20" />
-          </Carousel>
+                  </CarouselItem>
+                ))}
+              </CarouselContent>
+              <CarouselPrevious className="left-4 z-20" />
+              <CarouselNext className="right-4 z-20" />
+            </Carousel>
+          </div>
+
+          {/* Fixed content overlay - Stays in place during slides */}
+          <div className="absolute inset-0 z-10 flex flex-col items-center justify-center text-center p-4">
+            <motion.h1 
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.6 }}
+              className="text-4xl md:text-6xl font-bold mb-4 text-white"
+            >
+              {pageContent.heroTitle || 'Welcome to Our Shop'}
+            </motion.h1>
+            <motion.p 
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.6, delay: 0.2 }}
+              className="text-lg md:text-xl mb-8 text-white/90 max-w-2xl"
+            >
+              {pageContent.heroSubtitle || 'Discover our delicious treats'}
+            </motion.p>
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.6, delay: 0.4 }}
+            >
+              <Button 
+                size="lg" 
+                onClick={() => navigate('/menu')}
+                className="bg-background text-foreground hover:bg-white/90"
+              >
+                Order Now
+              </Button>
+            </motion.div>
+          </div>
         </section>
 
         {/* Featured Products */}
@@ -251,7 +256,7 @@ export default function Home() {
             </div>
           </motion.div>
         </section>
-      </div>
-    </>
+      </main>
+    </div>
   );
 }
