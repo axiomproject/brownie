@@ -32,9 +32,9 @@ export default function Home() {
   );
 
   const heroImages = [
-    '/images/hero/1.jpg',  // Update these paths based on your image locations
-    '/images/hero/2.jpg',
-    '/images/hero/3.jpg'
+    '/1.jpg',  // Changed paths to root directory
+    '/2.jpg',
+    '/3.jpg'
   ];
 
   useEffect(() => {
@@ -104,58 +104,59 @@ export default function Home() {
       <Navbar />
       <div className="min-h-screen bg-background">
         {/* Hero Section */}
-        <section className="relative h-[80vh] bg-muted overflow-hidden">
+        <section className="relative h-[80vh] bg-muted">
           <Carousel
             opts={{
               loop: true,
             }}
             plugins={[plugin.current]}
-            className="w-full h-full"
+            className="w-full h-full relative" // Added relative
           >
             <CarouselContent className="h-full">
               {heroImages.map((image, id) => (
-                <CarouselItem key={id} className="h-full relative">
-                  <img
-                    src={image}
-                    alt={`Hero slide ${id + 1}`}
-                    className="absolute inset-0 w-full h-full object-cover"
-                    onError={(e) => {
-                      e.currentTarget.src = '/images/fallback.jpg'; // Add a fallback image
-                      console.error(`Failed to load image: ${image}`);
-                    }}
-                  />
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/50 to-black/30" />
-                  <div className="absolute inset-0 flex flex-col items-center justify-center text-center p-4 z-10">
-                    <motion.h1 
-                      initial={{ opacity: 0, y: 20 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      transition={{ duration: 0.6 }}
-                      className="text-4xl md:text-6xl font-bold mb-4 text-white drop-shadow-lg"
-                    >
-                      {pageContent.heroTitle || 'Welcome to Our Shop'}
-                    </motion.h1>
-                    <motion.p 
-                      initial={{ opacity: 0, y: 20 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      transition={{ duration: 0.6, delay: 0.2 }}
-                      className="text-lg md:text-xl mb-8 text-white/90 drop-shadow-lg max-w-2xl"
-                    >
-                      {pageContent.heroSubtitle || 'Discover our delicious treats'}
-                    </motion.p>
-                    <motion.div
-                      initial={{ opacity: 0, y: 20 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      transition={{ duration: 0.6, delay: 0.4 }}
-                    >
-                      <Button 
-                        size="lg" 
-                        onClick={() => navigate('/menu')}
-                        variant="default"
-                        className="bg-white text-foreground hover:bg-white/90 shadow-lg"
+                <CarouselItem key={id} className="h-full">
+                  <div className="relative h-full"> {/* Added wrapper div */}
+                    <img
+                      src={image}
+                      alt={`Hero slide ${id + 1}`}
+                      className="absolute inset-0 w-full h-full object-cover"
+                      onError={(e) => {
+                        console.error(`Failed to load image: ${image}`);
+                      }}
+                    />
+                    <div className="absolute inset-0 bg-black/50" /> {/* Simplified overlay */}
+                    <div className="relative h-full flex flex-col items-center justify-center text-center p-4"> {/* Changed to relative */}
+                      <motion.h1 
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ duration: 0.6 }}
+                        className="text-4xl md:text-6xl font-bold mb-4 text-white z-10"
                       >
-                        Order Now
-                      </Button>
-                    </motion.div>
+                        {pageContent.heroTitle || 'Welcome to Our Shop'}
+                      </motion.h1>
+                      <motion.p 
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ duration: 0.6, delay: 0.2 }}
+                        className="text-lg md:text-xl mb-8 text-white z-10 max-w-2xl"
+                      >
+                        {pageContent.heroSubtitle || 'Discover our delicious treats'}
+                      </motion.p>
+                      <motion.div
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ duration: 0.6, delay: 0.4 }}
+                        className="z-10"
+                      >
+                        <Button 
+                          size="lg" 
+                          onClick={() => navigate('/menu')}
+                          className="bg-white text-foreground hover:bg-white/90"
+                        >
+                          Order Now
+                        </Button>
+                      </motion.div>
+                    </div>
                   </div>
                 </CarouselItem>
               ))}
