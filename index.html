@@ -10,7 +10,10 @@
   <body>
     <div id="root"></div>
     <script type="module" src="/src/main.tsx"></script>
-    <!-- Move script to end of body and remove async/defer -->
-    <script src="https://accounts.google.com/gsi/client"></script>
+    <!-- Update Google Sign-In script with nonce for better security -->
+    <script
+      src="https://accounts.google.com/gsi/client"
+      nonce="random-nonce"
+    ></script>
   </body>
 </html>

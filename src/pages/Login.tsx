@@ -260,37 +260,39 @@ export default function Login() {
       return;
     }
 
-    // Try to show the One Tap UI first
-    window.google.accounts.id.prompt((notification) => {
-      if (notification.isNotDisplayed() || notification.isSkippedMoment()) {
-        // If One Tap is blocked or skipped, manually cancel and reinitialize
-        window.google?.accounts?.id?.cancel?.();
-        
-        // Reinitialize with popup mode
-        window.google?.accounts?.id?.initialize({
-          client_id: import.meta.env.VITE_GOOGLE_CLIENT_ID,
-          callback: handleGoogleSignIn,
-          auto_select: false,
-          cancel_on_tap_outside: true,
-          itp_support: true,
-          ux_mode: 'popup'
-        });
+    try {
+      // Initialize with FedCM settings
+      window.google.accounts.id.initialize({
+        client_id: import.meta.env.VITE_GOOGLE_CLIENT_ID,
+        callback: handleGoogleSignIn,
+        use_fedcm_for_prompt: true
+      });
 
-        // Trigger the popup manually
-        window.google?.accounts?.id?.renderButton(
-          document.createElement('div'),
-          { type: 'standard' }
-        );
+      // Create a temporary container for the button
+      const buttonContainer = document.createElement('div');
+      document.body.appendChild(buttonContainer);
 
-        // Click the hidden button to show popup
-        const googleBtn = document.querySelector('div[role="button"]');
-        if (googleBtn) {
-          (googleBtn as HTMLElement).click();
-        } else {
-          toast.error('Unable to open Google Sign-In. Please try again.');
-        }
+      // Render and click the button
+      window.google.accounts.id.renderButton(buttonContainer, {
+        type: 'standard',
+        theme: settings.theme === 'dark' ? 'filled_black' : 'outline',
+        size: 'large',
+        width: 400
+      });
+
+      // Find and click the button
+      const button = buttonContainer.querySelector('[role="button"]');
+      if (button) {
+        (button as HTMLElement).click();
+        // Clean up
+        setTimeout(() => document.body.removeChild(buttonContainer), 1000);
+      } else {
+        throw new Error('Could not create sign-in button');
       }
-    });
+    } catch (error) {
+      console.error('Google Sign-In error:', error);
+      toast.error('Unable to open Google Sign-In. Please try again.');
+    }
   };
 
   // Add this function to reinitialize Google button
@@ -312,6 +314,7 @@ export default function Login() {
           callback: handleGoogleSignIn,
           auto_select: false,
           cancel_on_tap_outside: true,
+          use_fedcm_for_prompt: true // Add FedCM support
         });
       } catch (error) {
         console.error('Error initializing Google Sign-In:', error);
