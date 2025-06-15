@@ -260,15 +260,35 @@ export default function Login() {
       return;
     }
 
-    // Use the prompt method instead of clicking the button
+    // Try to show the One Tap UI first
     window.google.accounts.id.prompt((notification) => {
-      if (notification.isNotDisplayed()) {
-        console.error('One Tap not displayed:', notification.getNotDisplayedReason());
-        toast.error('Google Sign-In popup was blocked. Please check your browser settings.');
-      } else if (notification.isSkippedMoment()) {
-        console.log('User skipped sign in');
-      } else if (notification.isDismissedMoment()) {
-        console.log('User dismissed sign in');
+      if (notification.isNotDisplayed() || notification.isSkippedMoment()) {
+        // If One Tap is blocked or skipped, manually cancel and reinitialize
+        window.google?.accounts?.id?.cancel?.();
+        
+        // Reinitialize with popup mode
+        window.google?.accounts?.id?.initialize({
+          client_id: import.meta.env.VITE_GOOGLE_CLIENT_ID,
+          callback: handleGoogleSignIn,
+          auto_select: false,
+          cancel_on_tap_outside: true,
+          itp_support: true,
+          ux_mode: 'popup'
+        });
+
+        // Trigger the popup manually
+        window.google?.accounts?.id?.renderButton(
+          document.createElement('div'),
+          { type: 'standard' }
+        );
+
+        // Click the hidden button to show popup
+        const googleBtn = document.querySelector('div[role="button"]');
+        if (googleBtn) {
+          (googleBtn as HTMLElement).click();
+        } else {
+          toast.error('Unable to open Google Sign-In. Please try again.');
+        }
       }
     });
   };
@@ -282,44 +302,22 @@ export default function Login() {
 
     const initGoogle = () => {
       try {
-        if (!window.google?.accounts?.id) {
+        const google = window.google;
+        if (!google?.accounts?.id) {
           throw new Error('Google API not loaded');
         }
 
-        window.google.accounts.id.initialize({
+        google.accounts.id.initialize({
           client_id: import.meta.env.VITE_GOOGLE_CLIENT_ID,
           callback: handleGoogleSignIn,
           auto_select: false,
           cancel_on_tap_outside: true,
         });
-
-        const buttonDiv = document.getElementById('googleButton');
-        if (buttonDiv) {
-          // Make sure the container is visible and sized properly
-          buttonDiv.style.width = '100%';
-          buttonDiv.style.height = '40px';
-          buttonDiv.className = 'block w-full h-[40px]';
-          
-          window.google.accounts.id.renderButton(buttonDiv, {
-            type: 'standard',
-            theme: settings.theme === 'dark' ? 'filled_black' : 'outline',
-            size: 'large',
-            text: 'signin_with',
-            shape: 'rectangular',
-            width: '100%',
-          });
-        }
       } catch (error) {
         console.error('Error initializing Google Sign-In:', error);
         toast.error('Failed to initialize Google Sign-In');
       }
     };
-
-    // Clear any existing button first
-    const buttonDiv = document.getElementById('googleButton');
-    if (buttonDiv) {
-      buttonDiv.innerHTML = '';
-    }
 
     if (window.google?.accounts?.id) {
       initGoogle();
@@ -387,10 +385,6 @@ export default function Login() {
                   </CardHeader>
                   <CardContent className="space-y-4 px-0">
                     <div className="space-y-4">
-                      <div 
-                        id="googleButton"
-                        className="block w-full h-[40px]"
-                      />
                       <Button
                         type="button"
                         variant="outline"
