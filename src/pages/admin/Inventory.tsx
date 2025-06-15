@@ -256,16 +256,18 @@ export default function Inventory() {
 
   const sortData = (data: Product[]): Product[] => {
     return [...data].sort((a, b) => {
+      if (!a || !b) return 0; // Handle null values
+
       let aValue: any, bValue: any;
 
       if (sortColumn === 'stockQuantity') {
-        // For stockQuantity, sum up all variants
-        aValue = a.variants.reduce((sum, v) => sum + (v.stockQuantity || 0), 0);
-        bValue = b.variants.reduce((sum, v) => sum + (v.stockQuantity || 0), 0);
+        // For stockQuantity, sum up all variants, handling null values
+        aValue = a.variants?.reduce((sum, v) => sum + (v?.stockQuantity || 0), 0) || 0;
+        bValue = b.variants?.reduce((sum, v) => sum + (v?.stockQuantity || 0), 0) || 0;
       } else {
-        // For other columns, compare directly
-        aValue = a[sortColumn]?.toString().toLowerCase();
-        bValue = b[sortColumn]?.toString().toLowerCase();
+        // For other columns, compare directly with null checks
+        aValue = a[sortColumn]?.toString().toLowerCase() || '';
+        bValue = b[sortColumn]?.toString().toLowerCase() || '';
       }
 
       // Numeric comparison for stockQuantity
@@ -341,12 +343,14 @@ export default function Inventory() {
     
     const query = searchQuery.toLowerCase().trim();
     return products.filter(product => 
-      product.name.toLowerCase().includes(query) ||
-      product.category.toLowerCase().includes(query) ||
-      product.variants.some(variant => 
-        variant.name.toLowerCase().includes(query) ||
-        variant.stockQuantity.toString().includes(query)
-      )
+      product && // Check if product exists
+      (product.name?.toLowerCase().includes(query) ||
+      product.category?.toLowerCase().includes(query) ||
+      product.variants?.some(variant => 
+        variant && // Check if variant exists
+        (variant.name?.toLowerCase().includes(query) ||
+        variant.stockQuantity?.toString().includes(query))
+      ))
     );
   };
 
@@ -365,8 +369,13 @@ export default function Inventory() {
   };
 
   const paginatedProducts = () => {
-    // First filter, then sort, then paginate
-    const filteredData = filterProducts(products);
+    // First filter out any null or invalid products
+    const validProducts = products.filter(product => 
+      product && product.name && Array.isArray(product.variants)
+    );
+    
+    // Then apply filtering
+    const filteredData = filterProducts(validProducts);
     const sortedData = sortData(filteredData);
     const startIndex = (currentPage - 1) * itemsPerPage;
     const endIndex = startIndex + itemsPerPage;
