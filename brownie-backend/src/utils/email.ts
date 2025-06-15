@@ -41,7 +41,95 @@ interface EmailCallback {
   (error: Error | null, success?: any): void;
 }
 
-async function sendEmail(to: string, subject: string, html: string, callback?: EmailCallback) {
+// Add this shared email style template
+const emailStyles = `
+  <style>
+    .email-container {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+      max-width: 600px;
+      margin: 0 auto;
+      padding: 20px;
+      background-color: #ffffff;
+      border-radius: 8px;
+      color: #334155;
+    }
+    .header {
+      text-align: center;
+      margin-bottom: 30px;
+    }
+    h1 {
+      color: #1e293b;
+      font-size: 24px;
+      font-weight: 600;
+      margin-bottom: 16px;
+    }
+    .content {
+      line-height: 1.6;
+      margin-bottom: 24px;
+    }
+    .button {
+      display: inline-block;
+      background-color: #7c3aed;
+      color: #ffffff;
+      padding: 12px 24px;
+      text-decoration: none;
+      border-radius: 6px;
+      font-weight: 500;
+      margin: 16px 0;
+    }
+    .button:hover {
+      background-color: #6d28d9;
+    }
+    .footer {
+      margin-top: 32px;
+      padding-top: 16px;
+      border-top: 1px solid #e2e8f0;
+      text-align: center;
+      font-size: 14px;
+      color: #64748b;
+    }
+    .order-details {
+      background-color: #f8fafc;
+      padding: 16px;
+      border-radius: 6px;
+      margin: 16px 0;
+    }
+    .order-items {
+      list-style: none;
+      padding: 0;
+      margin: 12px 0;
+    }
+    .order-items li {
+      padding: 8px 0;
+      border-bottom: 1px solid #e2e8f0;
+    }
+    .order-items li:last-child {
+      border-bottom: none;
+    }
+  </style>
+`;
+
+// Update the sendEmail function to include the styles
+async function sendEmail(to: string, subject: string, content: string, callback?: EmailCallback) {
+  const html = `
+    <!DOCTYPE html>
+    <html>
+      <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        ${emailStyles}
+      </head>
+      <body>
+        <div class="email-container">
+          ${content}
+          <div class="footer">
+            <p>© ${new Date().getFullYear()} ${process.env.APP_NAME || 'Shop'}. All rights reserved.</p>
+          </div>
+        </div>
+      </body>
+    </html>
+  `;
+
   const mailOptions = {
     from: process.env.GMAIL_USER,
     to,
@@ -66,94 +154,106 @@ interface OrderItem {
 }
 
 export async function sendOrderConfirmationEmail(email: string, order: IOrder | IOrderPopulated): Promise<void> {
-  const subject = 'Order Confirmation';
-  const html = `
-    <h1>Thank you for your order!</h1>
-    <p>Your order #${order._id} has been received and is being processed.</p>
-    <h2>Order Details:</h2>
-    <ul>
-      ${order.items.map((item: OrderItem) => `
-        <li>${item.name} (${item.variantName}) - Quantity: ${item.quantity}</li>
-      `).join('')}
-    </ul>
-    <p>Total Amount: ₱${order.totalAmount}</p>
+  const content = `
+    <div class="header">
+      <h1>Thank you for your order!</h1>
+    </div>
+    <div class="content">
+      <p>Your order #${order._id.toString().slice(-6)} has been received and is being processed.</p>
+      <div class="order-details">
+        <h2>Order Details</h2>
+        <ul class="order-items">
+          ${order.items.map((item: OrderItem) => `
+            <li>${item.name} (${item.variantName}) × ${item.quantity}</li>
+          `).join('')}
+        </ul>
+        <p><strong>Total Amount:</strong> ₱${order.totalAmount}</p>
+      </div>
+    </div>
   `;
 
-  await sendEmail(email, subject, html);
+  await sendEmail(email, 'Order Confirmation', content);
 }
 
 export async function sendDeliveryConfirmationEmail(email: string, order: IOrder | IOrderPopulated): Promise<void> {
   const feedbackUrl = `${process.env.FRONTEND_URL}/feedback/${order._id.toString()}`;
-  const subject = 'Order Delivered - We Value Your Feedback!';
-  const html = `
-    <h1>Your Order Has Been Delivered!</h1>
-    <p>Dear Customer,</p>
-    <p>We're happy to confirm that your order #${order._id.toString().slice(-6)} has been delivered.</p>
-    
-    <h2>Order Details:</h2>
-    <ul>
-      ${order.items.map((item: OrderItem) => `
-        <li>${item.name} (${item.variantName}) - ${item.quantity}x</li>
-      `).join('')}
-    </ul>
-    
-    <p>We hope you enjoy your brownies! Your feedback is important to us.</p>
-    <p>Please take a moment to share your experience:</p>
-    
-    <div style="text-align: center; margin: 30px 0;">
-      <a href="${feedbackUrl}" style="
-        background-color: #7c3aed;
-        color: white;
-        padding: 12px 24px;
-        text-decoration: none;
-        border-radius: 6px;
-        display: inline-block;
-      ">Leave Feedback</a>
+  const content = `
+    <div class="header">
+      <h1>Your Order Has Been Delivered!</h1>
     </div>
-    
-    <p>Thank you for choosing ${process.env.APP_NAME || 'our shop'}!</p>
-    
-    <p>Best regards,<br>${process.env.APP_NAME || 'Shop'} Team</p>
+    <div class="content">
+      <p>Dear Customer,</p>
+      <p>We're happy to confirm that your order #${order._id.toString().slice(-6)} has been delivered.</p>
+      
+      <div class="order-details">
+        <h2>Order Details</h2>
+        <ul class="order-items">
+          ${order.items.map((item: OrderItem) => `
+            <li>${item.name} (${item.variantName}) × ${item.quantity}</li>
+          `).join('')}
+        </ul>
+      </div>
+      
+      <p>We hope you enjoy your brownies! Your feedback is important to us.</p>
+      <div style="text-align: center;">
+        <a href="${feedbackUrl}" class="button">Leave Feedback</a>
+      </div>
+    </div>
   `;
 
-  await sendEmail(email, subject, html);
+  await sendEmail(email, 'Order Delivered - We Value Your Feedback!', content);
 }
 
 export async function sendOrderRefundEmail(email: string, order: IOrder | IOrderPopulated): Promise<void> {
-  const subject = 'Order Refund Confirmation';
-  const html = `
-    <h1>Refund Confirmation</h1>
-    <p>Your refund for order #${order._id} has been processed.</p>
-    <p>Amount: ₱${order.totalAmount}</p>
-    <p>The refund will be processed according to your original payment method.</p>
-    <p>If you have any questions, please contact our support team.</p>
+  const content = `
+    <div class="header">
+      <h1>Refund Confirmation</h1>
+    </div>
+    <div class="content">
+      <div class="order-details">
+        <p><strong>Order:</strong> #${order._id.toString().slice(-6)}</p>
+        <p><strong>Amount:</strong> ₱${order.totalAmount}</p>
+      </div>
+      <p>Your refund has been processed and will be returned to your original payment method.</p>
+      <p>If you have any questions, please contact our support team.</p>
+    </div>
   `;
 
-  await sendEmail(email, subject, html);
+  await sendEmail(email, 'Refund Confirmation', content);
 }
 
 export async function sendPasswordResetEmail(email: string, resetToken: string): Promise<void> {
   const resetLink = `${process.env.FRONTEND_URL}/reset-password?token=${resetToken}`;
-  const subject = 'Password Reset Request';
-  const html = `
-    <h1>Password Reset Request</h1>
-    <p>You requested to reset your password. Click the link below to reset it:</p>
-    <a href="${resetLink}">Reset Password</a>
-    <p>If you didn't request this, please ignore this email.</p>
+  const content = `
+    <div class="header">
+      <h1>Reset Your Password</h1>
+    </div>
+    <div class="content">
+      <p>You requested to reset your password. Click the button below to set a new password:</p>
+      <div style="text-align: center;">
+        <a href="${resetLink}" class="button">Reset Password</a>
+      </div>
+      <p style="font-size: 14px; color: #64748b;">If you didn't request this, please ignore this email.</p>
+    </div>
   `;
 
-  await sendEmail(email, subject, html);
+  await sendEmail(email, 'Password Reset Request', content);
 }
 
 export async function sendVerificationEmail(email: string, verificationToken: string): Promise<void> {
   const verificationLink = `${process.env.FRONTEND_URL}/verify-email?token=${verificationToken}`;
-  const subject = 'Verify Your Email';
-  const html = `
-    <h1>Welcome!</h1>
-    <p>Please click the link below to verify your email address:</p>
-    <a href="${verificationLink}">Verify Email</a>
-    <p>If you didn't create an account, please ignore this email.</p>
+  const content = `
+    <div class="header">
+      <h1>Welcome to ${process.env.APP_NAME || 'our shop'}!</h1>
+    </div>
+    <div class="content">
+      <p>Please verify your email address to complete your registration:</p>
+      <div style="text-align: center;">
+        <a href="${verificationLink}" class="button">Verify Email</a>
+      </div>
+      <p style="font-size: 14px; color: #64748b;">If you didn't create an account, please ignore this email.</p>
+    </div>
   `;
 
-  await sendEmail(email, subject, html);
+  await sendEmail(email, 'Verify Your Email', content);
 }
