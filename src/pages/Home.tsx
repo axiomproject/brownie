@@ -100,12 +100,16 @@ export default function Home() {
   }, []);
 
   return (
-    <div className="flex flex-col min-h-screen">
-      <Navbar />
-      <main className="flex-1 pt-16"> {/* Add padding-top to account for navbar */}
+    <div className="flex flex-col min-h-screen bg-background"> {/* Added bg-background */}
+      <div className="fixed top-0 left-0 right-0"> {/* Add fixed navbar wrapper with highest z-index */}
+        <div className="relative z-50 bg-background">
+          <Navbar />
+        </div>
+      </div>
+      <main className="flex-1 mt-16"> {/* Add margin-top to account for fixed navbar */}
         {/* Hero Section */}
-        <section className="h-[calc(100vh-4rem)]"> {/* Updated height calculation */}
-          <div className="relative w-full h-full"> {/* Changed to relative and full height */}
+        <section className="relative h-[calc(100vh-4rem)] bg-background"> {/* Added bg-background */}
+          <div className="relative w-full h-full z-0"> {/* Changed to relative and full height with lower z-index */}
             <Carousel
               opts={{
                 loop: true,
@@ -138,7 +142,7 @@ export default function Home() {
           </div>
 
           {/* Fixed content overlay - Stays in place during slides */}
-          <div className="absolute inset-0 z-10 flex flex-col items-center justify-center text-center p-4">
+          <div className="absolute inset-0 z-[1] flex flex-col items-center justify-center text-center p-4"> {/* Content overlay with medium z-index */}
             <motion.h1 
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
@@ -163,7 +167,7 @@ export default function Home() {
               <Button 
                 size="lg" 
                 onClick={() => navigate('/menu')}
-                className="bg-background text-foreground hover:bg-white/90"
+                className="bg-white text-foreground hover:bg-white/90 dark:bg-white dark:text-background dark:hover:bg-white/90"
               >
                 Order Now
               </Button>
@@ -249,7 +253,7 @@ export default function Home() {
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
                 transition={{ duration: 0.6, delay: 0.2 }}
-                className="text-lg text-muted-foreground"
+                className="text-lg text-foreground"
               >
                 {pageContent.aboutContent}
               </motion.p>
