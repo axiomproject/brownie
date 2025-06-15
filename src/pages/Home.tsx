@@ -3,9 +3,17 @@ import { Card, CardContent } from "@/components/ui/card";
 import { motion } from "framer-motion";
 import { Navbar } from "@/components/Navbar";
 import { Link, useNavigate } from "react-router-dom";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import type { Product } from "@/types/product";
 import { API_URL } from '@/config';
+import {
+  Carousel,
+  CarouselContent,
+  CarouselItem,
+  CarouselNext,
+  CarouselPrevious,
+} from "@/components/ui/carousel"
+import Autoplay from "embla-carousel-autoplay"
 
 export default function Home() {
   const navigate = useNavigate();
@@ -19,6 +27,9 @@ export default function Home() {
     aboutTitle: '',
     aboutContent: ''
   });
+  const plugin = useRef(
+    Autoplay({ delay: 4000, stopOnInteraction: true })
+  );
 
   useEffect(() => {
     const fetchPopularProducts = async () => {
@@ -88,33 +99,60 @@ export default function Home() {
       <div className="min-h-screen bg-background">
         {/* Hero Section */}
         <section className="relative h-[80vh] bg-muted">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col items-center justify-center h-full text-center">
-            <motion.h1 
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.6 }}
-              className="text-6xl font-bold mb-4 text-foreground"
-            >
-              {pageContent.heroTitle}
-            </motion.h1>
-            <motion.p 
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.6, delay: 0.2 }}
-              className="text-xl mb-8 text-muted-foreground"
-            >
-              {pageContent.heroSubtitle}
-            </motion.p>
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.6, delay: 0.4 }}
-            >
-              <Button size="lg" onClick={() => navigate('/menu')}>
-                Order Now
-              </Button>
-            </motion.div>
-          </div>
+          <Carousel
+            opts={{
+              loop: true,
+            }}
+            plugins={[plugin.current]}
+            className="w-full h-full"
+          >
+            <CarouselContent className="h-full">
+              {[1, 2, 3].map((id) => (
+                <CarouselItem key={id} className="h-full relative">
+                  <img
+                    src={`/${id}.jpg`}
+                    alt={`Slide ${id}`}
+                    className="absolute inset-0 w-full h-full object-cover"
+                  />
+                  <div className="absolute inset-0 bg-black/40" />
+                  <div className="absolute inset-0 flex flex-col items-center justify-center text-center p-4">
+                    <motion.h1 
+                      initial={{ opacity: 0, y: 20 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ duration: 0.6 }}
+                      className="text-6xl font-bold mb-4 text-white"
+                    >
+                      {pageContent.heroTitle}
+                    </motion.h1>
+                    <motion.p 
+                      initial={{ opacity: 0, y: 20 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ duration: 0.6, delay: 0.2 }}
+                      className="text-xl mb-8 text-white/90"
+                    >
+                      {pageContent.heroSubtitle}
+                    </motion.p>
+                    <motion.div
+                      initial={{ opacity: 0, y: 20 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ duration: 0.6, delay: 0.4 }}
+                    >
+                      <Button 
+                        size="lg" 
+                        onClick={() => navigate('/menu')}
+                        variant="default"
+                        className="bg-white text-foreground hover:bg-white/90"
+                      >
+                        Order Now
+                      </Button>
+                    </motion.div>
+                  </div>
+                </CarouselItem>
+              ))}
+            </CarouselContent>
+            <CarouselPrevious className="left-4" />
+            <CarouselNext className="right-4" />
+          </Carousel>
         </section>
 
         {/* Featured Products */}
