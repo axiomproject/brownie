@@ -123,7 +123,7 @@ export default function Home() {
                         src={image}
                         alt={`Hero slide ${id + 1}`}
                         className="absolute inset-0 w-full h-full object-cover"
-                        onError={(e) => {
+                        onError={() => {
                           console.error(`Failed to load image: ${image}`);
                         }}
                       />
