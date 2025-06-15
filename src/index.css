@@ -187,3 +187,10 @@ body {
 [data-overlay-container="true"] [data-dialog-overlay] {
   @apply bg-black/30 backdrop-blur-[2px];
 }
+.carousel-item img {
+  transition: transform 0.5s ease;
+}
+
+.carousel-item:hover img {
+  transform: scale(1.05);
+}
