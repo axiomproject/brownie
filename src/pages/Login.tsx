@@ -76,6 +76,7 @@ export default function Login() {
   const [isRegisterView, setIsRegisterView] = useState(false);
   const [, setAppName] = useState('');
   const [, setLoading] = useState(true);
+  const [isAppNameLoading, setIsAppNameLoading] = useState(true); // Add this line
 
   useEffect(() => {
     const fetchContent = async () => {
@@ -99,6 +100,7 @@ export default function Login() {
         console.error('Error fetching app name:', error);
         setAppName('Brownie'); // Fallback value
       } finally {
+        setIsAppNameLoading(false);
         setLoading(false);
       }
     };
@@ -355,18 +357,22 @@ export default function Login() {
   };
 
   return (
-    <div className="grid min-h-svh lg:grid-cols-2">
+    <div className="grid min-h-svh lg:grid-cols-2 overflow-hidden">
       <div className="flex flex-col gap-4 p-6 md:p-10 bg-background">
         <div className="flex justify-between items-center">
-          <motion.a 
+          <motion.div 
             onClick={() => navigate('/')} 
-            className="flex items-center text-foreground gap-2 font-medium cursor-pointer"
+            className="flex items-center text-foreground gap-2 font-medium cursor-pointer min-w-[100px]"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ duration: 0.5 }}
           >
-            {settings.appName}
-          </motion.a>
+            {isAppNameLoading ? (
+              <div className="h-6 w-24 bg-muted animate-pulse rounded" />
+            ) : (
+              settings.appName
+            )}
+          </motion.div>
           <ModeToggle />
         </div>
         <div className="flex flex-1 items-center justify-center">
@@ -591,11 +597,15 @@ export default function Login() {
           </Card>
         </div>
       </div>
-      <div className="bg-muted relative hidden lg:block">
-        <img
+      <div className="bg-muted relative hidden lg:block overflow-hidden">
+        <motion.img
           src="/login-thumbnail.jpg"
-          alt="Image"
+          alt="Login background"
           className="absolute inset-0 h-full w-full object-cover dark:brightness-[0.3]"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ duration: 0.5 }}
+          loading="eager"
         />
       </div>
     </div>
