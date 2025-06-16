@@ -183,8 +183,6 @@ export default function HomeContent() {
         </Button>
       </div>
 
-      <h1 className="text-2xl font-bold text-foreground">Content Management</h1>
-
       <Tabs defaultValue="app" className="space-y-6">
         <TabsList className="grid grid-cols-5 w-full max-w-[800px]">
           <TabsTrigger value="app">App</TabsTrigger>
