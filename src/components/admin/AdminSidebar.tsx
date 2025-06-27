@@ -59,17 +59,21 @@ export function AdminSidebar() {
             {user?.name || 'Admin'}
           </h1>
         )}
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={() => setIsCollapsed(!isCollapsed)}
-          className={cn(
-            "h-8 w-8 p-0 text-foreground hidden md:flex", // Added hidden md:flex
-            isCollapsed && "rotate-180"
-          )}
-        >
-          <ChevronLeft className="h-4 w-4" />
-        </Button>
+        {/* Modified button with conditional rendering for mobile/desktop */}
+        <div className="flex items-center">
+          <span className="md:hidden text-xl font-bold">B</span>
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => setIsCollapsed(!isCollapsed)}
+            className={cn(
+              "h-8 w-8 p-0 text-foreground hidden md:flex",
+              isCollapsed && "rotate-180"
+            )}
+          >
+            <ChevronLeft className="h-4 w-4" />
+          </Button>
+        </div>
       </div>
       <nav className="flex-1 px-2">
         {menuItems.map((item) => (
