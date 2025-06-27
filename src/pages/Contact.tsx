@@ -59,7 +59,6 @@ export default function Contact() {
           });
         }
       } catch (error) {
-        console.error('Error fetching page content:', error);
       } finally {
         setLoading(false);
       }

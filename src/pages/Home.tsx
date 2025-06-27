@@ -68,7 +68,6 @@ export default function Home() {
         const popular = data.filter((p: Product) => p.isPopular).slice(0, 3);
         setPopularProducts(popular);
       } catch (error) {
-        console.error('Error fetching popular products:', error);
         setError('Failed to load products');
       } finally {
         setLoading(false);
@@ -95,7 +94,6 @@ export default function Home() {
 
         if (!response.ok) throw new Error('Failed to fetch content');
         const data = await response.json();
-        console.log('Home content received:', data);
         
         if (!data) throw new Error('No data received');
         
@@ -107,7 +105,6 @@ export default function Home() {
           aboutContent: data.aboutContent
         });
       } catch (error) {
-        console.error('Error:', error);
         setError('Failed to load content');
       } finally {
         setLoading(false);
@@ -150,7 +147,6 @@ export default function Home() {
                         alt={`Hero slide ${id + 1}`}
                         className="absolute inset-0 w-full h-full object-cover"
                         onError={() => {
-                          console.error(`Failed to load image: ${image}`);
                         }}
                       />
                       <div className="absolute inset-0 bg-black/50" />

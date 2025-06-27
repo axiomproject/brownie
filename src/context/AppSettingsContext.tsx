@@ -41,7 +41,6 @@ export function AppSettingsProvider({ children }: { children: ReactNode }) {
         const data = await response.json();
         setSettings({ appName: data?.appSettings?.appName || 'Brownie' });
       } catch (error) {
-        console.error('Error fetching app settings:', error);
         setSettings({ appName: 'Brownie' });
       } finally {
         setIsLoading(false);

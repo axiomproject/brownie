@@ -103,7 +103,6 @@ export default function FeedbackPage() {
         }))
       };
 
-      console.log('Submitting feedback:', feedbackData); // Debug log
 
       const response = await fetch(`${API_URL}/api/feedback`, {
         method: 'POST',
@@ -116,7 +115,6 @@ export default function FeedbackPage() {
       toast.success('Thank you for your feedback!');
       navigate('/');
     } catch (error) {
-      console.error('Error submitting feedback:', error);
       toast.error('Failed to submit feedback');
     } finally {
       setSubmitting(false);

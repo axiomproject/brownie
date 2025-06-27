@@ -33,7 +33,6 @@ export const paymentService = {
       const data = await response.json();
       return data.data;
     } catch (error) {
-      console.error('Payment error:', error);
       throw error;
     }
   }

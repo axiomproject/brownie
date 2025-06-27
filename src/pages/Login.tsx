@@ -97,7 +97,6 @@ export default function Login() {
         const data = await response.json();
         setAppName(data?.appSettings?.appName || 'Brownie');
       } catch (error) {
-        console.error('Error fetching app name:', error);
         setAppName('Brownie'); // Fallback value
       } finally {
         setIsAppNameLoading(false);
@@ -300,7 +299,6 @@ export default function Login() {
   // Add this function to reinitialize Google button
   const initializeGoogleSignIn = () => {
     if (!import.meta.env.VITE_GOOGLE_CLIENT_ID) {
-      console.error('Google Client ID is not configured');
       return;
     }
 
@@ -319,7 +317,6 @@ export default function Login() {
           use_fedcm_for_prompt: true // Add FedCM support
         });
       } catch (error) {
-        console.error('Error initializing Google Sign-In:', error);
         toast.error('Failed to initialize Google Sign-In');
       }
     };

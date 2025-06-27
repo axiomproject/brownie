@@ -43,13 +43,11 @@ export function AuthProvider({ children }: { children: ReactNode | ((props: { us
             }
           } catch (e) {
             // JSON parse error, clear storage
-            console.error('Error parsing stored user:', e);
             localStorage.removeItem('token');
             localStorage.removeItem('user');
           }
         }
       } catch (e) {
-        console.error('Error initializing auth:', e);
       } finally {
         setIsLoading(false);
       }

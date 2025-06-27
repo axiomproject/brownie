@@ -25,11 +25,9 @@ export function useNotifications() {
     setSocket(socketInstance);
 
     socketInstance.on('connect', () => {
-      console.log('Socket connected successfully');
     });
 
     socketInstance.on('connect_error', (error) => {
-      console.error('Socket connection error:', error);
     });
 
     fetchNotifications();
@@ -60,7 +58,6 @@ export function useNotifications() {
       setHasMore(response.data.length === LIMIT);
       if (!reset) setPage(prev => prev + 1);
     } catch (error) {
-      console.error('Failed to fetch notifications:', error);
     }
   };
 
@@ -79,7 +76,6 @@ export function useNotifications() {
           : notification
       ));
     } catch (error) {
-      console.error('Failed to mark notification as read:', error);
     }
   };
 
@@ -88,7 +84,6 @@ export function useNotifications() {
       await axios.delete(`${API_URL}/api/users/notifications`);
       setNotifications([]);
     } catch (error) {
-      console.error('Failed to clear notifications:', error);
     }
   };
 
