@@ -125,91 +125,82 @@ export default function Dashboard() {
   }
 
   return (
-    // Remove min-h-screen to prevent double scrollbars
-    <div className="bg-background p-1 xs:p-2 sm:p-4">
-      {/* Stats Grid - Make cards smaller and more compact */}
-      <div className="grid grid-cols-2 gap-1 xs:gap-2 sm:gap-4 mb-2 xs:mb-4">
-        <Card className="p-2 xs:p-3">
-          <CardHeader className="p-0 pb-1 xs:pb-2">
-            <CardTitle className="text-[10px] xs:text-xs sm:text-sm">Total Orders</CardTitle>
+    <div className="p-4 sm:p-6 lg:p-8 w-full bg-background min-h-screen">
+      {/* Stats cards grid - Make more responsive */}
+      <div className="grid grid-cols-1 xs:grid-cols-2 lg:grid-cols-4 gap-3 xs:gap-4 mb-6">
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Total Orders</CardTitle>
           </CardHeader>
-          <CardContent className="p-0">
-            <div className="text-sm xs:text-lg sm:text-2xl font-bold">{stats.totalOrders}</div>
+          <CardContent>
+            <div className="text-xl xs:text-2xl font-bold">{stats.totalOrders}</div>
           </CardContent>
         </Card>
-        <Card className="p-2 xs:p-3">
-          <CardHeader className="p-0 pb-1 xs:pb-2">
-            <CardTitle className="text-[10px] xs:text-xs sm:text-sm">Total Users</CardTitle>
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Total Users</CardTitle>
           </CardHeader>
-          <CardContent className="p-0">
-            <div className="text-sm xs:text-lg sm:text-2xl font-bold">{stats.totalUsers}</div>
+          <CardContent>
+            <div className="text-xl xs:text-2xl font-bold">{stats.totalUsers}</div>
           </CardContent>
         </Card>
-        <Card className="p-2 xs:p-3">
-          <CardHeader className="p-0 pb-1 xs:pb-2">
-            <CardTitle className="text-[10px] xs:text-xs sm:text-sm">Total Products</CardTitle>
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Total Products</CardTitle>
           </CardHeader>
-          <CardContent className="p-0">
-            <div className="text-sm xs:text-lg sm:text-2xl font-bold">{stats.totalProducts}</div>
-            <p className="text-[8px] xs:text-[10px] text-muted-foreground">
+          <CardContent>
+            <div className="text-xl xs:text-2xl font-bold">{stats.totalProducts}</div>
+            <p className="text-xs text-muted-foreground">
               {stats.lowStockProducts} items low on stock
             </p>
           </CardContent>
         </Card>
-        <Card className="p-2 xs:p-3">
-          <CardHeader className="p-0 pb-1 xs:pb-2">
-            <CardTitle className="text-[10px] xs:text-xs sm:text-sm">Revenue</CardTitle>
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Revenue</CardTitle>
           </CardHeader>
-          <CardContent className="p-0">
-            <div className="text-sm xs:text-lg sm:text-2xl font-bold">₱{stats.totalRevenue.toFixed(2)}</div>
-            <p className="text-[8px] xs:text-[10px] text-muted-foreground">From delivered orders</p>
+          <CardContent>
+            <div className="text-xl xs:text-2xl font-bold">₱{stats.totalRevenue.toFixed(2)}</div>
+            <p className="text-xs text-muted-foreground">From delivered orders</p>
           </CardContent>
         </Card>
       </div>
 
-      {/* Charts Section - Improve responsive sizing */}
-      <div className="flex flex-col gap-2 xs:gap-4">
+      {/* Charts Grid Section - Improve responsiveness */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 xs:gap-6 mb-6">
         {/* Revenue Chart */}
-        <Card>
-          <CardHeader className="p-2 xs:p-3 sm:p-4">
-            <CardTitle className="text-xs sm:text-sm">Monthly Revenue</CardTitle>
-            <CardDescription className="text-[10px] xs:text-xs">Total revenue by month</CardDescription>
+        <Card className="col-span-1">
+          <CardHeader>
+            <CardTitle className="text-base xs:text-lg">Monthly Revenue</CardTitle>
+            <CardDescription>Total revenue by month</CardDescription>
           </CardHeader>
-          <CardContent className="p-0 xs:p-2">
-            <div className="h-[200px] xs:h-[250px] sm:h-[300px] w-full">
+          <CardContent className="pl-0 xs:pl-2">
+            <div className="h-[300px] xs:h-[350px]">
               <ChartContainer config={chartConfig}>
                 <BarChart 
                   data={stats.revenueData}
                   margin={{ 
-                    top: 10,
-                    right: 5,
-                    bottom: 30,
-                    left: 30
+                    top: 20, 
+                    right: 10, 
+                    bottom: 50, 
+                    left: 50 
                   }}
-                  width={undefined}
-                  height={undefined}
+                  height={300}
                 >
-                  {/* Adjust chart components for better mobile display */}
                   <CartesianGrid vertical={false} />
                   <XAxis 
                     dataKey="name" 
-                    tick={{ 
-                      fill: 'var(--muted-foreground)',
-                      fontSize: '8px',
-                    }}
+                    tick={{ fill: 'var(--muted-foreground)', fontSize: 12 }}
                     angle={-45}
                     textAnchor="end"
-                    height={40}
+                    height={60}
                     interval={0}
                     scale="point"
-                    padding={{ left: 5, right: 5 }}
+                    padding={{ left: 10, right: 10 }}
                   />
                   <YAxis 
-                    tick={{ 
-                      fill: 'var(--muted-foreground)',
-                      fontSize: '8px',
-                    }}
-                    width={30}
+                    tick={{ fill: 'var(--muted-foreground)', fontSize: 12 }}
+                    width={50}
                   />
                   <ChartTooltip
                     cursor={{ fill: 'var(--accent)' }}
@@ -228,26 +219,25 @@ export default function Dashboard() {
           </CardContent>
         </Card>
 
-        {/* Most Ordered Items Chart - Similar adjustments */}
-        <Card>
-          <CardHeader className="p-2 xs:p-3 sm:p-4">
-            <CardTitle className="text-xs sm:text-sm">Most Ordered Items</CardTitle>
-            <CardDescription className="text-[10px] xs:text-xs">Top selling products by quantity</CardDescription>
+        {/* Most Ordered Items Chart */}
+        <Card className="col-span-1">
+          <CardHeader>
+            <CardTitle className="text-base xs:text-lg">Most Ordered Items</CardTitle>
+            <CardDescription>Top selling products by quantity</CardDescription>
           </CardHeader>
-          <CardContent className="p-0 xs:p-2">
-            <div className="h-[200px] xs:h-[250px] sm:h-[300px] w-full">
+          <CardContent>
+            <div className="h-[300px] xs:h-[350px]">
               <ChartContainer config={mostOrderedConfig}>
                 <BarChart
                   data={stats.mostOrderedItems || []}
                   layout="vertical"
                   margin={{
-                    top: 10,
-                    right: 20,
-                    bottom: 10,
-                    left: 30,
+                    top: 5,
+                    right: 30,
+                    bottom: 5,
+                    left: 80,
                   }}
-                  width={undefined}
-                  height={undefined}
+                  height={300}
                 >
                   <CartesianGrid horizontal={false} />
                   <YAxis
@@ -255,17 +245,17 @@ export default function Dashboard() {
                     type="category"
                     tickLine={false}
                     axisLine={false}
-                    width={70}
+                    width={80}
                     tick={{ 
                       fill: 'var(--muted-foreground)',
-                      fontSize: '8px',
+                      fontSize: 12 
                     }}
                   />
                   <XAxis 
                     type="number"
                     tick={{ 
                       fill: 'var(--muted-foreground)',
-                      fontSize: '8px',
+                      fontSize: 12
                     }}
                   />
                   <ChartTooltip
@@ -283,7 +273,7 @@ export default function Dashboard() {
                       position="right"
                       offset={8}
                       className="fill-foreground"
-                      fontSize={10}
+                      fontSize={12}
                     />
                   </Bar>
                 </BarChart>
@@ -293,49 +283,35 @@ export default function Dashboard() {
         </Card>
       </div>
 
-      {/* Recent Orders Section */}
-      <div className="mt-2 xs:mt-4">
-        <h3 className="text-xs sm:text-sm font-medium text-foreground mb-2">Recent Orders</h3>
-        <Card>
-          <CardContent className="p-0">
-            <div className="overflow-x-auto">
-              <div className="min-w-[500px]"> {/* Reduced minimum width */}
-                <table className="w-full">
-                  <thead className="bg-muted">
-                    <tr>
-                      <th className="p-1 xs:p-2 text-left text-[10px] xs:text-xs font-medium text-foreground">ID</th>
-                      <th className="p-1 xs:p-2 text-left text-[10px] xs:text-xs font-medium text-foreground">Customer</th>
-                      <th className="p-1 xs:p-2 text-left text-[10px] xs:text-xs font-medium text-foreground">Amount</th>
-                      <th className="p-1 xs:p-2 text-left text-[10px] xs:text-xs font-medium text-foreground">Status</th>
-                      <th className="p-1 xs:p-2 text-left text-[10px] xs:text-xs font-medium text-foreground">Date</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-border">
-                    {stats.recentOrders.map((order) => (
-                      <tr key={order._id} className="hover:bg-muted/50">
-                        <td className="p-1 xs:p-2 text-[10px] xs:text-xs text-foreground">
-                          #{order._id.slice(-6)}
-                        </td>
-                        <td className="p-1 xs:p-2 text-[10px] xs:text-xs text-foreground truncate max-w-[150px]">
-                          {order.user?.name || 'Guest Order'}
-                        </td>
-                        <td className="p-1 xs:p-2 text-[10px] xs:text-xs text-foreground">
-                          ₱{order.totalAmount.toFixed(2)}
-                        </td>
-                        <td className="p-1 xs:p-2 text-[10px] xs:text-xs text-foreground capitalize">
-                          {order.status}
-                        </td>
-                        <td className="p-1 xs:p-2 text-[10px] xs:text-xs text-foreground">
-                          {new Date(order.createdAt).toLocaleDateString()}
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
+      {/* Recent Orders Table */}
+      <div className="mt-8">
+        <h3 className="text-base xs:text-lg font-medium text-foreground mb-4">Recent Orders</h3>
+        <div className="bg-card rounded-lg shadow overflow-x-auto">
+          <table className="w-full min-w-[600px]">
+            <thead className="bg-muted">
+              <tr>
+                <th className="px-4 py-3 text-left text-xs font-medium text-foreground">Order ID</th>
+                <th className="px-4 py-3 text-left text-xs font-medium text-foreground">Customer</th>
+                <th className="px-4 py-3 text-left text-xs font-medium text-foreground">Amount</th>
+                <th className="px-4 py-3 text-left text-xs font-medium text-foreground">Status</th>
+                <th className="px-4 py-3 text-left text-xs font-medium text-foreground">Date</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-border">
+              {stats.recentOrders.map((order) => (
+                <tr key={order._id} className="text-xs xs:text-sm">
+                  <td className="px-4 py-3 text-foreground">#{order._id.slice(-6)}</td>
+                  <td className="px-4 py-3 text-foreground">{order.user?.name || 'Guest Order'}</td>
+                  <td className="px-4 py-3 text-foreground">₱{order.totalAmount.toFixed(2)}</td>
+                  <td className="px-4 py-3 text-foreground capitalize">{order.status}</td>
+                  <td className="px-4 py-3 text-foreground">
+                    {new Date(order.createdAt).toLocaleDateString()}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
       </div>
     </div>
   );
