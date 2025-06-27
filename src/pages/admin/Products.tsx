@@ -318,15 +318,15 @@ const [productToDelete, setProductToDelete] = useState<string | null>(null);
 
   return (
     <div className="space-y-4">
-      <div className="flex justify-between items-center gap-4">
-        <div className="flex-1">
-          <div className="relative w-full max-w-sm">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+        <div className="w-full sm:w-auto sm:flex-1">
+          <div className="relative w-full sm:max-w-sm">
+            <Search className="absolute left-2 xs:left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
             <Input
               placeholder="Search products..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="pl-10 w-full bg-background text-foreground placeholder:text-muted-foreground border-border"
+              className="pl-8 xs:pl-10 w-full text-sm xs:text-base bg-background text-foreground placeholder:text-muted-foreground border-border"
             />
           </div>
         </div>
@@ -494,14 +494,15 @@ const [productToDelete, setProductToDelete] = useState<string | null>(null);
       </div>
 
       {selectedProducts.length > 0 && (
-        <div className="flex items-center justify-between bg-muted p-2 rounded-md">
-          <span className="text-sm text-foreground">
-            {selectedProducts.length} products selected
+        <div className="flex items-center justify-between bg-muted px-2 xs:px-4 py-2 border-y border-border">
+          <span className="text-xs xs:text-sm text-muted-foreground">
+            {selectedProducts.length} selected
           </span>
           <Button
             variant="destructive"
             size="sm"
             onClick={confirmBulkDelete}
+            className="text-xs xs:text-sm px-2 xs:px-4"
           >
             Delete Selected
           </Button>
@@ -529,36 +530,39 @@ const [productToDelete, setProductToDelete] = useState<string | null>(null);
         <Table>
           <TableHeader>
             <TableRow className="border-border">
-              <TableHead className="w-[50px]">
+              <TableHead className="w-[30px] xs:w-[40px] sm:w-[50px]">
                 <Checkbox
                   checked={
                     paginatedProducts().length > 0 &&
                     paginatedProducts().every(product => selectedProducts.includes(product._id))
                   }
                   onCheckedChange={toggleAll}
+                  className="scale-75 xs:scale-90 sm:scale-100"
                 />
               </TableHead>
-              <TableHead>Image</TableHead>
+              <TableHead className="w-[60px]">Image</TableHead>
               <TableHead 
-                className="text-foreground cursor-pointer hover:bg-muted"
+                className="text-foreground cursor-pointer hover:bg-muted min-w-[120px] lg:min-w-[150px]"
                 onClick={() => handleSort('name')}
               >
                 Name <SortIcon column="name" />
               </TableHead>
               <TableHead 
-                className="text-foreground cursor-pointer hover:bg-muted"
+                className="hidden md:table-cell text-foreground cursor-pointer hover:bg-muted"
                 onClick={() => handleSort('category')}
               >
                 Category <SortIcon column="category" />
               </TableHead>
-              <TableHead className="text-foreground">Variants</TableHead>
+              <TableHead className="hidden lg:table-cell text-foreground">
+                Variants
+              </TableHead>
               <TableHead 
-                className="text-foreground cursor-pointer hover:bg-muted"
+                className="hidden md:table-cell text-foreground cursor-pointer hover:bg-muted"
                 onClick={() => handleSort('isPopular')}
               >
                 Popular <SortIcon column="isPopular" />
               </TableHead>
-              <TableHead className="text-right">Actions</TableHead>
+              <TableHead className="w-[68px] sm:w-[80px] text-right">Actions</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -568,24 +572,46 @@ const [productToDelete, setProductToDelete] = useState<string | null>(null);
                 className="border-border"
                 data-selected={selectedProducts.includes(product._id)}
               >
-                <TableCell>
+                <TableCell className="p-2 sm:py-2">
                   <Checkbox
                     checked={selectedProducts.includes(product._id)}
                     onCheckedChange={() => toggleProduct(product._id)}
+                    className="scale-75 xs:scale-90 sm:scale-100"
                   />
                 </TableCell>
-                <TableCell>
+                <TableCell className="p-2 sm:py-2">
                   <img 
                     src={product.image} 
                     alt={product.name}
-                    className="h-10 w-10 object-cover rounded"
+                    className="h-8 w-8 xs:h-10 xs:w-10 object-cover rounded"
                   />
                 </TableCell>
-                <TableCell className="text-foreground">{product.name}</TableCell>
-                <TableCell className="capitalize text-foreground">{product.category}</TableCell>
-                <TableCell>
+                <TableCell className="p-2 sm:py-2 min-w-[120px] lg:min-w-[150px]">
+                  <div className="flex flex-col gap-0.5">
+                    <span className="font-medium truncate text-xs xs:text-sm text-foreground">
+                      {product.name}
+                    </span>
+                    <span className="text-[10px] xs:text-xs text-muted-foreground md:hidden capitalize">
+                      {product.category}
+                    </span>
+                    <span className="text-[10px] xs:text-xs text-muted-foreground md:hidden">
+                      {product.variants.length} variants
+                    </span>
+                    <span className={`text-[10px] xs:text-xs md:hidden ${
+                      product.isPopular 
+                        ? 'text-green-500 dark:text-green-400' 
+                        : 'text-muted-foreground'
+                    }`}>
+                      {product.isPopular ? 'Popular' : 'Regular'}
+                    </span>
+                  </div>
+                </TableCell>
+                <TableCell className="hidden md:table-cell p-2 sm:py-2 capitalize text-foreground">
+                  {product.category}
+                </TableCell>
+                <TableCell className="hidden lg:table-cell p-2 sm:py-2">
                   {product.variants.map(v => (
-                    <div key={v.name} className="text-sm text-muted-foreground">
+                    <div key={v.name} className="text-xs text-muted-foreground">
                       {v.name}: ₱{v.price} ({v.stockQuantity} in stock - 
                       <span className={v.inStock ? 'text-green-500' : 'text-red-500'}>
                         {v.inStock ? 'In Stock' : 'Out of Stock'}
@@ -594,8 +620,8 @@ const [productToDelete, setProductToDelete] = useState<string | null>(null);
                     </div>
                   ))}
                 </TableCell>
-                <TableCell>
-                  <span className={`px-2 py-1 rounded-full text-sm ${
+                <TableCell className="hidden md:table-cell p-2 sm:py-2">
+                  <span className={`px-2 py-1 rounded-full text-xs ${
                     product.isPopular 
                       ? 'bg-green-500/10 text-green-500 dark:bg-green-500/20 dark:text-green-400' 
                       : 'bg-gray-500/10 text-gray-500 dark:bg-gray-500/20 dark:text-gray-400'
@@ -603,10 +629,10 @@ const [productToDelete, setProductToDelete] = useState<string | null>(null);
                     {product.isPopular ? 'Popular' : 'Regular'}
                   </span>
                 </TableCell>
-                <TableCell className="text-right">
+                <TableCell className="p-2 sm:py-2 text-right">
                   <DropdownMenu>
                     <DropdownMenuTrigger asChild>
-                      <Button variant="ghost" className="h-8 w-8 p-0">
+                      <Button variant="ghost" className="h-7 w-7">
                         <MoreHorizontal className="h-4 w-4 text-foreground" />
                       </Button>
                     </DropdownMenuTrigger>
