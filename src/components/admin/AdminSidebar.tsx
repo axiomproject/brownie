@@ -61,7 +61,7 @@ export function AdminSidebar() {
         )}
         {/* Modified button with conditional rendering for mobile/desktop */}
         <div className="flex items-center">
-          <span className="md:hidden text-xl font-bold">B</span>
+          <span className="md:hidden text-xl text-foreground font-bold">B</span>
           <Button
             variant="ghost"
             size="sm"
