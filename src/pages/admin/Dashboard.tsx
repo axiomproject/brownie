@@ -125,9 +125,9 @@ export default function Dashboard() {
   }
 
   return (
-    <div className="min-h-screen bg-background p-4 sm:p-8">
-      {/* Stats cards grid - Make more responsive */}
-      <div className="grid grid-cols-1 xs:grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+    <div className="min-h-screen bg-background p-2 xs:p-4 sm:p-6 lg:p-8">
+      {/* Stats Grid */}
+      <div className="grid grid-cols-2 xs:grid-cols-2 md:grid-cols-4 gap-2 xs:gap-3 sm:gap-4 mb-4 xs:mb-6">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-xs sm:text-sm font-medium">Total Orders</CardTitle>
@@ -166,26 +166,27 @@ export default function Dashboard() {
         </Card>
       </div>
 
-      {/* Charts Grid Section - Improve responsiveness */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+      {/* Charts Section */}
+      <div className="flex flex-col gap-4 mb-4 xs:mb-6">
         {/* Revenue Chart */}
-        <Card className="col-span-1">
-          <CardHeader>
+        <Card>
+          <CardHeader className="p-3 xs:p-4 sm:p-6">
             <CardTitle className="text-sm xs:text-base">Monthly Revenue</CardTitle>
             <CardDescription className="text-xs xs:text-sm">Total revenue by month</CardDescription>
           </CardHeader>
-          <CardContent className="pl-0 xs:pl-2">
-            <div className="h-[300px] sm:h-[400px]">
+          <CardContent className="p-0 xs:p-2 sm:p-4">
+            <div className="h-[250px] xs:h-[300px] sm:h-[400px] w-full">
               <ChartContainer config={chartConfig}>
                 <BarChart 
                   data={stats.revenueData}
                   margin={{ 
                     top: 20, 
                     right: 10, 
-                    bottom: 50, 
-                    left: 40 
+                    bottom: 40, 
+                    left: 35 
                   }}
-                  height={300}
+                  width={undefined}
+                  height={undefined}
                 >
                   <CartesianGrid vertical={false} />
                   <XAxis 
@@ -206,7 +207,7 @@ export default function Dashboard() {
                       fill: 'var(--muted-foreground)',
                       fontSize: '10px',
                     }}
-                    width={50}
+                    width={35}
                   />
                   <ChartTooltip
                     cursor={{ fill: 'var(--accent)' }}
@@ -226,24 +227,25 @@ export default function Dashboard() {
         </Card>
 
         {/* Most Ordered Items Chart */}
-        <Card className="col-span-1">
-          <CardHeader>
+        <Card>
+          <CardHeader className="p-3 xs:p-4 sm:p-6">
             <CardTitle className="text-sm xs:text-base">Most Ordered Items</CardTitle>
             <CardDescription className="text-xs xs:text-sm">Top selling products by quantity</CardDescription>
           </CardHeader>
-          <CardContent>
-            <div className="h-[300px] sm:h-[400px]">
+          <CardContent className="p-0 xs:p-2 sm:p-4">
+            <div className="h-[250px] xs:h-[300px] sm:h-[400px] w-full">
               <ChartContainer config={mostOrderedConfig}>
                 <BarChart
                   data={stats.mostOrderedItems || []}
                   layout="vertical"
                   margin={{
                     top: 20,
-                    right: 40,
+                    right: 30,
                     bottom: 20,
-                    left: 10,
+                    left: 35,
                   }}
-                  height={300}
+                  width={undefined}
+                  height={undefined}
                 >
                   <CartesianGrid horizontal={false} />
                   <YAxis
@@ -289,43 +291,49 @@ export default function Dashboard() {
         </Card>
       </div>
 
-      {/* Recent Orders Table - Make responsive */}
-      <div className="mt-8">
-        <h3 className="text-sm xs:text-lg font-medium text-foreground mb-4">Recent Orders</h3>
-        <div className="bg-card rounded-lg shadow overflow-x-auto">
-          <table className="w-full min-w-[600px]">
-            <thead className="bg-muted">
-              <tr>
-                <th className="px-4 py-3 text-left text-[10px] xs:text-sm font-medium text-foreground">Order ID</th>
-                <th className="px-4 py-3 text-left text-[10px] xs:text-sm font-medium text-foreground">Customer</th>
-                <th className="px-4 py-3 text-left text-[10px] xs:text-sm font-medium text-foreground">Amount</th>
-                <th className="px-4 py-3 text-left text-[10px] xs:text-sm font-medium text-foreground">Status</th>
-                <th className="px-4 py-3 text-left text-[10px] xs:text-sm font-medium text-foreground">Date</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-border">
-              {stats.recentOrders.map((order) => (
-                <tr key={order._id} className="hover:bg-muted/50">
-                  <td className="px-4 py-3 text-[10px] xs:text-sm text-foreground">
-                    #{order._id.slice(-6)}
-                  </td>
-                  <td className="px-4 py-3 text-[10px] xs:text-sm text-foreground">
-                    {order.user?.name || 'Guest Order'}
-                  </td>
-                  <td className="px-4 py-3 text-[10px] xs:text-sm text-foreground">
-                    ₱{order.totalAmount.toFixed(2)}
-                  </td>
-                  <td className="px-4 py-3 text-[10px] xs:text-sm text-foreground capitalize">
-                    {order.status}
-                  </td>
-                  <td className="px-4 py-3 text-[10px] xs:text-sm text-foreground">
-                    {new Date(order.createdAt).toLocaleDateString()}
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+      {/* Recent Orders Section */}
+      <div className="mt-4 xs:mt-6">
+        <h3 className="text-sm xs:text-base font-medium text-foreground mb-3 xs:mb-4">Recent Orders</h3>
+        <Card>
+          <CardContent className="p-0">
+            <div className="overflow-x-auto">
+              <div className="min-w-[600px]">
+                <table className="w-full">
+                  <thead className="bg-muted">
+                    <tr>
+                      <th className="p-2 xs:px-4 xs:py-3 text-left text-[10px] xs:text-xs sm:text-sm font-medium text-foreground">Order ID</th>
+                      <th className="p-2 xs:px-4 xs:py-3 text-left text-[10px] xs:text-xs sm:text-sm font-medium text-foreground">Customer</th>
+                      <th className="p-2 xs:px-4 xs:py-3 text-left text-[10px] xs:text-xs sm:text-sm font-medium text-foreground">Amount</th>
+                      <th className="p-2 xs:px-4 xs:py-3 text-left text-[10px] xs:text-xs sm:text-sm font-medium text-foreground">Status</th>
+                      <th className="p-2 xs:px-4 xs:py-3 text-left text-[10px] xs:text-xs sm:text-sm font-medium text-foreground">Date</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-border">
+                    {stats.recentOrders.map((order) => (
+                      <tr key={order._id} className="hover:bg-muted/50">
+                        <td className="p-2 xs:px-4 xs:py-3 text-[10px] xs:text-xs sm:text-sm text-foreground">
+                          #{order._id.slice(-6)}
+                        </td>
+                        <td className="p-2 xs:px-4 xs:py-3 text-[10px] xs:text-xs sm:text-sm text-foreground truncate max-w-[150px]">
+                          {order.user?.name || 'Guest Order'}
+                        </td>
+                        <td className="p-2 xs:px-4 xs:py-3 text-[10px] xs:text-xs sm:text-sm text-foreground">
+                          ₱{order.totalAmount.toFixed(2)}
+                        </td>
+                        <td className="p-2 xs:px-4 xs:py-3 text-[10px] xs:text-xs sm:text-sm text-foreground capitalize">
+                          {order.status}
+                        </td>
+                        <td className="p-2 xs:px-4 xs:py-3 text-[10px] xs:text-xs sm:text-sm text-foreground">
+                          {new Date(order.createdAt).toLocaleDateString()}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
       </div>
     </div>
   );
