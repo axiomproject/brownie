@@ -96,9 +96,9 @@ type SortDirection = 'asc' | 'desc';
 export default function Orders() {
   const [orders, setOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(true);
-  const [selectedCustomer, setSelectedCustomer] = useState<{ id: string; name: string } | null>(null);
-  const [customerDetails, setCustomerDetails] = useState<CustomerDetails | null>(null);
   const [isDetailsDialogOpen, setIsDetailsDialogOpen] = useState(false);
+  const [userDetails, setUserDetails] = useState<CustomerDetails | null>(null);
+  const [selectedUserName, setSelectedUserName] = useState<string>('');
   const [sortColumn, setSortColumn] = useState<SortColumn>('createdAt');
   const [sortDirection, setSortDirection] = useState<SortDirection>('desc'); // Default to newest first
   const [currentPage, setCurrentPage] = useState(1);
@@ -133,7 +133,8 @@ export default function Orders() {
     }
   };
 
-  const fetchCustomerDetails = async (userId: string) => {
+  const handleCustomerClick = async (userId: string, name: string) => {
+    setSelectedUserName(name);
     try {
       const response = await fetch(`${API_URL}/api/admin/users/${userId}/orders`, {
         headers: {
@@ -144,16 +145,11 @@ export default function Orders() {
 
       if (!response.ok) throw new Error('Failed to fetch customer details');
       const data = await response.json();
-      setCustomerDetails(data);
+      setUserDetails(data);
+      setIsDetailsDialogOpen(true);
     } catch (error) {
       toast.error("Failed to load customer details");
     }
-  };
-
-  const handleCustomerClick = (userId: string, name: string) => {
-    setSelectedCustomer({ id: userId, name });
-    fetchCustomerDetails(userId);
-    setIsDetailsDialogOpen(true);
   };
 
   const updateOrderStatus = async (orderId: string, newStatus: string) => {
@@ -713,7 +709,58 @@ export default function Orders() {
         </CardContent>
       </Card>
 
-      {/* ...existing dialogs... */}
+      <Dialog open={isDetailsDialogOpen} onOpenChange={setIsDetailsDialogOpen}>
+        <DialogContent className="bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/95">
+          <DialogHeader>
+            <DialogTitle className="text-foreground">
+              Customer Details: {selectedUserName}
+            </DialogTitle>
+          </DialogHeader>
+          {userDetails && (
+            <div className="space-y-4">
+              <div className="grid grid-cols-2 gap-4 text-sm">
+                <div>
+                  <p className="text-muted-foreground">Total Orders</p>
+                  <p className="text-foreground text-lg">{userDetails.orderCount}</p>
+                </div>
+                <div>
+                  <p className="text-muted-foreground">Total Spent</p>
+                  <p className="text-foreground text-lg">₱{userDetails.totalSpent.toFixed(2)}</p>
+                </div>
+                <div>
+                  <p className="text-muted-foreground">Customer Since</p>
+                  <p className="text-foreground">{new Date(userDetails.firstOrder).toLocaleDateString()}</p>
+                </div>
+              </div>
+
+              <div className="mt-4">
+                <h3 className="text-lg font-semibold mb-2 text-foreground">Order History</h3>
+                <div className="space-y-2 max-h-[300px] overflow-y-auto">
+                  {userDetails.orders.map((order) => (
+                    <div key={order._id} className="border p-3 rounded-lg">
+                      <div className="flex justify-between">
+                        <span className="text-foreground">#{order._id.slice(-6)}</span>
+                        <span className="text-muted-foreground">
+                          {new Date(order.createdAt).toLocaleDateString()}
+                        </span>
+                      </div>
+                      <div className="text-sm text-muted-foreground mt-1">
+                        {order.items.map((item, i) => (
+                          <div key={i}>{item.quantity}x {item.name}</div>
+                        ))}
+                      </div>
+                      <div className="flex justify-between mt-2">
+                        <span className={statusColors[order.status]}>{order.status}</span>
+                        <span className="text-foreground">₱{order.totalAmount.toFixed(2)}</span>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
