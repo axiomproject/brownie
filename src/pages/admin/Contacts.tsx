@@ -259,197 +259,199 @@ export default function Contacts() {
   };
 
   return (
-    <div className="space-y-6 mx-auto">
-        <div className="flex justify-between items-center gap-4">
-          <div className="flex-1">
-            <div className="relative w-full max-w-sm">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-              <Input
-                placeholder="Search messages..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="pl-10 w-full bg-background text-foreground placeholder:text-muted-foreground border-border"
-              />
-            </div>
+    <div className="space-y-6 mx-auto p-4">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+        <div className="w-full sm:w-auto">
+          <div className="relative w-full sm:max-w-sm">
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+            <Input
+              placeholder="Search messages..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="pl-10 w-full bg-background text-foreground placeholder:text-muted-foreground border-border"
+            />
           </div>
         </div>
+      </div>
 
-        {selectedContacts.length > 0 && (
-          <div className="flex items-center justify-between bg-muted p-2 rounded-md mt-4">
-            <span className="text-sm text-foreground">
-              {selectedContacts.length} messages selected
-            </span>
-            <Button
-              variant="destructive"
-              size="sm"
-              onClick={confirmBulkDelete}
-            >
-              Delete Selected
-            </Button>
-          </div>
-        )}
+      {selectedContacts.length > 0 && (
+        <div className="flex items-center justify-between bg-muted p-2 rounded-md mt-4">
+          <span className="text-sm text-foreground">
+            {selectedContacts.length} messages selected
+          </span>
+          <Button
+            variant="destructive"
+            size="sm"
+            onClick={confirmBulkDelete}
+          >
+            Delete Selected
+          </Button>
+        </div>
+      )}
 
-        <div className="rounded-md border border-border mt-4">
-          <Table>
-            <TableHeader>
-              <TableRow className="border-border">
-                <TableHead className="w-[50px]">
+      <div className="rounded-md border border-border mt-4 overflow-x-auto">
+        <Table>
+          <TableHeader>
+            <TableRow className="border-border">
+              <TableHead className="w-[50px]">
+                <Checkbox
+                  checked={
+                    paginatedContacts().length > 0 &&
+                    paginatedContacts().every(contact => selectedContacts.includes(contact._id))
+                  }
+                  onCheckedChange={toggleAll}
+                />
+              </TableHead>
+              <TableHead 
+                className="text-foreground cursor-pointer hover:bg-muted whitespace-nowrap"
+                onClick={() => handleSort('name')}
+              >
+                Name <SortIcon column="name" />
+              </TableHead>
+              <TableHead 
+                className="text-foreground cursor-pointer hover:bg-muted hidden md:table-cell whitespace-nowrap"
+                onClick={() => handleSort('email')}
+              >
+                Email <SortIcon column="email" />
+              </TableHead>
+              <TableHead 
+                className="text-foreground cursor-pointer hover:bg-muted hidden sm:table-cell whitespace-nowrap"
+                onClick={() => handleSort('subject')}
+              >
+                Subject <SortIcon column="subject" />
+              </TableHead>
+              <TableHead 
+                className="text-foreground cursor-pointer hover:bg-muted whitespace-nowrap"
+                onClick={() => handleSort('createdAt')}
+              >
+                Date <SortIcon column="createdAt" />
+              </TableHead>
+              <TableHead className="text-foreground text-right">Actions</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {paginatedContacts().map((contact) => (
+              <TableRow 
+                key={contact._id} 
+                className="border-border"
+              >
+                <TableCell>
                   <Checkbox
-                    checked={
-                      paginatedContacts().length > 0 &&
-                      paginatedContacts().every(contact => selectedContacts.includes(contact._id))
-                    }
-                    onCheckedChange={toggleAll}
+                    checked={selectedContacts.includes(contact._id)}
+                    onCheckedChange={() => toggleContact(contact._id)}
                   />
-                </TableHead>
-                <TableHead 
-                  className="text-foreground cursor-pointer hover:bg-muted"
-                  onClick={() => handleSort('name')}
-                >
-                  Name <SortIcon column="name" />
-                </TableHead>
-                <TableHead 
-                  className="text-foreground cursor-pointer hover:bg-muted"
-                  onClick={() => handleSort('email')}
-                >
-                  Email <SortIcon column="email" />
-                </TableHead>
-                <TableHead 
-                  className="text-foreground cursor-pointer hover:bg-muted"
-                  onClick={() => handleSort('subject')}
-                >
-                  Subject <SortIcon column="subject" />
-                </TableHead>
-                <TableHead 
-                  className="text-foreground cursor-pointer hover:bg-muted"
-                  onClick={() => handleSort('createdAt')}
-                >
-                  Date <SortIcon column="createdAt" />
-                </TableHead>
-                <TableHead className="text-foreground text-right">Actions</TableHead>
+                </TableCell>
+                <TableCell className="font-medium text-foreground whitespace-nowrap">{contact.name}</TableCell>
+                <TableCell className="text-foreground hidden md:table-cell">{contact.email}</TableCell>
+                <TableCell className="text-foreground hidden sm:table-cell">
+                  <span className="truncate block max-w-[200px]">{contact.subject}</span>
+                </TableCell>
+                <TableCell className="text-foreground whitespace-nowrap">{formatDate(contact.createdAt)}</TableCell>
+                <TableCell className="text-right">
+                  <div className="flex justify-end gap-2">
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      onClick={() => setSelectedContact(contact)}
+                      className="text-foreground hover:text-foreground/80"
+                    >
+                      <Eye className="h-4 w-4" />
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      onClick={() => handleDelete(contact._id)}
+                      className="text-foreground hover:text-foreground/80"
+                    >
+                      <Trash className="h-4 w-4" />
+                    </Button>
+                  </div>
+                </TableCell>
               </TableRow>
-            </TableHeader>
-            <TableBody>
-              {paginatedContacts().map((contact) => (
-                <TableRow 
-                  key={contact._id} 
-                  className="border-border"
-                >
-                  <TableCell>
-                    <Checkbox
-                      checked={selectedContacts.includes(contact._id)}
-                      onCheckedChange={() => toggleContact(contact._id)}
-                    />
-                  </TableCell>
-                  <TableCell className="font-medium text-foreground">{contact.name}</TableCell>
-                  <TableCell className="text-foreground">{contact.email}</TableCell>
-                  <TableCell className="text-foreground">{contact.subject}</TableCell>
-                  <TableCell className="text-foreground">{formatDate(contact.createdAt)}</TableCell>
-                  <TableCell className="text-right">
-                    <div className="flex justify-end gap-2">
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        onClick={() => setSelectedContact(contact)}
-                        className="text-foreground hover:text-foreground/80"
-                      >
-                        <Eye className="h-4 w-4" />
-                      </Button>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        onClick={() => handleDelete(contact._id)}
-                        className="text-foreground hover:text-foreground/80"
-                      >
-                        <Trash className="h-4 w-4" />
-                      </Button>
-                    </div>
-                  </TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-        </div>
+            ))}
+          </TableBody>
+        </Table>
+      </div>
 
-        {totalPages > 1 && (
-          <Pagination className="mt-4">
-            <PaginationContent>
-              <PaginationPrevious 
-                onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
-                className={currentPage === 1 ? 'pointer-events-none opacity-50' : ''}
-              />
-              {renderPaginationItems()}
-              <PaginationNext 
-                onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
-                className={currentPage === totalPages ? 'pointer-events-none opacity-50' : ''}
-              />
-            </PaginationContent>
-          </Pagination>
-        )}
+      {totalPages > 1 && (
+        <Pagination className="mt-4">
+          <PaginationContent>
+            <PaginationPrevious 
+              onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+              className={currentPage === 1 ? 'pointer-events-none opacity-50' : ''}
+            />
+            {renderPaginationItems()}
+            <PaginationNext 
+              onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+              className={currentPage === totalPages ? 'pointer-events-none opacity-50' : ''}
+            />
+          </PaginationContent>
+        </Pagination>
+      )}
 
-        <Dialog open={!!selectedContact} onOpenChange={() => setSelectedContact(null)}>
-          <DialogContent>
-            <DialogHeader>
-              <DialogTitle className="text-foreground">Message Details</DialogTitle>
-            </DialogHeader>
-            {selectedContact && (
-              <div className="space-y-4">
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <label className="font-semibold text-foreground">Name:</label>
-                    <p className="text-foreground truncate">{selectedContact.name}</p>
-                  </div>
-                  <div>
-                    <label className="font-semibold text-foreground">Email:</label>
-                    <p className="text-foreground break-all">{selectedContact.email}</p>
-                  </div>
+      <Dialog open={!!selectedContact} onOpenChange={() => setSelectedContact(null)}>
+        <DialogContent className="sm:max-w-[425px] max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="text-foreground">Message Details</DialogTitle>
+          </DialogHeader>
+          {selectedContact && (
+            <div className="space-y-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                  <label className="font-semibold text-foreground">Name:</label>
+                  <p className="text-foreground break-words">{selectedContact.name}</p>
                 </div>
                 <div>
-                  <label className="font-semibold text-foreground">Subject:</label>
-                  <p className="text-foreground">{selectedContact.subject}</p>
-                </div>
-                <div>
-                  <label className="font-semibold text-foreground">Message:</label>
-                  <p className="whitespace-pre-wrap text-foreground">{selectedContact.message}</p>
-                </div>
-                <div>
-                  <label className="font-semibold text-foreground">Date:</label>
-                  <p className="text-foreground">{formatDate(selectedContact.createdAt)}</p>
+                  <label className="font-semibold text-foreground">Email:</label>
+                  <p className="text-foreground break-words">{selectedContact.email}</p>
                 </div>
               </div>
-            )}
-          </DialogContent>
-        </Dialog>
+              <div>
+                <label className="font-semibold text-foreground">Subject:</label>
+                <p className="text-foreground break-words">{selectedContact.subject}</p>
+              </div>
+              <div>
+                <label className="font-semibold text-foreground">Message:</label>
+                <p className="whitespace-pre-wrap text-foreground break-words">{selectedContact.message}</p>
+              </div>
+              <div>
+                <label className="font-semibold text-foreground">Date:</label>
+                <p className="text-foreground">{formatDate(selectedContact.createdAt)}</p>
+              </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
 
-        <AlertDialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
-          <AlertDialogContent>
-            <AlertDialogHeader>
-              <AlertDialogTitle className="text-foreground">Are you absolutely sure?</AlertDialogTitle>
-              <AlertDialogDescription className="text-muted-foreground">
-                This will permanently delete {selectedContacts.length} selected messages.
-              </AlertDialogDescription>
-            </AlertDialogHeader>
-            <AlertDialogFooter>
-              <AlertDialogCancel className="text-foreground">Cancel</AlertDialogCancel>
-              <AlertDialogAction onClick={executeBulkDelete}>Continue</AlertDialogAction>
-            </AlertDialogFooter>
-          </AlertDialogContent>
-        </AlertDialog>
+      <AlertDialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle className="text-foreground">Are you absolutely sure?</AlertDialogTitle>
+            <AlertDialogDescription className="text-muted-foreground">
+              This will permanently delete {selectedContacts.length} selected messages.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel className="text-foreground">Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={executeBulkDelete}>Continue</AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
 
-        <AlertDialog open={showSingleDeleteDialog} onOpenChange={setShowSingleDeleteDialog}>
-          <AlertDialogContent>
-            <AlertDialogHeader>
-              <AlertDialogTitle className="text-foreground">Are you absolutely sure?</AlertDialogTitle>
-              <AlertDialogDescription className="text-muted-foreground">
-                This will permanently delete this message.
-              </AlertDialogDescription>
-            </AlertDialogHeader>
-            <AlertDialogFooter>
-              <AlertDialogCancel className="text-foreground">Cancel</AlertDialogCancel>
-              <AlertDialogAction onClick={executeSingleDelete}>Continue</AlertDialogAction>
-            </AlertDialogFooter>
-          </AlertDialogContent>
-        </AlertDialog>
-      </div>
+      <AlertDialog open={showSingleDeleteDialog} onOpenChange={setShowSingleDeleteDialog}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle className="text-foreground">Are you absolutely sure?</AlertDialogTitle>
+            <AlertDialogDescription className="text-muted-foreground">
+              This will permanently delete this message.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel className="text-foreground">Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={executeSingleDelete}>Continue</AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+    </div>
   );
 }
