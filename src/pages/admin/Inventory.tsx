@@ -503,11 +503,17 @@ export default function Inventory() {
                   <Table>
                     <TableHeader>
                       <TableRow className="border-border">
-                        <TableHead className="text-foreground cursor-pointer hover:bg-muted min-w-[120px] lg:min-w-[150px]">
-                          Product
+                        <TableHead 
+                          className="text-foreground cursor-pointer hover:bg-muted min-w-[120px] lg:min-w-[150px]"
+                          onClick={() => handleSort('name')}
+                        >
+                          Product <SortIcon column="name" />
                         </TableHead>
-                        <TableHead className="hidden md:table-cell text-foreground">
-                          Category
+                        <TableHead 
+                          className="hidden md:table-cell text-foreground cursor-pointer hover:bg-muted"
+                          onClick={() => handleSort('category')}
+                        >
+                          Category <SortIcon column="category" />
                         </TableHead>
                         <TableHead className="text-foreground min-w-[100px]">
                           Variant
@@ -609,13 +615,15 @@ export default function Inventory() {
                   <div className="border-t border-border">
                     <Pagination className="py-1 xs:py-2 sm:py-4">
                       <PaginationContent className="flex justify-center gap-0.5 xs:gap-1 sm:gap-2">
-                        {renderPaginationItems(currentPage, totalPages, setCurrentPage).map((item, index) => (
-                          <PaginationItem key={index} className="text-foreground">
-                            {React.cloneElement(item, {
-                              className: `${item.props.className || ''} text-foreground hover:bg-muted hover:text-foreground select-none`
-                            })}
-                          </PaginationItem>
-                        ))}
+                        <PaginationPrevious 
+                          onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                          className={`px-1 xs:px-2 sm:px-4 text-xs xs:text-sm ${currentPage === 1 ? 'pointer-events-none opacity-50' : ''}`}
+                        />
+                        {renderPaginationItems(currentPage, totalPages, setCurrentPage)}
+                        <PaginationNext 
+                          onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+                          className={`px-1 xs:px-2 sm:px-4 text-xs xs:text-sm ${currentPage === totalPages ? 'pointer-events-none opacity-50' : ''}`}
+                        />
                       </PaginationContent>
                     </Pagination>
                   </div>
@@ -632,20 +640,35 @@ export default function Inventory() {
                 <Table>
                   <TableHeader>
                     <TableRow className="border-border">
-                      <TableHead className="text-foreground min-w-[120px] lg:min-w-[150px]">
-                        Product
+                      <TableHead 
+                        className="text-foreground min-w-[120px] lg:min-w-[150px] cursor-pointer hover:bg-muted"
+                        onClick={() => handleLogSort('productId.name')}
+                      >
+                        Product <LogSortIcon column="productId.name" />
                       </TableHead>
-                      <TableHead className="hidden md:table-cell text-foreground">
-                        Date
+                      <TableHead 
+                        className="hidden md:table-cell text-foreground cursor-pointer hover:bg-muted"
+                        onClick={() => handleLogSort('createdAt')}
+                      >
+                        Date <LogSortIcon column="createdAt" />
                       </TableHead>
-                      <TableHead className="text-foreground">
-                        Change
+                      <TableHead 
+                        className="text-foreground cursor-pointer hover:bg-muted"
+                        onClick={() => handleLogSort('newQuantity')}
+                      >
+                        Change <LogSortIcon column="newQuantity" />
                       </TableHead>
-                      <TableHead className="hidden lg:table-cell text-foreground">
-                        Reason
+                      <TableHead 
+                        className="hidden lg:table-cell text-foreground cursor-pointer hover:bg-muted"
+                        onClick={() => handleLogSort('reason')}
+                      >
+                        Reason <LogSortIcon column="reason" />
                       </TableHead>
-                      <TableHead className="hidden md:table-cell text-foreground">
-                        Updated By
+                      <TableHead 
+                        className="hidden md:table-cell text-foreground cursor-pointer hover:bg-muted"
+                        onClick={() => handleLogSort('updatedBy.name')}
+                      >
+                        Updated By <LogSortIcon column="updatedBy.name" />
                       </TableHead>
                     </TableRow>
                   </TableHeader>
@@ -699,13 +722,15 @@ export default function Inventory() {
                 <div className="border-t border-border">
                   <Pagination className="py-1 xs:py-2 sm:py-4">
                     <PaginationContent className="flex justify-center gap-0.5 xs:gap-1 sm:gap-2">
-                      {renderPaginationItems(logsCurrentPage, totalLogsPages, setLogsCurrentPage).map((item, index) => (
-                        <PaginationItem key={index} className="text-foreground">
-                          {React.cloneElement(item, {
-                            className: `${item.props.className || ''} text-foreground hover:bg-muted hover:text-foreground select-none`
-                          })}
-                        </PaginationItem>
-                      ))}
+                      <PaginationPrevious 
+                        onClick={() => setLogsCurrentPage(p => Math.max(1, p - 1))}
+                        className={`px-1 xs:px-2 sm:px-4 text-xs xs:text-sm ${logsCurrentPage === 1 ? 'pointer-events-none opacity-50' : ''}`}
+                      />
+                      {renderPaginationItems(logsCurrentPage, totalLogsPages, setLogsCurrentPage)}
+                      <PaginationNext 
+                        onClick={() => setLogsCurrentPage(p => Math.min(totalLogsPages, p + 1))}
+                        className={`px-1 xs:px-2 sm:px-4 text-xs xs:text-sm ${logsCurrentPage === totalLogsPages ? 'pointer-events-none opacity-50' : ''}`}
+                      />
                     </PaginationContent>
                   </Pagination>
                 </div>
