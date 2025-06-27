@@ -29,7 +29,7 @@ import {
   PaginationPrevious,
 } from "@/components/ui/pagination";
 import { API_URL } from '@/config';
-import { Card, CardContent, CardHeader } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 
 interface Contact {
   _id: string;
@@ -277,16 +277,6 @@ export default function Contacts() {
 
       <div className="flex flex-col gap-4">
         <Card>
-          <CardHeader>
-            <div className="flex items-center justify-between">
-              <div>
-                <h2 className="text-2xl font-bold tracking-tight">Messages</h2>
-                <p className="text-muted-foreground">
-                  Manage contact form submissions
-                </p>
-              </div>
-            </div>
-          </CardHeader>
 
           <CardContent className="p-0">
             {selectedContacts.length > 0 && (
