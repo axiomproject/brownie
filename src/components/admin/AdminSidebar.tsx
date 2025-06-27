@@ -64,7 +64,7 @@ export function AdminSidebar() {
           size="sm"
           onClick={() => setIsCollapsed(!isCollapsed)}
           className={cn(
-            "h-8 w-8 p-0 text-foreground",
+            "h-8 w-8 p-0 text-foreground hidden md:flex", // Added hidden md:flex
             isCollapsed && "rotate-180"
           )}
         >
