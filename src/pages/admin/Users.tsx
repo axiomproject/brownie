@@ -431,15 +431,15 @@ export default function Users() {
 
   return (
     <div className="space-y-4">
-      <div className="flex justify-between items-center gap-4">
-        <div className="flex-1">
-          <div className="relative w-full max-w-sm">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+        <div className="w-full sm:w-auto sm:flex-1">
+          <div className="relative w-full sm:max-w-sm">
+            <Search className="absolute left-2 xs:left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
             <Input
               placeholder="Search users..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="pl-10 w-full bg-background text-foreground placeholder:text-muted-foreground border-border"
+              className="pl-8 xs:pl-10 w-full text-sm xs:text-base bg-background text-foreground placeholder:text-muted-foreground border-border"
             />
           </div>
         </div>
@@ -555,14 +555,15 @@ export default function Users() {
       </div>
 
       {selectedUsers.length > 0 && (
-        <div className="flex items-center justify-between bg-muted p-2 rounded-md">
-          <span className="text-sm text-foreground">
-            {selectedUsers.length} users selected
+        <div className="flex items-center justify-between bg-muted px-2 xs:px-4 py-2 border-y border-border">
+          <span className="text-xs xs:text-sm text-muted-foreground">
+            {selectedUsers.length} selected
           </span>
           <Button
             variant="destructive"
             size="sm"
             onClick={confirmBulkDelete}
+            className="text-xs xs:text-sm px-2 xs:px-4"
           >
             Delete Selected
           </Button>
@@ -609,41 +610,42 @@ export default function Users() {
         <Table>
           <TableHeader>
             <TableRow className="border-border">
-              <TableHead className="w-[50px]">
+              <TableHead className="w-[30px] xs:w-[40px] sm:w-[50px]">
                 <Checkbox
                   checked={
                     paginatedUsers().length > 0 &&
                     paginatedUsers().every(user => selectedUsers.includes(user._id))
                   }
                   onCheckedChange={toggleAll}
+                  className="scale-75 xs:scale-90 sm:scale-100"
                 />
               </TableHead>
               <TableHead 
-                className="text-foreground cursor-pointer hover:bg-muted"
+                className="text-foreground cursor-pointer hover:bg-muted min-w-[120px] lg:min-w-[150px]"
                 onClick={() => handleSort('name')}
               >
                 Name <SortIcon column="name" />
               </TableHead>
               <TableHead 
-                className="text-foreground cursor-pointer hover:bg-muted"
+                className="hidden md:table-cell text-foreground cursor-pointer hover:bg-muted"
                 onClick={() => handleSort('email')}
               >
                 Email <SortIcon column="email" />
               </TableHead>
               <TableHead 
-                className="text-foreground cursor-pointer hover:bg-muted"
+                className="hidden md:table-cell text-foreground cursor-pointer hover:bg-muted"
                 onClick={() => handleSort('role')}
               >
                 Role <SortIcon column="role" />
               </TableHead>
-              <TableHead className="text-foreground">Verified</TableHead>
+              <TableHead className="hidden lg:table-cell text-foreground">Verified</TableHead>
               <TableHead 
-                className="text-foreground cursor-pointer hover:bg-muted"
+                className="hidden md:table-cell text-foreground cursor-pointer hover:bg-muted"
                 onClick={() => handleSort('createdAt')}
               >
                 Joined <SortIcon column="createdAt" />
               </TableHead>
-              <TableHead className="text-right text-foreground">Actions</TableHead>
+              <TableHead className="w-[68px] sm:w-[80px] text-right">Actions</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -653,27 +655,49 @@ export default function Users() {
                 className="border-border"
                 data-selected={selectedUsers.includes(user._id)}
               >
-                <TableCell>
+                <TableCell className="p-2 sm:py-2">
                   <Checkbox
                     checked={selectedUsers.includes(user._id)}
                     onCheckedChange={() => toggleUser(user._id)}
+                    className="scale-75 xs:scale-90 sm:scale-100"
                   />
                 </TableCell>
-                <TableCell className="text-foreground">{user.name}</TableCell>
-                <TableCell className="text-foreground">{user.email}</TableCell>
-                <TableCell className="capitalize text-foreground">{user.role}</TableCell>
-                <TableCell>
+                <TableCell className="p-2 sm:py-2 min-w-[120px] lg:min-w-[150px]">
+                  <div className="flex flex-col gap-0.5">
+                    <span className="font-medium truncate text-xs xs:text-sm text-foreground">
+                      {user.name}
+                    </span>
+                    <span className="text-[10px] xs:text-xs text-muted-foreground md:hidden truncate">
+                      {user.email}
+                    </span>
+                    <span className="text-[10px] xs:text-xs text-muted-foreground md:hidden capitalize">
+                      {user.role}
+                    </span>
+                    <span className="text-[10px] xs:text-xs text-muted-foreground md:hidden">
+                      {new Date(user.createdAt).toLocaleDateString()}
+                    </span>
+                  </div>
+                </TableCell>
+                <TableCell className="hidden md:table-cell p-2 sm:py-2 text-foreground">
+                  {user.email}
+                </TableCell>
+                <TableCell className="hidden md:table-cell p-2 sm:py-2 capitalize text-foreground">
+                  {user.role}
+                </TableCell>
+                <TableCell className="hidden lg:table-cell p-2 sm:py-2">
                   <Switch
                     checked={user.isVerified}
                     onCheckedChange={(checked) => handleVerificationChange(user._id, checked)}
                     aria-label="Verify user"
                   />
                 </TableCell>
-                <TableCell className="text-foreground">{new Date(user.createdAt).toLocaleDateString()}</TableCell>
-                <TableCell className="text-right">
+                <TableCell className="hidden md:table-cell p-2 sm:py-2 text-foreground">
+                  {new Date(user.createdAt).toLocaleDateString()}
+                </TableCell>
+                <TableCell className="p-2 sm:py-2 text-right">
                   <DropdownMenu>
                     <DropdownMenuTrigger asChild>
-                      <Button variant="ghost" className="h-8 w-8 p-0">
+                      <Button variant="ghost" className="h-7 w-7">
                         <MoreHorizontal className="h-4 w-4 text-foreground" />
                       </Button>
                     </DropdownMenuTrigger>
