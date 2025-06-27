@@ -503,39 +503,54 @@ export default function Inventory() {
                   <Table>
                     <TableHeader>
                       <TableRow className="border-border">
-                        <TableHead 
-                          className="text-foreground cursor-pointer hover:bg-muted"
-                          onClick={() => handleSort('name')}
-                        >
-                          Product <SortIcon column="name" />
+                        <TableHead className="text-foreground cursor-pointer hover:bg-muted min-w-[120px] lg:min-w-[150px]">
+                          Product
                         </TableHead>
-                        <TableHead 
-                          className="text-foreground cursor-pointer hover:bg-muted"
-                          onClick={() => handleSort('category')}
-                        >
-                          Category <SortIcon column="category" />
+                        <TableHead className="hidden md:table-cell text-foreground">
+                          Category
                         </TableHead>
-                        <TableHead className="text-foreground">Variant</TableHead>
-                        <TableHead 
-                          className="text-foreground cursor-pointer hover:bg-muted"
-                          onClick={() => handleSort('stockQuantity')}
-                        >
-                          Stock Quantity <SortIcon column="stockQuantity" />
+                        <TableHead className="text-foreground min-w-[100px]">
+                          Variant
                         </TableHead>
-                        <TableHead className="text-foreground">Status</TableHead>
-                        <TableHead className="text-foreground">Actions</TableHead>
+                        <TableHead className="text-foreground">
+                          Stock
+                        </TableHead>
+                        <TableHead className="hidden md:table-cell text-foreground">
+                          Status
+                        </TableHead>
+                        <TableHead className="text-foreground w-[120px] sm:w-[150px]">
+                          Actions
+                        </TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
                       {paginatedProducts().flatMap((product) =>
                         product.variants.map((variant) => (
                           <TableRow key={`${product._id}-${variant.name}`} className="border-border">
-                            <TableCell className="text-foreground">{product.name}</TableCell>
-                            <TableCell className="capitalize text-foreground">{product.category}</TableCell>
-                            <TableCell className="text-foreground">{variant.name}</TableCell>
-                            <TableCell className="text-foreground">{variant.stockQuantity}</TableCell>
-                            <TableCell>
-                              <span className={`px-2 py-1 rounded-full text-sm ${
+                            <TableCell className="min-w-[120px] lg:min-w-[150px]">
+                              <div className="flex flex-col gap-0.5">
+                                <span className="font-medium truncate text-xs xs:text-sm text-foreground">
+                                  {product.name}
+                                </span>
+                                <span className="text-[10px] xs:text-xs text-muted-foreground md:hidden capitalize">
+                                  {product.category}
+                                </span>
+                                <span className="text-[10px] xs:text-xs text-muted-foreground md:hidden">
+                                  {variant.inStock ? 'In Stock' : 'Out of Stock'}
+                                </span>
+                              </div>
+                            </TableCell>
+                            <TableCell className="hidden md:table-cell capitalize text-foreground">
+                              {product.category}
+                            </TableCell>
+                            <TableCell className="text-foreground">
+                              {variant.name}
+                            </TableCell>
+                            <TableCell className="text-foreground">
+                              {variant.stockQuantity}
+                            </TableCell>
+                            <TableCell className="hidden md:table-cell">
+                              <span className={`px-2 py-1 rounded-full text-xs ${
                                 variant.inStock 
                                   ? 'bg-green-500/10 text-green-500' 
                                   : 'bg-red-500/10 text-red-500'
@@ -547,7 +562,7 @@ export default function Inventory() {
                               <div className="flex items-center gap-2">
                                 <Input
                                   type="number"
-                                  className="w-24 text-foreground"
+                                  className="w-20 xs:w-24 text-xs xs:text-sm text-foreground"
                                   defaultValue={variant.stockQuantity}
                                   onKeyDown={(e) => {
                                     if (e.key === 'Enter') {
@@ -589,14 +604,11 @@ export default function Inventory() {
                     </TableBody>
                   </Table>
                 </div>
+
                 {totalPages > 1 && (
                   <div className="border-t border-border">
                     <Pagination className="py-1 xs:py-2 sm:py-4">
                       <PaginationContent className="flex justify-center gap-0.5 xs:gap-1 sm:gap-2">
-                        <PaginationPrevious 
-                          onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
-                          className={`px-1 xs:px-2 sm:px-4 text-xs xs:text-sm ${currentPage === 1 ? 'pointer-events-none opacity-50' : ''}`}
-                        />
                         {renderPaginationItems(currentPage, totalPages, setCurrentPage).map((item, index) => (
                           <PaginationItem key={index} className="text-foreground">
                             {React.cloneElement(item, {
@@ -604,10 +616,6 @@ export default function Inventory() {
                             })}
                           </PaginationItem>
                         ))}
-                        <PaginationNext 
-                          onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
-                          className={`px-1 xs:px-2 sm:px-4 text-xs xs:text-sm ${currentPage === totalPages ? 'pointer-events-none opacity-50' : ''}`}
-                        />
                       </PaginationContent>
                     </Pagination>
                   </div>
@@ -618,97 +626,92 @@ export default function Inventory() {
         </TabsContent>
 
         <TabsContent value="logs">
-          <div className="rounded-md border border-border">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead 
-                    className="text-foreground cursor-pointer hover:bg-muted"
-                    onClick={() => handleLogSort('createdAt')}
-                  >
-                    Date <LogSortIcon column="createdAt" />
-                  </TableHead>
-                  <TableHead 
-                    className="text-foreground cursor-pointer hover:bg-muted"
-                    onClick={() => handleLogSort('productId.name')}
-                  >
-                    Product <LogSortIcon column="productId.name" />
-                  </TableHead>
-                  <TableHead 
-                    className="text-foreground cursor-pointer hover:bg-muted"
-                    onClick={() => handleLogSort('variantName')}
-                  >
-                    Variant <LogSortIcon column="variantName" />
-                  </TableHead>
-                  <TableHead 
-                    className="text-foreground cursor-pointer hover:bg-muted"
-                    onClick={() => handleLogSort('newQuantity')}
-                  >
-                    Change <LogSortIcon column="newQuantity" />
-                  </TableHead>
-                  <TableHead 
-                    className="text-foreground cursor-pointer hover:bg-muted"
-                    onClick={() => handleLogSort('reason')}
-                  >
-                    Reason <LogSortIcon column="reason" />
-                  </TableHead>
-                  <TableHead 
-                    className="text-foreground cursor-pointer hover:bg-muted"
-                    onClick={() => handleLogSort('updatedBy.name')}
-                  >
-                    Updated By <LogSortIcon column="updatedBy.name" />
-                  </TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {paginatedLogs().map((log) => (
-                  <TableRow key={log._id}>
-                    <TableCell className="text-foreground">{new Date(log.createdAt).toLocaleString()}</TableCell>
-                    <TableCell className="text-foreground">{log.productId.name}</TableCell>
-                    <TableCell className="text-foreground">{log.variantName}</TableCell>
-                    <TableCell>
-                      <span className={`${
-                        log.newQuantity > log.previousQuantity 
-                          ? 'text-green-500 dark:text-green-400' 
-                          : 'text-red-500 dark:text-red-400'
-                      }`}>
-                        {log.previousQuantity} → {log.newQuantity}
-                      </span>
-                    </TableCell>
-                    <TableCell className="text-foreground">{log.reason}</TableCell>
-                    <TableCell className="text-foreground">{log.updatedBy.name}</TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          </div>
-          {totalLogsPages > 1 && (
-            <Pagination className="mt-4 select-none">
-              <PaginationContent>
-                <PaginationItem>
-                  <PaginationPrevious 
-                    onClick={() => setLogsCurrentPage(p => Math.max(1, p - 1))}
-                    className={`${logsCurrentPage === 1 ? 'pointer-events-none opacity-50' : 'cursor-pointer'} text-foreground hover:bg-muted hover:text-foreground`}
-                  />
-                </PaginationItem>
-                
-                {renderPaginationItems(logsCurrentPage, totalLogsPages, setLogsCurrentPage).map((item, index) => (
-                  <PaginationItem key={index} className="text-foreground">
-                    {React.cloneElement(item, {
-                      className: `${item.props.className || ''} text-foreground hover:bg-muted hover:text-foreground select-none`
-                    })}
-                  </PaginationItem>
-                ))}
-                
-                <PaginationItem>
-                  <PaginationNext 
-                    onClick={() => setLogsCurrentPage(p => Math.min(totalLogsPages, p + 1))}
-                    className={`${logsCurrentPage === totalLogsPages ? 'pointer-events-none opacity-50' : 'cursor-pointer'} text-foreground hover:bg-muted hover:text-foreground`}
-                  />
-                </PaginationItem>
-              </PaginationContent>
-            </Pagination>
-          )}
+          <Card>
+            <CardContent className="p-0">
+              <div className="border-0 overflow-x-auto">
+                <Table>
+                  <TableHeader>
+                    <TableRow className="border-border">
+                      <TableHead className="text-foreground min-w-[120px] lg:min-w-[150px]">
+                        Product
+                      </TableHead>
+                      <TableHead className="hidden md:table-cell text-foreground">
+                        Date
+                      </TableHead>
+                      <TableHead className="text-foreground">
+                        Change
+                      </TableHead>
+                      <TableHead className="hidden lg:table-cell text-foreground">
+                        Reason
+                      </TableHead>
+                      <TableHead className="hidden md:table-cell text-foreground">
+                        Updated By
+                      </TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {paginatedLogs().map((log) => (
+                      <TableRow key={log._id}>
+                        <TableCell className="min-w-[120px] lg:min-w-[150px]">
+                          <div className="flex flex-col gap-0.5">
+                            <span className="font-medium truncate text-xs xs:text-sm text-foreground">
+                              {log.productId.name}
+                            </span>
+                            <span className="text-[10px] xs:text-xs text-muted-foreground">
+                              {log.variantName}
+                            </span>
+                            <span className="text-[10px] xs:text-xs text-muted-foreground md:hidden">
+                              {new Date(log.createdAt).toLocaleString()}
+                            </span>
+                            <span className="text-[10px] xs:text-xs text-muted-foreground lg:hidden truncate">
+                              {log.reason}
+                            </span>
+                            <span className="text-[10px] xs:text-xs text-muted-foreground md:hidden">
+                              By: {log.updatedBy.name}
+                            </span>
+                          </div>
+                        </TableCell>
+                        <TableCell className="hidden md:table-cell text-foreground">
+                          {new Date(log.createdAt).toLocaleString()}
+                        </TableCell>
+                        <TableCell>
+                          <span className={`${
+                            log.newQuantity > log.previousQuantity 
+                              ? 'text-green-500 dark:text-green-400' 
+                              : 'text-red-500 dark:text-red-400'
+                          }`}>
+                            {log.previousQuantity} → {log.newQuantity}
+                          </span>
+                        </TableCell>
+                        <TableCell className="hidden lg:table-cell text-foreground">
+                          <span className="truncate block max-w-[200px]">{log.reason}</span>
+                        </TableCell>
+                        <TableCell className="hidden md:table-cell text-foreground">
+                          {log.updatedBy.name}
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </div>
+
+              {totalLogsPages > 1 && (
+                <div className="border-t border-border">
+                  <Pagination className="py-1 xs:py-2 sm:py-4">
+                    <PaginationContent className="flex justify-center gap-0.5 xs:gap-1 sm:gap-2">
+                      {renderPaginationItems(logsCurrentPage, totalLogsPages, setLogsCurrentPage).map((item, index) => (
+                        <PaginationItem key={index} className="text-foreground">
+                          {React.cloneElement(item, {
+                            className: `${item.props.className || ''} text-foreground hover:bg-muted hover:text-foreground select-none`
+                          })}
+                        </PaginationItem>
+                      ))}
+                    </PaginationContent>
+                  </Pagination>
+                </div>
+              )}
+            </CardContent>
+          </Card>
         </TabsContent>
       </Tabs>
       <StockUpdateDialog
