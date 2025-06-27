@@ -47,7 +47,7 @@ export default function Home() {
   };
 
   const heroImages = [
-    '/1.jpg',  // Changed paths to root directory
+    '/1.jpg',  
     '/2.jpg',
     '/3.jpg'
   ];
