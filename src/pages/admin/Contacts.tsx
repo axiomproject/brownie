@@ -308,10 +308,30 @@ export default function Contacts() {
                   onCheckedChange={toggleAll}
                 />
               </TableHead>
-              <TableHead>Name</TableHead>
-              <TableHead className="hidden md:table-cell">Email</TableHead>
-              <TableHead className="hidden sm:table-cell max-w-[180px]">Subject</TableHead>
-              <TableHead className="hidden sm:table-cell">Date</TableHead>
+              <TableHead 
+                className="cursor-pointer hover:bg-muted"
+                onClick={() => handleSort('name')}
+              >
+                Name <SortIcon column="name" />
+              </TableHead>
+              <TableHead 
+                className="hidden md:table-cell cursor-pointer hover:bg-muted"
+                onClick={() => handleSort('email')}
+              >
+                Email <SortIcon column="email" />
+              </TableHead>
+              <TableHead 
+                className="hidden sm:table-cell max-w-[180px] cursor-pointer hover:bg-muted"
+                onClick={() => handleSort('subject')}
+              >
+                Subject <SortIcon column="subject" />
+              </TableHead>
+              <TableHead 
+                className="hidden sm:table-cell cursor-pointer hover:bg-muted"
+                onClick={() => handleSort('createdAt')}
+              >
+                Date <SortIcon column="createdAt" />
+              </TableHead>
               <TableHead className="text-right">Actions</TableHead>
             </TableRow>
           </TableHeader>
