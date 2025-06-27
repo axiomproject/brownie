@@ -302,15 +302,16 @@ export default function Feedback() {
 
   return (
     <div className="space-y-6">
-      <div className="flex justify-between items-center">
-        <div className="flex-1">
-          <div className="relative w-full max-w-sm">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+      {/* Update search bar container */}
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+        <div className="w-full sm:w-auto sm:flex-1">
+          <div className="relative w-full sm:max-w-sm">
+            <Search className="absolute left-2 xs:left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
             <Input
               placeholder="Search feedbacks..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="pl-10 w-full bg-background text-foreground placeholder:text-muted-foreground border-border"
+              className="pl-8 xs:pl-10 w-full text-sm xs:text-base bg-background text-foreground placeholder:text-muted-foreground border-border"
             />
           </div>
         </div>
@@ -320,15 +321,15 @@ export default function Feedback() {
         <Card>
           <CardContent className="p-0">
             {selectedFeedbacks.length > 0 && (
-              <div className="flex items-center justify-between bg-muted px-2 sm:px-4 py-2 border-y border-border">
-                <span className="text-xs sm:text-sm text-muted-foreground">
+              <div className="flex items-center justify-between bg-muted px-2 xs:px-4 py-2 border-y border-border">
+                <span className="text-xs xs:text-sm text-muted-foreground">
                   {selectedFeedbacks.length} selected
                 </span>
                 <Button
                   variant="destructive"
                   size="sm"
                   onClick={confirmBulkDelete}
-                  className="text-xs sm:text-sm px-2 sm:px-4"
+                  className="text-xs xs:text-sm px-2 xs:px-4"
                 >
                   Delete Selected
                 </Button>
@@ -339,20 +340,21 @@ export default function Feedback() {
               <Table>
                 <TableHeader>
                   <TableRow className="border-border">
-                    <TableHead className="w-[40px] sm:w-[50px]">
+                    <TableHead className="w-[30px] xs:w-[40px] sm:w-[50px]">
                       <Checkbox
                         checked={
                           paginatedFeedbacks().length > 0 &&
                           paginatedFeedbacks().every(feedback => selectedFeedbacks.includes(feedback._id))
                         }
                         onCheckedChange={toggleAll}
+                        className="scale-75 xs:scale-90 sm:scale-100"
                       />
                     </TableHead>
                     <TableHead 
-                      className="cursor-pointer hover:bg-muted min-w-[120px] lg:min-w-[150px]"
+                      className="cursor-pointer hover:bg-muted min-w-[100px] xs:min-w-[120px] lg:min-w-[150px]"
                       onClick={() => handleSort('productName')}
                     >
-                      Product <SortIcon column="productName" />
+                      <span className="text-xs xs:text-sm">Product</span> <SortIcon column="productName" />
                     </TableHead>
                     <TableHead 
                       className="hidden lg:table-cell cursor-pointer hover:bg-muted"
@@ -375,25 +377,26 @@ export default function Feedback() {
                   {paginatedFeedbacks().map((feedback) => (
                     feedback.productFeedback.map((product) => (
                       <TableRow key={`${feedback._id}-${product.productId}`}>
-                        <TableCell className="p-2 sm:py-2">
+                        <TableCell className="p-1 xs:p-2 sm:py-2">
                           <Checkbox
                             checked={selectedFeedbacks.includes(feedback._id)}
                             onCheckedChange={() => toggleFeedback(feedback._id)}
+                            className="scale-75 xs:scale-90 sm:scale-100"
                           />
                         </TableCell>
-                        <TableCell className="p-2 sm:py-2 min-w-[120px] lg:min-w-[150px]">
+                        <TableCell className="p-1 xs:p-2 sm:py-2 min-w-[100px] xs:min-w-[120px] lg:min-w-[150px]">
                           <div className="flex flex-col gap-0.5">
-                            <span className="font-medium truncate">{product.productName}</span>
-                            <span className="text-xs text-muted-foreground truncate">
+                            <span className="font-medium truncate text-xs xs:text-sm">{product.productName}</span>
+                            <span className="text-[10px] xs:text-xs text-muted-foreground truncate">
                               {product.variantName}
                             </span>
-                            <span className="text-xs text-muted-foreground lg:hidden">
+                            <span className="text-[10px] xs:text-xs text-muted-foreground lg:hidden">
                               {new Date(feedback.createdAt).toLocaleDateString()}
                             </span>
-                            <span className="text-xs text-muted-foreground md:hidden truncate">
+                            <span className="text-[10px] xs:text-xs text-muted-foreground md:hidden truncate">
                               {feedback.order?.user?.name || feedback.order?.email || 'Guest'}
                             </span>
-                            <span className="text-xs text-muted-foreground md:hidden">
+                            <span className="text-[10px] xs:text-xs text-muted-foreground md:hidden">
                               {product.comment}
                             </span>
                           </div>
@@ -430,16 +433,16 @@ export default function Feedback() {
 
             {totalPages > 1 && (
               <div className="border-t border-border">
-                <Pagination className="py-2 sm:py-4">
-                  <PaginationContent className="flex justify-center gap-1 sm:gap-2">
+                <Pagination className="py-1 xs:py-2 sm:py-4">
+                  <PaginationContent className="flex justify-center gap-0.5 xs:gap-1 sm:gap-2">
                     <PaginationPrevious 
                       onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
-                      className={`px-2 sm:px-4 ${currentPage === 1 ? 'pointer-events-none opacity-50' : ''}`}
+                      className={`px-1 xs:px-2 sm:px-4 text-xs xs:text-sm ${currentPage === 1 ? 'pointer-events-none opacity-50' : ''}`}
                     />
                     {renderPaginationItems()}
                     <PaginationNext 
                       onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
-                      className={`px-2 sm:px-4 ${currentPage === totalPages ? 'pointer-events-none opacity-50' : ''}`}
+                      className={`px-1 xs:px-2 sm:px-4 text-xs xs:text-sm ${currentPage === totalPages ? 'pointer-events-none opacity-50' : ''}`}
                     />
                   </PaginationContent>
                 </Pagination>
