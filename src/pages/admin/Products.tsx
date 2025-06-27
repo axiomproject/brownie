@@ -98,7 +98,7 @@ const [productToDelete, setProductToDelete] = useState<string | null>(null);
 
   const fetchProducts = async () => {
     try {
-      console.log('Fetching products...');
+     
       const response = await fetch(`${API_URL}/api/admin/products`, {
         headers: {
           'Authorization': `Bearer ${localStorage.getItem('token')}`,
@@ -112,10 +112,8 @@ const [productToDelete, setProductToDelete] = useState<string | null>(null);
       }
 
       const data = await response.json();
-      console.log('Fetched products:', data);
       setProducts(data);
     } catch (error) {
-      console.error('Error fetching products:', error);
       toast.error("Failed to load products");
     } finally {
       setLoading(false);

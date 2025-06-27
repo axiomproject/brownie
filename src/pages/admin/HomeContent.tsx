@@ -105,10 +105,10 @@ export default function HomeContent() {
         });
         if (!response.ok) throw new Error('Failed to fetch content');
         const data = await response.json();
-        console.log('Fetched admin content:', data); // Add this debug log
+       
         setContent(data);
       } catch (error) {
-        console.error('Error fetching content:', error);
+       
         toast.error('Failed to load content');
       } finally {
         setLoading(false);
