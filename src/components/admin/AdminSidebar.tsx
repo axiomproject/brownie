@@ -47,11 +47,11 @@ export function AdminSidebar() {
 
   return (
     <div className={cn(
-      "min-h-screen bg-muted border-r flex flex-col fixed transition-all duration-300",
+      "min-h-screen bg-muted border-r flex flex-col fixed transition-all duration-300 overflow-y-auto max-h-screen", // Added overflow-y-auto and max-h-screen
       isCollapsed ? "w-16" : "w-64"
     )}>
       <div className={cn(
-        "p-6 flex items-center",
+        "p-6 flex items-center sticky top-0 z-20 bg-muted border-b", // Added sticky, top-0, z-20, and border-b
         isCollapsed ? "justify-center" : "justify-between"
       )}>
         {!isCollapsed && (
@@ -101,7 +101,7 @@ export function AdminSidebar() {
           </Link>
         ))}
       </nav>
-      <div className="p-4 border-t">
+      <div className="p-4 border-t sticky bottom-0 bg-muted z-20"> {/* Added sticky, bottom-0, and z-20 */}
         {isCollapsed ? (
           <div className="flex flex-col gap-2">
             <Button 
