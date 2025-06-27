@@ -40,6 +40,7 @@ import React from "react";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { Checkbox } from "@/components/ui/checkbox";
 import { API_URL } from '@/config';
+import { Card, CardContent } from "@/components/ui/card";
 
 interface Coupon {
   _id: string;
@@ -349,22 +350,22 @@ export default function Coupon() {
   }
 
   return (
-    <div className="space-y-4">
-      <div className="flex justify-between items-center gap-4">
-        <div className="flex-1">
-          <div className="relative w-full max-w-sm">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+    <div className="space-y-6">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+        <div className="w-full sm:w-auto sm:flex-1">
+          <div className="relative w-full sm:max-w-sm">
+            <Search className="absolute left-2 xs:left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
             <Input
               placeholder="Search coupons..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="pl-10 w-full bg-background text-foreground placeholder:text-muted-foreground border-border"
+              className="pl-8 xs:pl-10 w-full text-sm xs:text-base bg-background text-foreground placeholder:text-muted-foreground border-border"
             />
           </div>
         </div>
         <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
           <DialogTrigger asChild>
-            <Button className="mt-8">
+            <Button className="w-full sm:w-auto">
               <Plus className="h-4 w-4 mr-2" />
               Create Coupon
             </Button>
@@ -459,6 +460,174 @@ export default function Coupon() {
             </div>
           </DialogContent>
         </Dialog>
+      </div>
+
+      <div className="flex flex-col gap-4">
+        <Card>
+          <CardContent className="p-0">
+            {selectedCoupons.length > 0 && (
+              <div className="flex items-center justify-between bg-muted px-2 xs:px-4 py-2 border-y border-border">
+                <span className="text-xs xs:text-sm text-muted-foreground">
+                  {selectedCoupons.length} selected
+                </span>
+                <Button
+                  variant="destructive"
+                  size="sm"
+                  onClick={confirmBulkDelete}
+                  className="text-xs xs:text-sm px-2 xs:px-4"
+                >
+                  Delete Selected
+                </Button>
+              </div>
+            )}
+
+            <div className="border-0 overflow-x-auto">
+              <Table>
+                <TableHeader>
+                  <TableRow className="border-border">
+                    <TableHead className="w-[30px] xs:w-[40px] sm:w-[50px]">
+                      <Checkbox
+                        checked={
+                          paginatedCoupons().length > 0 &&
+                          paginatedCoupons().every(coupon => selectedCoupons.includes(coupon._id))
+                        }
+                        onCheckedChange={toggleAll}
+                        className="scale-75 xs:scale-90 sm:scale-100"
+                      />
+                    </TableHead>
+                    <TableHead 
+                      className="cursor-pointer hover:bg-muted min-w-[100px] xs:min-w-[120px]"
+                      onClick={() => handleSort('code')}
+                    >
+                      <span className="text-xs xs:text-sm">Code</span> <SortIcon column="code" />
+                    </TableHead>
+                    <TableHead 
+                      className="hidden md:table-cell cursor-pointer hover:bg-muted"
+                      onClick={() => handleSort('type')}
+                    >
+                      Type <SortIcon column="type" />
+                    </TableHead>
+                    <TableHead 
+                      className="cursor-pointer hover:bg-muted"
+                      onClick={() => handleSort('value')}
+                    >
+                      Value <SortIcon column="value" />
+                    </TableHead>
+                    <TableHead className="hidden lg:table-cell">New Users</TableHead>
+                    <TableHead
+                      className="hidden sm:table-cell cursor-pointer hover:bg-muted"
+                      onClick={() => handleSort('maxUses')}
+                    >
+                      Usage <SortIcon column="maxUses" />
+                    </TableHead>
+                    <TableHead 
+                      className="hidden md:table-cell cursor-pointer hover:bg-muted"
+                      onClick={() => handleSort('expiryDate')}
+                    >
+                      Expiry <SortIcon column="expiryDate" />
+                    </TableHead>
+                    <TableHead 
+                      className="cursor-pointer hover:bg-muted w-[80px]"
+                      onClick={() => handleSort('isActive')}
+                    >
+                      Status
+                    </TableHead>
+                    <TableHead className="w-[50px]">Actions</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {paginatedCoupons().map((coupon) => (
+                    <TableRow key={coupon._id} className="border-border">
+                      <TableCell className="p-1 xs:p-2">
+                        <Checkbox
+                          checked={selectedCoupons.includes(coupon._id)}
+                          onCheckedChange={() => toggleCoupon(coupon._id)}
+                          className="scale-75 xs:scale-90 sm:scale-100"
+                        />
+                      </TableCell>
+                      <TableCell className="p-1 xs:p-2">
+                        <div className="flex flex-col gap-0.5">
+                          <span className="font-mono text-xs xs:text-sm font-medium">{coupon.code}</span>
+                          <span className="text-[10px] xs:text-xs text-muted-foreground md:hidden">
+                            {coupon.type}
+                          </span>
+                          <span className="text-[10px] xs:text-xs text-muted-foreground sm:hidden">
+                            {coupon.maxUses === -1 ? 
+                              `${coupon.usedCount} uses` : 
+                              `${coupon.usedCount}/${coupon.maxUses} uses`
+                            }
+                          </span>
+                          <span className="text-[10px] xs:text-xs text-muted-foreground md:hidden">
+                            {coupon.expiryDate ? 
+                              new Date(coupon.expiryDate).toLocaleDateString() : 
+                              'No expiry'
+                            }
+                          </span>
+                        </div>
+                      </TableCell>
+                      <TableCell className="hidden md:table-cell p-2">
+                        {coupon.type}
+                      </TableCell>
+                      <TableCell className="p-1 xs:p-2 text-xs xs:text-sm">
+                        {coupon.type === 'fixed' ? `₱${coupon.value}` : `${coupon.value}x`}
+                      </TableCell>
+                      <TableCell className="hidden lg:table-cell p-2">
+                        {coupon.newUsersOnly ? 'Yes' : 'No'}
+                      </TableCell>
+                      <TableCell className="hidden sm:table-cell p-2">
+                        {coupon.maxUses === -1 ? 
+                          `${coupon.usedCount} uses` : 
+                          `${coupon.usedCount}/${coupon.maxUses}`
+                        }
+                      </TableCell>
+                      <TableCell className="hidden md:table-cell p-2">
+                        {coupon.expiryDate ? 
+                          new Date(coupon.expiryDate).toLocaleDateString() : 
+                          'No expiry'
+                        }
+                      </TableCell>
+                      <TableCell className="p-1 xs:p-2">
+                        <Switch
+                          checked={coupon.isActive}
+                          onCheckedChange={(checked) => toggleCouponStatus(coupon._id, checked)}
+                          className="scale-75 xs:scale-90 sm:scale-100"
+                        />
+                      </TableCell>
+                      <TableCell className="p-1 xs:p-2">
+                        <Button 
+                          variant="ghost" 
+                          size="icon"
+                          onClick={() => handleEdit(coupon)}
+                          className="h-7 w-7"
+                        >
+                          <Pencil className="h-3 w-3" />
+                        </Button>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </div>
+
+            {totalPages > 1 && (
+              <div className="border-t border-border">
+                <Pagination className="py-1 xs:py-2 sm:py-4">
+                  <PaginationContent className="flex justify-center gap-0.5 xs:gap-1 sm:gap-2">
+                    <PaginationPrevious 
+                      onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                      className={`px-1 xs:px-2 sm:px-4 text-xs xs:text-sm ${currentPage === 1 ? 'pointer-events-none opacity-50' : ''}`}
+                    />
+                    {renderPaginationItems()}
+                    <PaginationNext 
+                      onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+                      className={`px-1 xs:px-2 sm:px-4 text-xs xs:text-sm ${currentPage === totalPages ? 'pointer-events-none opacity-50' : ''}`}
+                    />
+                  </PaginationContent>
+                </Pagination>
+              </div>
+            )}
+          </CardContent>
+        </Card>
       </div>
 
       <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
