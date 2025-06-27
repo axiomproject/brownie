@@ -186,15 +186,15 @@ export default function HomeContent() {
 
       <div className="w-full max-w-[300px] mb-6">
         <Select value={currentSection} onValueChange={setCurrentSection}>
-          <SelectTrigger>
+          <SelectTrigger className="text-foreground">
             <SelectValue placeholder="Select section" />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="app">App Settings</SelectItem>
-            <SelectItem value="home">Home</SelectItem>
-            <SelectItem value="menu">Menu</SelectItem>
-            <SelectItem value="about">About</SelectItem>
-            <SelectItem value="contact">Contact</SelectItem>
+            <SelectItem value="app" className="text-foreground">App Settings</SelectItem>
+            <SelectItem value="home" className="text-foreground">Home</SelectItem>
+            <SelectItem value="menu" className="text-foreground">Menu</SelectItem>
+            <SelectItem value="about" className="text-foreground">About</SelectItem>
+            <SelectItem value="contact" className="text-foreground">Contact</SelectItem>
           </SelectContent>
         </Select>
       </div>
