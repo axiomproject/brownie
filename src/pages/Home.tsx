@@ -12,6 +12,7 @@ import {
   CarouselItem,
 } from "@/components/ui/carousel"
 import Autoplay from "embla-carousel-autoplay"
+import { LoadingDialog } from "@/components/LoadingDialog";
 
 export default function Home() {
   const navigate = useNavigate();
@@ -28,6 +29,22 @@ export default function Home() {
   const plugin = useRef(
     Autoplay({ delay: 4000, stopOnInteraction: true })
   );
+
+  const [showLoadingDialog, setShowLoadingDialog] = useState(true);
+  const [hasSeenDialog, setHasSeenDialog] = useState(() => {
+    return localStorage.getItem('hasSeenLoadingDialog') === 'true'
+  });
+
+  useEffect(() => {
+    if (!hasSeenDialog) {
+      setShowLoadingDialog(true);
+      localStorage.setItem('hasSeenLoadingDialog', 'true');
+    }
+  }, [hasSeenDialog]);
+
+  const handleApiResponse = () => {
+    setShowLoadingDialog(false);
+  };
 
   const heroImages = [
     '/1.jpg',  // Changed paths to root directory
@@ -73,6 +90,9 @@ export default function Home() {
           },
           credentials: 'include'
         });
+        
+        handleApiResponse();
+
         if (!response.ok) throw new Error('Failed to fetch content');
         const data = await response.json();
         console.log('Home content received:', data);
@@ -99,7 +119,11 @@ export default function Home() {
 
   return (
     <div className="flex flex-col min-h-screen bg-background"> {/* Added bg-background */}
-      <div className="fixed top-0 left-0 right-0"> {/* Add fixed navbar wrapper with highest z-index */}
+      <LoadingDialog 
+        open={showLoadingDialog} 
+        onOpenChange={setShowLoadingDialog}
+      />
+      <div className="fixed top-0 left-0 right=0"> {/* Add fixed navbar wrapper with highest z-index */}
         <div className="relative z-50 bg-background">
           <Navbar />
         </div>
