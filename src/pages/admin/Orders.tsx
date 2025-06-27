@@ -571,13 +571,37 @@ export default function Orders() {
                       className="scale-75 xs:scale-90 sm:scale-100"
                     />
                   </TableHead>
-                  <TableHead className="min-w-[80px] text-foreground">Order ID</TableHead>
+                  <TableHead className="min-w-[80px] text-foreground cursor-pointer hover:bg-muted"
+                    onClick={() => handleSort('createdAt')}
+                  >
+                    Order ID <SortIcon column="createdAt" />
+                  </TableHead>
                   <TableHead className="min-w-[150px] text-foreground">Customer</TableHead>
                   <TableHead className="min-w-[200px] text-foreground">Items</TableHead>
-                  <TableHead className="min-w-[100px] text-foreground">Total</TableHead>
-                  <TableHead className="min-w-[100px] text-foreground">Payment</TableHead>
-                  <TableHead className="min-w-[140px] text-foreground">Status</TableHead>
-                  <TableHead className="min-w-[150px] text-foreground">Date</TableHead>
+                  <TableHead 
+                    className="min-w-[100px] text-foreground cursor-pointer hover:bg-muted"
+                    onClick={() => handleSort('totalAmount')}
+                  >
+                    Total <SortIcon column="totalAmount" />
+                  </TableHead>
+                  <TableHead 
+                    className="min-w-[100px] text-foreground cursor-pointer hover:bg-muted"
+                    onClick={() => handleSort('paymentMethod')}
+                  >
+                    Payment <SortIcon column="paymentMethod" />
+                  </TableHead>
+                  <TableHead 
+                    className="min-w-[140px] text-foreground cursor-pointer hover:bg-muted"
+                    onClick={() => handleSort('status')}
+                  >
+                    Status <SortIcon column="status" />
+                  </TableHead>
+                  <TableHead 
+                    className="min-w-[150px] text-foreground cursor-pointer hover:bg-muted"
+                    onClick={() => handleSort('createdAt')}
+                  >
+                    Date <SortIcon column="createdAt" />
+                  </TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
