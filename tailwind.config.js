@@ -1,7 +1,10 @@
 // ...existing config...
 
 module.exports = {
-  // ...existing config...
+  screens: {
+    'xs': '475px',
+  
+  },
   theme: {
     extend: {
       // ...existing extends...

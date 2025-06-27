@@ -125,168 +125,200 @@ export default function Dashboard() {
   }
 
   return (
-    <div className="min-h-screen bg-background p-8">
-      {/* Stats cards grid */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-6">
+    <div className="min-h-screen bg-background p-4 sm:p-8">
+      {/* Stats cards grid - Make more responsive */}
+      <div className="grid grid-cols-1 xs:grid-cols-2 md:grid-cols-4 gap-4 mb-6">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Total Orders</CardTitle>
+            <CardTitle className="text-xs sm:text-sm font-medium">Total Orders</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{stats.totalOrders}</div>
+            <div className="text-lg sm:text-2xl font-bold">{stats.totalOrders}</div>
           </CardContent>
         </Card>
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Total Users</CardTitle>
+            <CardTitle className="text-xs sm:text-sm font-medium">Total Users</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{stats.totalUsers}</div>
+            <div className="text-lg sm:text-2xl font-bold">{stats.totalUsers}</div>
           </CardContent>
         </Card>
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Total Products</CardTitle>
+            <CardTitle className="text-xs sm:text-sm font-medium">Total Products</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{stats.totalProducts}</div>
-            <p className="text-xs text-muted-foreground">
+            <div className="text-lg sm:text-2xl font-bold">{stats.totalProducts}</div>
+            <p className="text-[10px] xs:text-xs text-muted-foreground">
               {stats.lowStockProducts} items low on stock
             </p>
           </CardContent>
         </Card>
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Revenue</CardTitle>
+            <CardTitle className="text-xs sm:text-sm font-medium">Revenue</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">₱{stats.totalRevenue.toFixed(2)}</div>
-            <p className="text-xs text-muted-foreground">From delivered orders</p>
+            <div className="text-lg sm:text-2xl font-bold">₱{stats.totalRevenue.toFixed(2)}</div>
+            <p className="text-[10px] xs:text-xs text-muted-foreground">From delivered orders</p>
           </CardContent>
         </Card>
       </div>
 
-      {/* Charts Grid Section */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+      {/* Charts Grid Section - Improve responsiveness */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
         {/* Revenue Chart */}
         <Card className="col-span-1">
           <CardHeader>
-            <CardTitle>Monthly Revenue</CardTitle>
-            <CardDescription>Total revenue by month</CardDescription>
+            <CardTitle className="text-sm xs:text-base">Monthly Revenue</CardTitle>
+            <CardDescription className="text-xs xs:text-sm">Total revenue by month</CardDescription>
           </CardHeader>
-          <CardContent className="pl-2">
-            <ChartContainer config={chartConfig}>
-              <BarChart 
-                data={stats.revenueData}
-                margin={{ top: 40, right: 20, bottom: 90, left: 70 }}
-              >
-                <CartesianGrid vertical={false} />
-                <XAxis 
-                  dataKey="name" 
-                  tick={{ fill: 'var(--muted-foreground)' }}
-                  angle={-45}
-                  textAnchor="end"
-                  height={20}
-                  interval={0}
-                />
-                <YAxis 
-                  tick={{ fill: 'var(--muted-foreground)' }}
-                  width={20}
-                />
-                <ChartTooltip
-                  cursor={{ fill: 'var(--accent)' }}
-                  content={<ChartTooltipContent />}
-                />
-                <Bar 
-                  dataKey="total" 
-                  fill="currentColor"
-                  className="fill-current text-primary"
-                  radius={[4, 4, 0, 0]}
-                  maxBarSize={35}
-                />
-              </BarChart>
-            </ChartContainer>
+          <CardContent className="pl-0 xs:pl-2">
+            <div className="h-[300px] sm:h-[400px]">
+              <ChartContainer config={chartConfig}>
+                <BarChart 
+                  data={stats.revenueData}
+                  margin={{ 
+                    top: 20, 
+                    right: 10, 
+                    bottom: 50, 
+                    left: 40 
+                  }}
+                  height={300}
+                >
+                  <CartesianGrid vertical={false} />
+                  <XAxis 
+                    dataKey="name" 
+                    tick={{ 
+                      fill: 'var(--muted-foreground)',
+                      fontSize: '10px',
+                    }}
+                    angle={-45}
+                    textAnchor="end"
+                    height={60}
+                    interval={0}
+                    scale="point"
+                    padding={{ left: 10, right: 10 }}
+                  />
+                  <YAxis 
+                    tick={{ 
+                      fill: 'var(--muted-foreground)',
+                      fontSize: '10px',
+                    }}
+                    width={50}
+                  />
+                  <ChartTooltip
+                    cursor={{ fill: 'var(--accent)' }}
+                    content={<ChartTooltipContent />}
+                  />
+                  <Bar 
+                    dataKey="total" 
+                    fill="currentColor"
+                    className="fill-current text-primary"
+                    radius={[4, 4, 0, 0]}
+                    maxBarSize={35}
+                  />
+                </BarChart>
+              </ChartContainer>
+            </div>
           </CardContent>
         </Card>
 
         {/* Most Ordered Items Chart */}
         <Card className="col-span-1">
           <CardHeader>
-            <CardTitle>Most Ordered Items</CardTitle>
-            <CardDescription>Top selling products by quantity</CardDescription>
+            <CardTitle className="text-sm xs:text-base">Most Ordered Items</CardTitle>
+            <CardDescription className="text-xs xs:text-sm">Top selling products by quantity</CardDescription>
           </CardHeader>
           <CardContent>
-            <ChartContainer config={mostOrderedConfig}>
-              <BarChart
-                data={stats.mostOrderedItems || []}
-                layout="vertical"
-                margin={{
-                  top: 20,
-                  right: 40,
-                  bottom: 20,
-                  left: 10,
-                }}
-                height={400}
-              >
-                <CartesianGrid horizontal={false} />
-                <YAxis
-                  dataKey="name"
-                  type="category"
-                  tickLine={false}
-                  axisLine={false}
-                  width={70}
-                  tick={{ fill: 'var(--muted-foreground)' }}
-                />
-                <XAxis 
-                  type="number" 
-                  tick={{ fill: 'var(--muted-foreground)' }}
-                />
-                <ChartTooltip
-                  cursor={false}
-                  content={<ChartTooltipContent />}
-                />
-                <Bar
-                  dataKey="quantity"
-                  fill="currentColor"
-                  className="fill-current text-primary"
-                  radius={[0, 4, 4, 0]}
+            <div className="h-[300px] sm:h-[400px]">
+              <ChartContainer config={mostOrderedConfig}>
+                <BarChart
+                  data={stats.mostOrderedItems || []}
+                  layout="vertical"
+                  margin={{
+                    top: 20,
+                    right: 40,
+                    bottom: 20,
+                    left: 10,
+                  }}
+                  height={300}
                 >
-                  <LabelList
-                    dataKey="quantity"
-                    position="right"
-                    offset={8}
-                    className="fill-foreground"
-                    fontSize={12}
+                  <CartesianGrid horizontal={false} />
+                  <YAxis
+                    dataKey="name"
+                    type="category"
+                    tickLine={false}
+                    axisLine={false}
+                    width={70}
+                    tick={{ 
+                      fill: 'var(--muted-foreground)',
+                      fontSize: '10px',
+                    }}
                   />
-                </Bar>
-              </BarChart>
-            </ChartContainer>
+                  <XAxis 
+                    type="number"
+                    tick={{ 
+                      fill: 'var(--muted-foreground)',
+                      fontSize: '10px',
+                    }}
+                  />
+                  <ChartTooltip
+                    cursor={false}
+                    content={<ChartTooltipContent />}
+                  />
+                  <Bar
+                    dataKey="quantity"
+                    fill="currentColor"
+                    className="fill-current text-primary"
+                    radius={[0, 4, 4, 0]}
+                  >
+                    <LabelList
+                      dataKey="quantity"
+                      position="right"
+                      offset={8}
+                      className="fill-foreground"
+                      fontSize={10}
+                    />
+                  </Bar>
+                </BarChart>
+              </ChartContainer>
+            </div>
           </CardContent>
         </Card>
       </div>
 
-      {/* Recent Orders Table */}
+      {/* Recent Orders Table - Make responsive */}
       <div className="mt-8">
-        <h3 className="text-lg font-medium text-foreground mb-4">Recent Orders</h3>
-        <div className="bg-card rounded-lg shadow overflow-hidden">
-          <table className="w-full">
+        <h3 className="text-sm xs:text-lg font-medium text-foreground mb-4">Recent Orders</h3>
+        <div className="bg-card rounded-lg shadow overflow-x-auto">
+          <table className="w-full min-w-[600px]">
             <thead className="bg-muted">
               <tr>
-                <th className="px-6 py-3 text-left text-sm font-medium text-foreground">Order ID</th>
-                <th className="px-6 py-3 text-left text-sm font-medium text-foreground">Customer</th>
-                <th className="px-6 py-3 text-left text-sm font-medium text-foreground">Amount</th>
-                <th className="px-6 py-3 text-left text-sm font-medium text-foreground">Status</th>
-                <th className="px-6 py-3 text-left text-sm font-medium text-foreground">Date</th>
+                <th className="px-4 py-3 text-left text-[10px] xs:text-sm font-medium text-foreground">Order ID</th>
+                <th className="px-4 py-3 text-left text-[10px] xs:text-sm font-medium text-foreground">Customer</th>
+                <th className="px-4 py-3 text-left text-[10px] xs:text-sm font-medium text-foreground">Amount</th>
+                <th className="px-4 py-3 text-left text-[10px] xs:text-sm font-medium text-foreground">Status</th>
+                <th className="px-4 py-3 text-left text-[10px] xs:text-sm font-medium text-foreground">Date</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-border">
               {stats.recentOrders.map((order) => (
-                <tr key={order._id}>
-                  <td className="px-6 py-4 text-sm text-foreground">#{order._id.slice(-6)}</td>
-                  <td className="px-6 py-4 text-sm text-foreground">{order.user?.name || 'Guest Order'}</td>
-                  <td className="px-6 py-4 text-sm text-foreground">₱{order.totalAmount.toFixed(2)}</td>
-                  <td className="px-6 py-4 text-sm text-foreground capitalize">{order.status}</td>
-                  <td className="px-6 py-4 text-sm text-foreground">
+                <tr key={order._id} className="hover:bg-muted/50">
+                  <td className="px-4 py-3 text-[10px] xs:text-sm text-foreground">
+                    #{order._id.slice(-6)}
+                  </td>
+                  <td className="px-4 py-3 text-[10px] xs:text-sm text-foreground">
+                    {order.user?.name || 'Guest Order'}
+                  </td>
+                  <td className="px-4 py-3 text-[10px] xs:text-sm text-foreground">
+                    ₱{order.totalAmount.toFixed(2)}
+                  </td>
+                  <td className="px-4 py-3 text-[10px] xs:text-sm text-foreground capitalize">
+                    {order.status}
+                  </td>
+                  <td className="px-4 py-3 text-[10px] xs:text-sm text-foreground">
                     {new Date(order.createdAt).toLocaleDateString()}
                   </td>
                 </tr>
