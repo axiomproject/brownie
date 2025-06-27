@@ -259,10 +259,9 @@ export default function Contacts() {
   };
 
   return (
-      <div className="p-6">
+    <div className="space-y-6 mx-auto">
         <div className="flex justify-between items-center gap-4">
           <div className="flex-1">
-            <h2 className="text-xl font-semibold text-foreground mb-4">Contact Messages</h2>
             <div className="relative w-full max-w-sm">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
               <Input

@@ -170,7 +170,6 @@ export default function Settings() {
 
   return (
     <div className="space-y-6 mx-auto">
-      <h2 className="text-2xl font-bold text-foreground">Admin Settings</h2>
       
       <div className="grid gap-6">
         <Card>
