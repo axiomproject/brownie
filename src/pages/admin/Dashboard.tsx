@@ -166,7 +166,7 @@ export default function Dashboard() {
         </Card>
       </div>
 
-      {/* Charts Grid Section - Improve responsiveness */}
+      {/* Charts Grid Section */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 xs:gap-6 mb-6">
         {/* Revenue Chart */}
         <Card className="col-span-1">
@@ -175,17 +175,17 @@ export default function Dashboard() {
             <CardDescription>Total revenue by month</CardDescription>
           </CardHeader>
           <CardContent className="pl-0 xs:pl-2">
-            <div className="h-[300px] xs:h-[350px]">
+            <div className="h-[400px]"> {/* Increased height */}
               <ChartContainer config={chartConfig}>
                 <BarChart 
                   data={stats.revenueData}
                   margin={{ 
                     top: 20, 
-                    right: 10, 
-                    bottom: 50, 
+                    right: 30, // Increased right margin
+                    bottom: 70, // Increased bottom margin
                     left: 50 
                   }}
-                  height={300}
+                  height={350} // Increased height
                 >
                   <CartesianGrid vertical={false} />
                   <XAxis 
@@ -226,18 +226,18 @@ export default function Dashboard() {
             <CardDescription>Top selling products by quantity</CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="h-[300px] xs:h-[350px]">
+            <div className="h-[400px]"> {/* Increased height */}
               <ChartContainer config={mostOrderedConfig}>
                 <BarChart
                   data={stats.mostOrderedItems || []}
                   layout="vertical"
                   margin={{
-                    top: 5,
-                    right: 30,
-                    bottom: 5,
-                    left: 80,
+                    top: 20,
+                    right: 50, // Increased right margin
+                    bottom: 20,
+                    left: 100, // Increased left margin
                   }}
-                  height={300}
+                  height={350} // Increased height
                 >
                   <CartesianGrid horizontal={false} />
                   <YAxis
