@@ -261,23 +261,23 @@ export default function Contacts() {
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-col gap-4 md:gap-8">
+      <div className="flex flex-col gap-4">
         <Card>
-          <CardHeader className="flex flex-col md:flex-row gap-4 md:gap-8 items-start md:items-center justify-between space-y-0">
-            <div>
-              <CardTitle className="text-2xl font-bold tracking-tight">Messages</CardTitle>
-              <p className="text-muted-foreground">
+          <CardHeader className="flex flex-col space-y-4 p-4 sm:p-6">
+            <div className="space-y-2">
+              <CardTitle className="text-xl sm:text-2xl font-bold tracking-tight">Messages</CardTitle>
+              <p className="text-sm text-muted-foreground">
                 Manage contact form submissions
               </p>
             </div>
-            <div className="flex items-center w-full md:w-auto">
-              <div className="relative w-full md:w-auto">
+            <div className="w-full">
+              <div className="relative w-full">
                 <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
                 <Input
                   placeholder="Search messages..."
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  className="pl-8 w-full md:w-[250px]"
+                  className="pl-8 w-full"
                 />
               </div>
             </div>
@@ -285,25 +285,26 @@ export default function Contacts() {
 
           <CardContent className="p-0">
             {selectedContacts.length > 0 && (
-              <div className="flex items-center justify-between bg-muted px-4 py-2 border-y border-border">
-                <span className="text-sm text-muted-foreground">
+              <div className="flex items-center justify-between bg-muted px-2 sm:px-4 py-2 border-y border-border">
+                <span className="text-xs sm:text-sm text-muted-foreground">
                   {selectedContacts.length} selected
                 </span>
                 <Button
                   variant="destructive"
                   size="sm"
                   onClick={confirmBulkDelete}
+                  className="text-xs sm:text-sm px-2 sm:px-4"
                 >
                   Delete Selected
                 </Button>
               </div>
             )}
 
-            <div className="border-0">
+            <div className="border-0 overflow-x-auto">
               <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableHead className="w-[50px]">
+                    <TableHead className="w-[40px] sm:w-[50px]">
                       <Checkbox
                         checked={paginatedContacts().length > 0 && 
                           paginatedContacts().every(contact => 
@@ -313,7 +314,7 @@ export default function Contacts() {
                       />
                     </TableHead>
                     <TableHead 
-                      className="cursor-pointer hover:bg-muted"
+                      className="cursor-pointer hover:bg-muted min-w-[120px]"
                       onClick={() => handleSort('name')}
                     >
                       Name <SortIcon column="name" />
@@ -336,51 +337,55 @@ export default function Contacts() {
                     >
                       Date <SortIcon column="createdAt" />
                     </TableHead>
-                    <TableHead className="text-right">Actions</TableHead>
+                    <TableHead className="w-[68px] sm:w-[80px] text-right">Actions</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
                   {paginatedContacts().map((contact) => (
                     <TableRow key={contact._id}>
-                      <TableCell className="py-2">
+                      <TableCell className="p-2 sm:py-2">
                         <Checkbox
                           checked={selectedContacts.includes(contact._id)}
                           onCheckedChange={() => toggleContact(contact._id)}
                         />
                       </TableCell>
-                      <TableCell className="py-2">
-                        <div className="flex flex-col">
-                          <span className="font-medium">{contact.name}</span>
-                          <span className="text-sm text-muted-foreground md:hidden">
+                      <TableCell className="p-2 sm:py-2 min-w-[120px]">
+                        <div className="flex flex-col gap-0.5">
+                          <span className="font-medium truncate">{contact.name}</span>
+                          <span className="text-xs text-muted-foreground md:hidden truncate">
                             {contact.email}
                           </span>
-                          <span className="text-sm text-muted-foreground sm:hidden">
+                          <span className="text-xs text-muted-foreground sm:hidden">
                             {formatDate(contact.createdAt)}
                           </span>
                         </div>
                       </TableCell>
-                      <TableCell className="hidden md:table-cell py-2">{contact.email}</TableCell>
-                      <TableCell className="hidden sm:table-cell py-2">
+                      <TableCell className="hidden md:table-cell p-2 sm:py-2">
+                        <span className="truncate block">{contact.email}</span>
+                      </TableCell>
+                      <TableCell className="hidden sm:table-cell p-2 sm:py-2">
                         <span className="truncate block max-w-[180px]">{contact.subject}</span>
                       </TableCell>
-                      <TableCell className="hidden sm:table-cell py-2 whitespace-nowrap">
+                      <TableCell className="hidden sm:table-cell p-2 sm:py-2 whitespace-nowrap">
                         {formatDate(contact.createdAt)}
                       </TableCell>
-                      <TableCell className="text-right py-2">
-                        <div className="flex justify-end gap-2">
+                      <TableCell className="p-2 sm:py-2 text-right">
+                        <div className="flex justify-end gap-1 sm:gap-2">
                           <Button
                             variant="ghost"
                             size="icon"
                             onClick={() => setSelectedContact(contact)}
+                            className="h-7 w-7 sm:h-8 sm:w-8"
                           >
-                            <Eye className="h-4 w-4" />
+                            <Eye className="h-3 w-3 sm:h-4 sm:w-4" />
                           </Button>
                           <Button
                             variant="ghost"
                             size="icon"
                             onClick={() => handleDelete(contact._id)}
+                            className="h-7 w-7 sm:h-8 sm:w-8"
                           >
-                            <Trash className="h-4 w-4" />
+                            <Trash className="h-3 w-3 sm:h-4 sm:w-4" />
                           </Button>
                         </div>
                       </TableCell>
@@ -392,9 +397,17 @@ export default function Contacts() {
 
             {totalPages > 1 && (
               <div className="border-t border-border">
-                <Pagination className="py-4">
-                  <PaginationContent className="flex justify-center">
+                <Pagination className="py-2 sm:py-4">
+                  <PaginationContent className="flex justify-center gap-1 sm:gap-2">
+                    <PaginationPrevious 
+                      onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                      className={`px-2 sm:px-4 ${currentPage === 1 ? 'pointer-events-none opacity-50' : ''}`}
+                    />
                     {renderPaginationItems()}
+                    <PaginationNext 
+                      onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+                      className={`px-2 sm:px-4 ${currentPage === totalPages ? 'pointer-events-none opacity-50' : ''}`}
+                    />
                   </PaginationContent>
                 </Pagination>
               </div>
