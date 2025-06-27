@@ -508,13 +508,12 @@ export default function Inventory() {
                         >
                           Product <SortIcon column="name" />
                         </TableHead>
-                        <TableHead 
-                          className="hidden md:table-cell text-foreground cursor-pointer hover:bg-muted"
+                        <TableHead className="hidden md:table-cell text-foreground cursor-pointer hover:bg-muted"
                           onClick={() => handleSort('category')}
                         >
                           Category <SortIcon column="category" />
                         </TableHead>
-                        <TableHead className="text-foreground min-w-[100px]">
+                        <TableHead className="hidden md:table-cell text-foreground min-w-[100px]">
                           Variant
                         </TableHead>
                         <TableHead className="text-foreground">
@@ -537,6 +536,9 @@ export default function Inventory() {
                                 <span className="font-medium truncate text-xs xs:text-sm text-foreground">
                                   {product.name}
                                 </span>
+                                <span className="text-[10px] xs:text-xs text-muted-foreground md:hidden">
+                                  Variant: {variant.name}
+                                </span>
                                 <span className="text-[10px] xs:text-xs text-muted-foreground md:hidden capitalize">
                                   {product.category}
                                 </span>
@@ -548,7 +550,7 @@ export default function Inventory() {
                             <TableCell className="hidden md:table-cell capitalize text-foreground">
                               {product.category}
                             </TableCell>
-                            <TableCell className="text-foreground">
+                            <TableCell className="hidden md:table-cell text-foreground">
                               {variant.name}
                             </TableCell>
                             <TableCell className="text-foreground">
