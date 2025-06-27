@@ -32,6 +32,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { API_URL } from '@/config';
+import { Card, CardContent } from "@/components/ui/card";
 
 interface Variant {
   name: string;
@@ -473,16 +474,16 @@ export default function Inventory() {
   }
 
   return (
-    <div className="space-y-4">
-      <div className="flex justify-between items-center gap-4">
-        <div className="flex-1">
-          <div className="relative w-full max-w-sm">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+    <div className="space-y-6">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+        <div className="w-full sm:w-auto sm:flex-1">
+          <div className="relative w-full sm:max-w-sm">
+            <Search className="absolute left-2 xs:left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
             <Input
               placeholder="Search inventory..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="pl-10 w-full bg-background text-foreground placeholder:text-muted-foreground border-border"
+              className="pl-8 xs:pl-10 w-full text-sm xs:text-base bg-background text-foreground placeholder:text-muted-foreground border-border"
             />
           </div>
         </div>
@@ -495,123 +496,125 @@ export default function Inventory() {
         </TabsList>
         
         <TabsContent value="stock">
-          <div className="rounded-md border border-border">
-            <Table>
-              <TableHeader>
-                <TableRow className="border-border">
-                  <TableHead 
-                    className="text-foreground cursor-pointer hover:bg-muted"
-                    onClick={() => handleSort('name')}
-                  >
-                    Product <SortIcon column="name" />
-                  </TableHead>
-                  <TableHead 
-                    className="text-foreground cursor-pointer hover:bg-muted"
-                    onClick={() => handleSort('category')}
-                  >
-                    Category <SortIcon column="category" />
-                  </TableHead>
-                  <TableHead className="text-foreground">Variant</TableHead>
-                  <TableHead 
-                    className="text-foreground cursor-pointer hover:bg-muted"
-                    onClick={() => handleSort('stockQuantity')}
-                  >
-                    Stock Quantity <SortIcon column="stockQuantity" />
-                  </TableHead>
-                  <TableHead className="text-foreground">Status</TableHead>
-                  <TableHead className="text-foreground">Actions</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {paginatedProducts().flatMap((product) =>
-                  product.variants.map((variant) => (
-                    <TableRow key={`${product._id}-${variant.name}`} className="border-border">
-                      <TableCell className="text-foreground">{product.name}</TableCell>
-                      <TableCell className="capitalize text-foreground">{product.category}</TableCell>
-                      <TableCell className="text-foreground">{variant.name}</TableCell>
-                      <TableCell className="text-foreground">{variant.stockQuantity}</TableCell>
-                      <TableCell>
-                        <span className={`px-2 py-1 rounded-full text-sm ${
-                          variant.inStock 
-                            ? 'bg-green-500/10 text-green-500' 
-                            : 'bg-red-500/10 text-red-500'
-                        }`}>
-                          {variant.inStock ? 'In Stock' : 'Out of Stock'}
-                        </span>
-                      </TableCell>
-                      <TableCell>
-                        <div className="flex items-center gap-2">
-                          <Input
-                            type="number"
-                            className="w-24 text-foreground"
-                            defaultValue={variant.stockQuantity}
-                            onKeyDown={(e) => {
-                              if (e.key === 'Enter') {
-                                const newQuantity = parseInt((e.target as HTMLInputElement).value);
-                                if (!isNaN(newQuantity) && newQuantity >= 0) {
-                                  setSelectedUpdate({
-                                    productId: product._id,
-                                    variantName: variant.name,
-                                    currentQuantity: variant.stockQuantity,
-                                    newQuantity
-                                  });
-                                  setUpdateDialogOpen(true);
-                                }
-                              }
-                            }}
-                            onBlur={(e) => {
-                              const newQuantity = parseInt(e.target.value);
-                              if (!isNaN(newQuantity) && 
-                                  newQuantity >= 0 && 
-                                  newQuantity !== variant.stockQuantity) {
-                                setSelectedUpdate({
-                                  productId: product._id,
-                                  variantName: variant.name,
-                                  currentQuantity: variant.stockQuantity,
-                                  newQuantity
-                                });
-                                setUpdateDialogOpen(true);
-                              }
-                            }}
-                          />
-                          {updatingStock === `${product._id}-${variant.name}` && (
-                            <Loader2 className="h-4 w-4 animate-spin" />
-                          )}
-                        </div>
-                      </TableCell>
-                    </TableRow>
-                  ))
+          <div className="flex flex-col gap-4">
+            <Card>
+              <CardContent className="p-0">
+                <div className="border-0 overflow-x-auto">
+                  <Table>
+                    <TableHeader>
+                      <TableRow className="border-border">
+                        <TableHead 
+                          className="text-foreground cursor-pointer hover:bg-muted"
+                          onClick={() => handleSort('name')}
+                        >
+                          Product <SortIcon column="name" />
+                        </TableHead>
+                        <TableHead 
+                          className="text-foreground cursor-pointer hover:bg-muted"
+                          onClick={() => handleSort('category')}
+                        >
+                          Category <SortIcon column="category" />
+                        </TableHead>
+                        <TableHead className="text-foreground">Variant</TableHead>
+                        <TableHead 
+                          className="text-foreground cursor-pointer hover:bg-muted"
+                          onClick={() => handleSort('stockQuantity')}
+                        >
+                          Stock Quantity <SortIcon column="stockQuantity" />
+                        </TableHead>
+                        <TableHead className="text-foreground">Status</TableHead>
+                        <TableHead className="text-foreground">Actions</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {paginatedProducts().flatMap((product) =>
+                        product.variants.map((variant) => (
+                          <TableRow key={`${product._id}-${variant.name}`} className="border-border">
+                            <TableCell className="text-foreground">{product.name}</TableCell>
+                            <TableCell className="capitalize text-foreground">{product.category}</TableCell>
+                            <TableCell className="text-foreground">{variant.name}</TableCell>
+                            <TableCell className="text-foreground">{variant.stockQuantity}</TableCell>
+                            <TableCell>
+                              <span className={`px-2 py-1 rounded-full text-sm ${
+                                variant.inStock 
+                                  ? 'bg-green-500/10 text-green-500' 
+                                  : 'bg-red-500/10 text-red-500'
+                              }`}>
+                                {variant.inStock ? 'In Stock' : 'Out of Stock'}
+                              </span>
+                            </TableCell>
+                            <TableCell>
+                              <div className="flex items-center gap-2">
+                                <Input
+                                  type="number"
+                                  className="w-24 text-foreground"
+                                  defaultValue={variant.stockQuantity}
+                                  onKeyDown={(e) => {
+                                    if (e.key === 'Enter') {
+                                      const newQuantity = parseInt((e.target as HTMLInputElement).value);
+                                      if (!isNaN(newQuantity) && newQuantity >= 0) {
+                                        setSelectedUpdate({
+                                          productId: product._id,
+                                          variantName: variant.name,
+                                          currentQuantity: variant.stockQuantity,
+                                          newQuantity
+                                        });
+                                        setUpdateDialogOpen(true);
+                                      }
+                                    }
+                                  }}
+                                  onBlur={(e) => {
+                                    const newQuantity = parseInt(e.target.value);
+                                    if (!isNaN(newQuantity) && 
+                                        newQuantity >= 0 && 
+                                        newQuantity !== variant.stockQuantity) {
+                                      setSelectedUpdate({
+                                        productId: product._id,
+                                        variantName: variant.name,
+                                        currentQuantity: variant.stockQuantity,
+                                        newQuantity
+                                      });
+                                      setUpdateDialogOpen(true);
+                                    }
+                                  }}
+                                />
+                                {updatingStock === `${product._id}-${variant.name}` && (
+                                  <Loader2 className="h-4 w-4 animate-spin" />
+                                )}
+                              </div>
+                            </TableCell>
+                          </TableRow>
+                        ))
+                      )}
+                    </TableBody>
+                  </Table>
+                </div>
+                {totalPages > 1 && (
+                  <div className="border-t border-border">
+                    <Pagination className="py-1 xs:py-2 sm:py-4">
+                      <PaginationContent className="flex justify-center gap-0.5 xs:gap-1 sm:gap-2">
+                        <PaginationPrevious 
+                          onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                          className={`px-1 xs:px-2 sm:px-4 text-xs xs:text-sm ${currentPage === 1 ? 'pointer-events-none opacity-50' : ''}`}
+                        />
+                        {renderPaginationItems(currentPage, totalPages, setCurrentPage).map((item, index) => (
+                          <PaginationItem key={index} className="text-foreground">
+                            {React.cloneElement(item, {
+                              className: `${item.props.className || ''} text-foreground hover:bg-muted hover:text-foreground select-none`
+                            })}
+                          </PaginationItem>
+                        ))}
+                        <PaginationNext 
+                          onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+                          className={`px-1 xs:px-2 sm:px-4 text-xs xs:text-sm ${currentPage === totalPages ? 'pointer-events-none opacity-50' : ''}`}
+                        />
+                      </PaginationContent>
+                    </Pagination>
+                  </div>
                 )}
-              </TableBody>
-            </Table>
+              </CardContent>
+            </Card>
           </div>
-          {totalPages > 1 && (
-            <Pagination className="mt-4 select-none">
-              <PaginationContent>
-                <PaginationItem>
-                  <PaginationPrevious 
-                    onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
-                    className={`${currentPage === 1 ? 'pointer-events-none opacity-50' : 'cursor-pointer'} text-foreground hover:bg-muted hover:text-foreground`}
-                  />
-                </PaginationItem>
-                
-                {renderPaginationItems(currentPage, totalPages, setCurrentPage).map((item, index) => (
-                  <PaginationItem key={index} className="text-foreground">
-                    {React.cloneElement(item, {
-                      className: `${item.props.className || ''} text-foreground hover:bg-muted hover:text-foreground select-none`
-                    })}
-                  </PaginationItem>
-                ))}
-                
-                <PaginationItem>
-                  <PaginationNext 
-                    onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
-                    className={`${currentPage === totalPages ? 'pointer-events-none opacity-50' : 'cursor-pointer'} text-foreground hover:bg-muted hover:text-foreground`}
-                  />
-                </PaginationItem>
-              </PaginationContent>
-            </Pagination>
-          )}
         </TabsContent>
 
         <TabsContent value="logs">
