@@ -261,19 +261,29 @@ export default function Contacts() {
 
   return (
     <div className="space-y-6">
+      <div className="flex justify-between items-center">
+        <div className="flex-1">
+          <div className="relative w-full max-w-sm">
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+            <Input
+              placeholder="Search messages..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="pl-10 w-full bg-background text-foreground placeholder:text-muted-foreground border-border"
+            />
+          </div>
+        </div>
+      </div>
+
       <div className="flex flex-col gap-4">
         <Card>
-          <CardHeader className="flex flex-col md:flex-row gap-4 md:gap-8 items-start md:items-center justify-between space-y-0">
-         
-            <div className="flex items-center w-full md:w-auto">
-              <div className="relative w-full md:w-auto">
-                <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
-                <Input
-                  placeholder="Search messages..."
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  className="pl-8 w-full md:w-[250px]"
-                />
+          <CardHeader>
+            <div className="flex items-center justify-between">
+              <div>
+                <h2 className="text-2xl font-bold tracking-tight">Messages</h2>
+                <p className="text-muted-foreground">
+                  Manage contact form submissions
+                </p>
               </div>
             </div>
           </CardHeader>
