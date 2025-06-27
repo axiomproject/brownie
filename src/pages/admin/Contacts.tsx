@@ -259,23 +259,29 @@ export default function Contacts() {
   };
 
   return (
-    <div className="space-y-6 mx-auto p-4">
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-        <div className="w-full sm:w-auto">
-          <div className="relative w-full sm:max-w-sm">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+    <div className="h-full flex-1 flex-col space-y-8 p-8 md:flex">
+      <div className="flex items-center justify-between space-y-2">
+        <div>
+          <h2 className="text-2xl font-bold tracking-tight">Messages</h2>
+          <p className="text-muted-foreground">
+            Manage contact form submissions
+          </p>
+        </div>
+        <div className="flex items-center space-x-2">
+          <div className="relative">
+            <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
             <Input
               placeholder="Search messages..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="pl-10 w-full bg-background text-foreground placeholder:text-muted-foreground border-border"
+              className="pl-8 w-[150px] sm:w-[250px]"
             />
           </div>
         </div>
       </div>
 
       {selectedContacts.length > 0 && (
-        <div className="flex items-center justify-between bg-muted p-2 rounded-md mt-4">
+        <div className="flex items-center justify-between bg-muted p-2 rounded-md">
           <span className="text-sm text-foreground">
             {selectedContacts.length} messages selected
           </span>
@@ -289,71 +295,59 @@ export default function Contacts() {
         </div>
       )}
 
-      <div className="rounded-md border border-border mt-4 overflow-x-auto">
+      <div className="rounded-md border">
         <Table>
           <TableHeader>
-            <TableRow className="border-border">
+            <TableRow>
               <TableHead className="w-[50px]">
                 <Checkbox
-                  checked={
-                    paginatedContacts().length > 0 &&
-                    paginatedContacts().every(contact => selectedContacts.includes(contact._id))
-                  }
+                  checked={paginatedContacts().length > 0 && 
+                    paginatedContacts().every(contact => 
+                      selectedContacts.includes(contact._id)
+                    )}
                   onCheckedChange={toggleAll}
                 />
               </TableHead>
-              <TableHead 
-                className="text-foreground cursor-pointer hover:bg-muted whitespace-nowrap"
-                onClick={() => handleSort('name')}
-              >
-                Name <SortIcon column="name" />
-              </TableHead>
-              <TableHead 
-                className="text-foreground cursor-pointer hover:bg-muted hidden md:table-cell whitespace-nowrap"
-                onClick={() => handleSort('email')}
-              >
-                Email <SortIcon column="email" />
-              </TableHead>
-              <TableHead 
-                className="text-foreground cursor-pointer hover:bg-muted hidden sm:table-cell whitespace-nowrap"
-                onClick={() => handleSort('subject')}
-              >
-                Subject <SortIcon column="subject" />
-              </TableHead>
-              <TableHead 
-                className="text-foreground cursor-pointer hover:bg-muted whitespace-nowrap"
-                onClick={() => handleSort('createdAt')}
-              >
-                Date <SortIcon column="createdAt" />
-              </TableHead>
-              <TableHead className="text-foreground text-right">Actions</TableHead>
+              <TableHead>Name</TableHead>
+              <TableHead className="hidden md:table-cell">Email</TableHead>
+              <TableHead className="hidden sm:table-cell max-w-[180px]">Subject</TableHead>
+              <TableHead className="hidden sm:table-cell">Date</TableHead>
+              <TableHead className="text-right">Actions</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {paginatedContacts().map((contact) => (
-              <TableRow 
-                key={contact._id} 
-                className="border-border"
-              >
+              <TableRow key={contact._id}>
                 <TableCell>
                   <Checkbox
                     checked={selectedContacts.includes(contact._id)}
                     onCheckedChange={() => toggleContact(contact._id)}
                   />
                 </TableCell>
-                <TableCell className="font-medium text-foreground whitespace-nowrap">{contact.name}</TableCell>
-                <TableCell className="text-foreground hidden md:table-cell">{contact.email}</TableCell>
-                <TableCell className="text-foreground hidden sm:table-cell">
-                  <span className="truncate block max-w-[200px]">{contact.subject}</span>
+                <TableCell>
+                  <div className="flex flex-col">
+                    <span className="font-medium">{contact.name}</span>
+                    <span className="text-sm text-muted-foreground md:hidden">
+                      {contact.email}
+                    </span>
+                    <span className="text-sm text-muted-foreground sm:hidden">
+                      {formatDate(contact.createdAt)}
+                    </span>
+                  </div>
                 </TableCell>
-                <TableCell className="text-foreground whitespace-nowrap">{formatDate(contact.createdAt)}</TableCell>
+                <TableCell className="hidden md:table-cell">{contact.email}</TableCell>
+                <TableCell className="hidden sm:table-cell">
+                  <span className="truncate block max-w-[180px]">{contact.subject}</span>
+                </TableCell>
+                <TableCell className="hidden sm:table-cell">
+                  {formatDate(contact.createdAt)}
+                </TableCell>
                 <TableCell className="text-right">
                   <div className="flex justify-end gap-2">
                     <Button
                       variant="ghost"
                       size="icon"
                       onClick={() => setSelectedContact(contact)}
-                      className="text-foreground hover:text-foreground/80"
                     >
                       <Eye className="h-4 w-4" />
                     </Button>
@@ -361,7 +355,6 @@ export default function Contacts() {
                       variant="ghost"
                       size="icon"
                       onClick={() => handleDelete(contact._id)}
-                      className="text-foreground hover:text-foreground/80"
                     >
                       <Trash className="h-4 w-4" />
                     </Button>
@@ -375,7 +368,7 @@ export default function Contacts() {
 
       {totalPages > 1 && (
         <Pagination className="mt-4">
-          <PaginationContent>
+          <PaginationContent className="flex justify-center">
             <PaginationPrevious 
               onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
               className={currentPage === 1 ? 'pointer-events-none opacity-50' : ''}
