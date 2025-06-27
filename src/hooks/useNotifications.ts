@@ -27,7 +27,7 @@ export function useNotifications() {
     socketInstance.on('connect', () => {
     });
 
-    socketInstance.on('connect_error', (error) => {
+    socketInstance.on('connect_error', () => {
     });
 
     fetchNotifications();
