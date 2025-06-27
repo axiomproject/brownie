@@ -31,7 +31,7 @@ export default function Home() {
   );
 
   const [showLoadingDialog, setShowLoadingDialog] = useState(true);
-  const [hasSeenDialog, setHasSeenDialog] = useState(() => {
+  const [hasSeenDialog] = useState(() => {
     return localStorage.getItem('hasSeenLoadingDialog') === 'true'
   });
 
