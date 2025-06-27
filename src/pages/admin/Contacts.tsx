@@ -309,25 +309,25 @@ export default function Contacts() {
                       />
                     </TableHead>
                     <TableHead 
-                      className="cursor-pointer hover:bg-muted min-w-[120px]"
+                      className="cursor-pointer hover:bg-muted min-w-[120px] lg:min-w-[150px]"
                       onClick={() => handleSort('name')}
                     >
                       Name <SortIcon column="name" />
                     </TableHead>
                     <TableHead 
-                      className="hidden md:table-cell cursor-pointer hover:bg-muted"
+                      className="hidden lg:table-cell cursor-pointer hover:bg-muted"
                       onClick={() => handleSort('email')}
                     >
                       Email <SortIcon column="email" />
                     </TableHead>
                     <TableHead 
-                      className="hidden sm:table-cell cursor-pointer hover:bg-muted"
+                      className="hidden md:table-cell cursor-pointer hover:bg-muted"
                       onClick={() => handleSort('subject')}
                     >
                       Subject <SortIcon column="subject" />
                     </TableHead>
                     <TableHead 
-                      className="hidden sm:table-cell cursor-pointer hover:bg-muted whitespace-nowrap"
+                      className="hidden md:table-cell cursor-pointer hover:bg-muted whitespace-nowrap"
                       onClick={() => handleSort('createdAt')}
                     >
                       Date <SortIcon column="createdAt" />
@@ -344,43 +344,46 @@ export default function Contacts() {
                           onCheckedChange={() => toggleContact(contact._id)}
                         />
                       </TableCell>
-                      <TableCell className="p-2 sm:py-2 min-w-[120px]">
+                      <TableCell className="p-2 sm:py-2 min-w-[120px] lg:min-w-[150px]">
                         <div className="flex flex-col gap-0.5">
                           <span className="font-medium truncate">{contact.name}</span>
-                          <span className="text-xs text-muted-foreground md:hidden truncate">
+                          <span className="text-xs text-muted-foreground lg:hidden truncate">
                             {contact.email}
                           </span>
-                          <span className="text-xs text-muted-foreground sm:hidden">
+                          <span className="text-xs text-muted-foreground md:hidden truncate">
+                            {contact.subject}
+                          </span>
+                          <span className="text-xs text-muted-foreground md:hidden">
                             {formatDate(contact.createdAt)}
                           </span>
                         </div>
                       </TableCell>
-                      <TableCell className="hidden md:table-cell p-2 sm:py-2">
-                        <span className="truncate block">{contact.email}</span>
+                      <TableCell className="hidden lg:table-cell p-2 sm:py-2">
+                        <span className="truncate block max-w-[200px]">{contact.email}</span>
                       </TableCell>
-                      <TableCell className="hidden sm:table-cell p-2 sm:py-2">
+                      <TableCell className="hidden md:table-cell p-2 sm:py-2">
                         <span className="truncate block max-w-[180px]">{contact.subject}</span>
                       </TableCell>
-                      <TableCell className="hidden sm:table-cell p-2 sm:py-2 whitespace-nowrap">
+                      <TableCell className="hidden md:table-cell p-2 sm:py-2 whitespace-nowrap">
                         {formatDate(contact.createdAt)}
                       </TableCell>
                       <TableCell className="p-2 sm:py-2 text-right">
-                        <div className="flex justify-end gap-1 sm:gap-2">
+                        <div className="flex justify-end gap-1">
                           <Button
                             variant="ghost"
                             size="icon"
                             onClick={() => setSelectedContact(contact)}
-                            className="h-7 w-7 sm:h-8 sm:w-8"
+                            className="h-7 w-7"
                           >
-                            <Eye className="h-3 w-3 sm:h-4 sm:w-4" />
+                            <Eye className="h-3 w-3" />
                           </Button>
                           <Button
                             variant="ghost"
                             size="icon"
                             onClick={() => handleDelete(contact._id)}
-                            className="h-7 w-7 sm:h-8 sm:w-8"
+                            className="h-7 w-7"
                           >
-                            <Trash className="h-3 w-3 sm:h-4 sm:w-4" />
+                            <Trash className="h-3 w-3" />
                           </Button>
                         </div>
                       </TableCell>
