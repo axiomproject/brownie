@@ -69,7 +69,6 @@ export default function Menu() {
           });
         }
       } catch (error) {
-        console.error('Error fetching page content:', error);
       }
     };
     fetchContent();

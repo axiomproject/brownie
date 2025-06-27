@@ -245,7 +245,6 @@ export default function Orders() {
       });
       toast.success('Order status updated and delivery details added');
     } catch (error) {
-      console.error('Delivery update error:', error);
       toast.error(error instanceof Error ? error.message : "Failed to update delivery details");
     }
   };

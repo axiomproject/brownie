@@ -47,7 +47,6 @@ export default function About() {
           });
         }
       } catch (error) {
-        console.error('Error fetching page content:', error);
       }
     };
 

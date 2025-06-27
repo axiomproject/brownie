@@ -85,7 +85,6 @@ export default function Dashboard() {
         const data = await response.json();
         setStats(data);
       } catch (error) {
-        console.error('Error fetching dashboard stats:', error);
       } finally {
         setLoading(false);
       }

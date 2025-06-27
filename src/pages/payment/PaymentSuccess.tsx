@@ -91,7 +91,6 @@ export default function PaymentSuccess() {
         localStorage.removeItem('appliedCoupon'); // Remove coupon data
         clearCart();
       } catch (error) {
-        console.error('Error creating order:', error);
         toast.error("Failed to create order record");
       } finally {
         setIsCreatingOrder(false);

@@ -121,7 +121,6 @@ export default function Users() {
       const data = await response.json();
       setUsers(data);
     } catch (error) {
-      console.error('Error fetching users:', error);
       toast.error(error instanceof Error ? error.message : "Failed to load users");
     } finally {
       setLoading(false);

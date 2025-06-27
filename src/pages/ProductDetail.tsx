@@ -60,11 +60,9 @@ export default function ProductDetail() {
 
         // Validate id format before making the request
         if (!/^[0-9a-fA-F]{24}$/.test(id)) {
-          console.error('Invalid product ID format:', id);
           return;
         }
 
-        console.log('Fetching feedbacks for product ID:', id);
         const response = await fetch(`${API_URL}/api/feedback/product/${id}`, {
           method: 'GET',
           headers: {
@@ -78,16 +76,13 @@ export default function ProductDetail() {
         }
         
         const data = await response.json();
-        console.log('Received feedback data:', data);
         
         if (Array.isArray(data)) {
           setFeedbacks(data);
         } else {
-          console.log('No feedbacks found or invalid data format');
           setFeedbacks([]);
         }
       } catch (error) {
-        console.error('Error fetching feedbacks:', error);
         setFeedbacks([]);
       }
     };
