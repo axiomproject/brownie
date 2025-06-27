@@ -572,17 +572,12 @@ export default function Orders() {
                     />
                   </TableHead>
                   <TableHead className="min-w-[80px] text-foreground">Order ID</TableHead>
-                  <TableHead className="min-w-[120px] lg:min-w-[150px] text-foreground">Customer</TableHead>
-                  <TableHead className="hidden md:table-cell text-foreground">Items</TableHead>
-                  <TableHead 
-                    className="text-foreground cursor-pointer hover:bg-muted"
-                    onClick={() => handleSort('totalAmount')}
-                  >
-                    Total <SortIcon column="totalAmount" />
-                  </TableHead>
-                  <TableHead className="hidden lg:table-cell text-foreground">Payment</TableHead>
-                  <TableHead className="text-foreground min-w-[140px]">Status</TableHead>
-                  <TableHead className="hidden md:table-cell text-foreground">Date</TableHead>
+                  <TableHead className="min-w-[150px] text-foreground">Customer</TableHead>
+                  <TableHead className="min-w-[200px] text-foreground">Items</TableHead>
+                  <TableHead className="min-w-[100px] text-foreground">Total</TableHead>
+                  <TableHead className="min-w-[100px] text-foreground">Payment</TableHead>
+                  <TableHead className="min-w-[140px] text-foreground">Status</TableHead>
+                  <TableHead className="min-w-[150px] text-foreground">Date</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
