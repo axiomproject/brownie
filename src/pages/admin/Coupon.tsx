@@ -9,7 +9,7 @@ import {
 } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Loader2, Plus, Pencil, X, ChevronUp, ChevronDown, Search } from "lucide-react";
+import { Loader2, Plus, Pencil, ChevronUp, ChevronDown, Search } from "lucide-react";
 import { toast } from 'sonner';
 import {
   Dialog,
@@ -371,14 +371,6 @@ export default function Coupon() {
           <DialogContent className="bg-background border-border">
             <DialogHeader>
               <DialogTitle className="text-foreground">Create New Coupon</DialogTitle>
-              <Button
-                variant="ghost"
-                size="icon"
-                className="absolute right-4 top-4 text-foreground hover:text-foreground/80"
-                onClick={() => setIsDialogOpen(false)}
-              >
-                <X className="h-4 w-4" />
-              </Button>
             </DialogHeader>
             <div className="space-y-4">
               <div className="space-y-2">
@@ -439,7 +431,7 @@ export default function Coupon() {
                   type="datetime-local"
                   value={newCoupon.expiryDate}
                   onChange={(e) => setNewCoupon({...newCoupon, expiryDate: e.target.value})}
-                  className="bg-background text-foreground border-border"
+                  className="bg-background text-foreground border-border [&::-webkit-calendar-picker-indicator]:dark:invert"
                 />
               </div>
 
@@ -464,14 +456,6 @@ export default function Coupon() {
         <DialogContent className="bg-background border-border">
           <DialogHeader>
             <DialogTitle className="text-foreground">Edit Coupon</DialogTitle>
-            <Button
-              variant="ghost"
-              size="icon"
-              className="absolute right-4 top-4 text-foreground hover:text-foreground/80"
-              onClick={() => setIsEditDialogOpen(false)}
-            >
-              <X className="h-4 w-4" />
-            </Button>
           </DialogHeader>
           {editingCoupon && (
             <div className="space-y-4">
@@ -532,7 +516,7 @@ export default function Coupon() {
                   type="datetime-local"
                   value={editingCoupon.expiryDate || ''}
                   onChange={(e) => setEditingCoupon({...editingCoupon, expiryDate: e.target.value})}
-                  className="bg-background text-foreground border-border"
+                  className="bg-background text-foreground border-border [&::-webkit-calendar-picker-indicator]:dark:invert"
                 />
               </div>
 
@@ -601,38 +585,38 @@ export default function Coupon() {
                 />
               </TableHead>
               <TableHead 
-                className="cursor-pointer hover:bg-muted min-w-[100px] xs:min-w-[120px] lg:min-w-[150px]"
+                className="cursor-pointer hover:bg-muted min-w-[100px] xs:min-w-[120px] lg:min-w-[150px] text-foreground"
                 onClick={() => handleSort('code')}
               >
                 <span className="text-xs xs:text-sm">Code</span> <SortIcon column="code" />
               </TableHead>
               <TableHead 
-                className="hidden md:table-cell cursor-pointer hover:bg-muted"
+                className="hidden md:table-cell cursor-pointer hover:bg-muted text-foreground"
                 onClick={() => handleSort('type')}
               >
                 Type <SortIcon column="type" />
               </TableHead>
               <TableHead 
-                className="cursor-pointer hover:bg-muted"
+                className="cursor-pointer hover:bg-muted text-foreground"
                 onClick={() => handleSort('value')}
               >
                 Value <SortIcon column="value" />
               </TableHead>
-              <TableHead className="hidden lg:table-cell">New Users</TableHead>
+              <TableHead className="hidden lg:table-cell text-foreground">New Users</TableHead>
               <TableHead
-                className="hidden md:table-cell cursor-pointer hover:bg-muted"
+                className="hidden md:table-cell cursor-pointer hover:bg-muted text-foreground"
                 onClick={() => handleSort('maxUses')}
               >
                 Usage <SortIcon column="maxUses" />
               </TableHead>
               <TableHead 
-                className="hidden md:table-cell cursor-pointer hover:bg-muted"
+                className="hidden md:table-cell cursor-pointer hover:bg-muted text-foreground"
                 onClick={() => handleSort('expiryDate')}
               >
                 Expiry <SortIcon column="expiryDate" />
               </TableHead>
-              <TableHead className="w-[80px] text-center">Status</TableHead>
-              <TableHead className="w-[68px] sm:w-[80px] text-right">Actions</TableHead>
+              <TableHead className="w-[80px] text-center text-foreground">Status</TableHead>
+              <TableHead className="w-[68px] sm:w-[80px] text-right text-foreground">Actions</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -648,7 +632,7 @@ export default function Coupon() {
                     className="scale-75 xs:scale-90 sm:scale-100"
                   />
                 </TableCell>
-                <TableCell className="p-1 xs:p-2 sm:py-2 min-w-[100px] xs:min-w-[120px] lg:min-w-[150px]">
+                <TableCell className="p-1 xs:p-2 sm:py-2 min-w-[100px] xs:min-w-[120px] lg:min-w-[150px] text-foreground">
                   <div className="flex flex-col gap-0.5">
                     <span className="font-mono truncate text-xs xs:text-sm">{coupon.code}</span>
                     <span className="text-[10px] xs:text-xs text-muted-foreground md:hidden">
@@ -668,22 +652,22 @@ export default function Coupon() {
                     </span>
                   </div>
                 </TableCell>
-                <TableCell className="hidden md:table-cell p-2 sm:py-2">
+                <TableCell className="hidden md:table-cell p-2 sm:py-2 text-foreground">
                   {coupon.type}
                 </TableCell>
-                <TableCell className="p-2 sm:py-2">
+                <TableCell className="p-2 sm:py-2 text-foreground">
                   {coupon.type === 'fixed' ? `₱${coupon.value}` : `${coupon.value}x`}
                 </TableCell>
-                <TableCell className="hidden lg:table-cell p-2 sm:py-2">
+                <TableCell className="hidden lg:table-cell p-2 sm:py-2 text-foreground">
                   {coupon.newUsersOnly ? 'Yes' : 'No'}
                 </TableCell>
-                <TableCell className="hidden md:table-cell p-2 sm:py-2">
+                <TableCell className="hidden md:table-cell p-2 sm:py-2 text-foreground">
                   {coupon.maxUses === -1 ? 
                     `${coupon.usedCount} uses` : 
                     `${coupon.usedCount}/${coupon.maxUses}`
                   }
                 </TableCell>
-                <TableCell className="hidden md:table-cell p-2 sm:py-2">
+                <TableCell className="hidden md:table-cell p-2 sm:py-2 text-foreground">
                   {coupon.expiryDate ? 
                     new Date(coupon.expiryDate).toLocaleDateString() : 
                     'No expiry'
@@ -700,7 +684,7 @@ export default function Coupon() {
                     variant="ghost" 
                     size="icon"
                     onClick={() => handleEdit(coupon)}
-                    className="h-7 w-7"
+                    className="h-7 w-7 text-foreground hover:text-foreground/80 hover:bg-muted"
                   >
                     <Pencil className="h-3 w-3" />
                   </Button>
