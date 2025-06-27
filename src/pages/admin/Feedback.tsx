@@ -24,6 +24,7 @@ import { Star, Search, ChevronUp, ChevronDown, Loader2 } from "lucide-react";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { Switch } from "@/components/ui/switch";
 import { API_URL } from '@/config';
+import { Card, CardContent } from "@/components/ui/card";
 
 interface ProductFeedback {
   productId: string;
@@ -300,8 +301,8 @@ export default function Feedback() {
   }
 
   return (
-    <div className="space-y-4">
-      <div className="flex justify-between items-center gap-4">
+    <div className="space-y-6">
+      <div className="flex justify-between items-center">
         <div className="flex-1">
           <div className="relative w-full max-w-sm">
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
@@ -315,22 +316,140 @@ export default function Feedback() {
         </div>
       </div>
 
-      {selectedFeedbacks.length > 0 && (
-        <div className="flex items-center justify-between bg-muted p-2 rounded-md">
-          <span className="text-sm text-foreground">
-            {selectedFeedbacks.length} feedbacks selected
-          </span>
-          <Button
-            variant="destructive"
-            size="sm"
-            onClick={confirmBulkDelete}
-          >
-            Delete Selected
-          </Button>
-        </div>
-      )}
+      <div className="flex flex-col gap-4">
+        <Card>
+          <CardContent className="p-0">
+            {selectedFeedbacks.length > 0 && (
+              <div className="flex items-center justify-between bg-muted px-2 sm:px-4 py-2 border-y border-border">
+                <span className="text-xs sm:text-sm text-muted-foreground">
+                  {selectedFeedbacks.length} selected
+                </span>
+                <Button
+                  variant="destructive"
+                  size="sm"
+                  onClick={confirmBulkDelete}
+                  className="text-xs sm:text-sm px-2 sm:px-4"
+                >
+                  Delete Selected
+                </Button>
+              </div>
+            )}
 
-<AlertDialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
+            <div className="border-0 overflow-x-auto">
+              <Table>
+                <TableHeader>
+                  <TableRow className="border-border">
+                    <TableHead className="w-[40px] sm:w-[50px]">
+                      <Checkbox
+                        checked={
+                          paginatedFeedbacks().length > 0 &&
+                          paginatedFeedbacks().every(feedback => selectedFeedbacks.includes(feedback._id))
+                        }
+                        onCheckedChange={toggleAll}
+                      />
+                    </TableHead>
+                    <TableHead 
+                      className="cursor-pointer hover:bg-muted min-w-[120px] lg:min-w-[150px]"
+                      onClick={() => handleSort('productName')}
+                    >
+                      Product <SortIcon column="productName" />
+                    </TableHead>
+                    <TableHead 
+                      className="hidden lg:table-cell cursor-pointer hover:bg-muted"
+                      onClick={() => handleSort('createdAt')}
+                    >
+                      Date <SortIcon column="createdAt" />
+                    </TableHead>
+                    <TableHead className="hidden md:table-cell">Customer</TableHead>
+                    <TableHead 
+                      className="cursor-pointer hover:bg-muted w-[100px]"
+                      onClick={() => handleSort('rating')}
+                    >
+                      Rating <SortIcon column="rating" />
+                    </TableHead>
+                    <TableHead className="hidden md:table-cell">Comment</TableHead>
+                    <TableHead className="w-[80px] text-center">Display</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {paginatedFeedbacks().map((feedback) => (
+                    feedback.productFeedback.map((product) => (
+                      <TableRow key={`${feedback._id}-${product.productId}`}>
+                        <TableCell className="p-2 sm:py-2">
+                          <Checkbox
+                            checked={selectedFeedbacks.includes(feedback._id)}
+                            onCheckedChange={() => toggleFeedback(feedback._id)}
+                          />
+                        </TableCell>
+                        <TableCell className="p-2 sm:py-2 min-w-[120px] lg:min-w-[150px]">
+                          <div className="flex flex-col gap-0.5">
+                            <span className="font-medium truncate">{product.productName}</span>
+                            <span className="text-xs text-muted-foreground truncate">
+                              {product.variantName}
+                            </span>
+                            <span className="text-xs text-muted-foreground lg:hidden">
+                              {new Date(feedback.createdAt).toLocaleDateString()}
+                            </span>
+                            <span className="text-xs text-muted-foreground md:hidden truncate">
+                              {feedback.order?.user?.name || feedback.order?.email || 'Guest'}
+                            </span>
+                            <span className="text-xs text-muted-foreground md:hidden">
+                              {product.comment}
+                            </span>
+                          </div>
+                        </TableCell>
+                        <TableCell className="hidden lg:table-cell p-2 sm:py-2">
+                          {new Date(feedback.createdAt).toLocaleDateString()}
+                        </TableCell>
+                        <TableCell className="hidden md:table-cell p-2 sm:py-2">
+                          <div className="truncate max-w-[200px]">
+                            {feedback.order?.user?.name || 'Guest Order'}
+                          </div>
+                          <div className="text-xs text-muted-foreground truncate">
+                            {feedback.order?.user?.email || feedback.order?.email || ''}
+                          </div>
+                        </TableCell>
+                        <TableCell className="p-2 sm:py-2">
+                          <StarRating rating={product.rating} />
+                        </TableCell>
+                        <TableCell className="hidden md:table-cell p-2 sm:py-2">
+                          <span className="truncate block max-w-[300px]">{product.comment}</span>
+                        </TableCell>
+                        <TableCell className="p-2 sm:py-2 text-center">
+                          <Switch
+                            checked={product.isDisplayed}
+                            onCheckedChange={() => toggleFeedbackDisplay(feedback._id, product.productId)}
+                          />
+                        </TableCell>
+                      </TableRow>
+                    ))
+                  ))}
+                </TableBody>
+              </Table>
+            </div>
+
+            {totalPages > 1 && (
+              <div className="border-t border-border">
+                <Pagination className="py-2 sm:py-4">
+                  <PaginationContent className="flex justify-center gap-1 sm:gap-2">
+                    <PaginationPrevious 
+                      onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                      className={`px-2 sm:px-4 ${currentPage === 1 ? 'pointer-events-none opacity-50' : ''}`}
+                    />
+                    {renderPaginationItems()}
+                    <PaginationNext 
+                      onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+                      className={`px-2 sm:px-4 ${currentPage === totalPages ? 'pointer-events-none opacity-50' : ''}`}
+                    />
+                  </PaginationContent>
+                </Pagination>
+              </div>
+            )}
+          </CardContent>
+        </Card>
+      </div>
+
+      <AlertDialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle className="text-foreground">Are you absolutely sure?</AlertDialogTitle>
@@ -346,122 +465,6 @@ export default function Feedback() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
-
-      <div className="rounded-md border border-border">
-        <Table>
-          <TableHeader>
-            <TableRow className="border-border">
-              <TableHead className="w-[50px]">
-                <Checkbox
-                  checked={
-                    paginatedFeedbacks().length > 0 &&
-                    paginatedFeedbacks().every(feedback => selectedFeedbacks.includes(feedback._id))
-                  }
-                  onCheckedChange={toggleAll}
-                />
-              </TableHead>
-              <TableHead 
-                className="text-foreground cursor-pointer hover:bg-muted"
-                onClick={() => handleSort('createdAt')}
-              >
-                Date <SortIcon column="createdAt" />
-              </TableHead>
-              <TableHead className="text-foreground">Customer</TableHead>
-              <TableHead 
-                className="text-foreground cursor-pointer hover:bg-muted"
-                onClick={() => handleSort('productName')}
-              >
-                Product <SortIcon column="productName" />
-              </TableHead>
-              <TableHead 
-                className="text-foreground cursor-pointer hover:bg-muted"
-                onClick={() => handleSort('rating')}
-              >
-                Rating <SortIcon column="rating" />
-              </TableHead>
-              <TableHead className="text-foreground">Comment</TableHead>
-              <TableHead 
-                className="text-foreground cursor-pointer hover:bg-muted"
-                onClick={() => handleSort('isDisplayed')}
-              >
-                Display <SortIcon column="isDisplayed" />
-              </TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {paginatedFeedbacks().map((feedback) => (
-              feedback.productFeedback.map((product) => (
-                <TableRow key={`${feedback._id}-${product.productId}`}>
-                  <TableCell>
-                    <Checkbox
-                      checked={selectedFeedbacks.includes(feedback._id)}
-                      onCheckedChange={() => toggleFeedback(feedback._id)}
-                    />
-                  </TableCell>
-                  <TableCell className="text-foreground">
-                    {new Date(feedback.createdAt).toLocaleDateString()}
-                  </TableCell>
-                  <TableCell>
-                    <div className="text-foreground">
-                      {feedback.order?.user?.name || 
-                       (feedback.order?.email ? 'Guest Order' : 'Unknown User')}
-                    </div>
-                    <div className="text-sm text-muted-foreground">
-                      {feedback.order?.user?.email || feedback.order?.email || ''}
-                    </div>
-                  </TableCell>
-                  <TableCell className="text-foreground">
-                    <div>{product.productName}</div>
-                    <div className="text-sm text-muted-foreground">
-                      {product.variantName}
-                    </div>
-                  </TableCell>
-                  <TableCell>
-                    <StarRating rating={product.rating} />
-                  </TableCell>
-                  <TableCell className="text-foreground max-w-[300px]">
-                    {product.comment}
-                  </TableCell>
-                  <TableCell>
-                    <Switch
-                      checked={product.isDisplayed}
-                      onCheckedChange={() => toggleFeedbackDisplay(feedback._id, product.productId)}
-                    />
-                  </TableCell>
-                </TableRow>
-              ))
-            ))}
-          </TableBody>
-        </Table>
-      </div>
-
-     {totalPages > 1 && (
-            <Pagination className="mt-4 select-none">
-              <PaginationContent>
-                <PaginationItem>
-                  <PaginationPrevious 
-                    onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
-                    className={`${currentPage === 1 ? 'pointer-events-none opacity-50' : 'cursor-pointer'} text-foreground hover:bg-muted hover:text-foreground`}
-                  />
-                </PaginationItem>
-                
-                {renderPaginationItems().map((item: PaginationItemType, index: number) => (
-                  <PaginationItem key={index} className="text-foreground">
-                    {React.cloneElement(item, {
-                      className: `${item.props.className || ''} text-foreground hover:bg-muted hover:text-foreground select-none`
-                    })}
-                  </PaginationItem>
-                ))}
-                
-                <PaginationItem>
-                  <PaginationNext 
-                    onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
-                    className={`${currentPage === totalPages ? 'pointer-events-none opacity-50' : 'cursor-pointer'} text-foreground hover:bg-muted hover:text-foreground`}
-                  />
-                </PaginationItem>
-              </PaginationContent>
-            </Pagination>
-      )}
     </div>
   );
 }
