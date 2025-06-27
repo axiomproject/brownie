@@ -29,23 +29,23 @@ export function AdminLayout({ children }: AdminLayoutProps) {
       case '/admin':
         return 'Dashboard';
       case '/admin/users':
-        return 'Users Management';
+        return 'Users';
       case '/admin/products':
-        return 'Products Management';
+        return 'Products';
       case '/admin/orders':
-        return 'Orders Management';
+        return 'Orders';
         case '/admin/inventory':
-        return 'Inventory Management';
+        return 'Inventory';
         case '/admin/coupons':
-        return 'Coupon Management';
+        return 'Coupon';
         case '/admin/feedbacks':
-        return 'Feedback Management';
+        return 'Feedback';
         case '/admin/contacts':
-        return 'Contact Management';
+        return 'Contact';
         case '/admin/content':
-          return 'Content Management';
+          return 'Content';
           case '/admin/settings':
-            return 'Admin Settings';
+            return 'Settings';
       default:
         return 'Admin Panel';
     }
