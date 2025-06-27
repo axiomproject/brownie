@@ -78,80 +78,88 @@ export function AdminLayout({ children }: AdminLayoutProps) {
                   </span>
                 )}
               </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="w-[450px]">
+              <DropdownMenuContent 
+                align="end" 
+                className="w-[calc(100vw-2rem)] sm:w-[450px] max-w-[450px]"
+              >
                 {notifications.length === 0 ? (
                   <div className="py-3 px-4 text-sm text-muted-foreground text-center">
                     No notifications
                   </div>
                 ) : (
                   <Tabs defaultValue="all" className="w-full">
-                    <div className="flex justify-between items-center px-2 py-1 border-b">
-                      <TabsList className="w-full">
-                        <TabsTrigger value="all" className="flex-1">
+                    <div className="flex justify-between items-center px-2 py-1 border-b overflow-x-auto">
+                      <TabsList className="w-full flex-nowrap overflow-x-auto">
+                        <TabsTrigger value="all" className="flex-shrink-0 text-xs sm:text-sm px-2 sm:px-4">
                           All ({notifications.length})
                         </TabsTrigger>
-                        <TabsTrigger value="orders" className="flex-1">
+                        <TabsTrigger value="orders" className="flex-shrink-0 text-xs sm:text-sm px-2 sm:px-4">
                           Orders ({groupedNotifications.orders.length})
                         </TabsTrigger>
-                        <TabsTrigger value="users" className="flex-1">
+                        <TabsTrigger value="users" className="flex-shrink-0 text-xs sm:text-sm px-2 sm:px-4">
                           Users ({groupedNotifications.users.length})
                         </TabsTrigger>
-                        <TabsTrigger value="feedback" className="flex-1">
+                        <TabsTrigger value="feedback" className="flex-shrink-0 text-xs sm:text-sm px-2 sm:px-4">
                           Reviews ({groupedNotifications.feedback.length})
                         </TabsTrigger>
                       </TabsList>
                       <button
                         onClick={clearAll}
-                        className="px-2 py-1 text-sm text-destructive hover:text-destructive/90"
+                        className="px-2 py-1 text-xs sm:text-sm text-destructive hover:text-destructive/90 whitespace-nowrap ml-2"
                       >
                         Clear All
                       </button>
                     </div>
-                    <TabsContent value="all" className="max-h-[60vh] overflow-y-auto">
-                      {notifications.map((notification) => (
-                        <NotificationItem
-                          key={notification._id}
-                          notification={notification}
-                          onClick={() => markAsRead(notification._id)}
-                          onNavigate={() => setIsDropdownOpen(false)}
-                        />
-                      ))}
-                    </TabsContent>
-                    <TabsContent value="orders" className="max-h-[60vh] overflow-y-auto">
-                      {groupedNotifications.orders.map((notification) => (
-                        <NotificationItem
-                          key={notification._id}
-                          notification={notification}
-                          onClick={() => markAsRead(notification._id)}
-                          onNavigate={() => setIsDropdownOpen(false)}
-                        />
-                      ))}
-                    </TabsContent>
-                    <TabsContent value="users" className="max-h-[60vh] overflow-y-auto">
-                      {groupedNotifications.users.map((notification) => (
-                        <NotificationItem
-                          key={notification._id}
-                          notification={notification}
-                          onClick={() => markAsRead(notification._id)}
-                          onNavigate={() => setIsDropdownOpen(false)}
-                        />
-                      ))}
-                    </TabsContent>
-                    <TabsContent value="feedback" className="max-h-[60vh] overflow-y-auto">
-                      {groupedNotifications.feedback.map((notification) => (
-                        <NotificationItem
-                          key={notification._id}
-                          notification={notification}
-                          onClick={() => markAsRead(notification._id)}
-                          onNavigate={() => setIsDropdownOpen(false)}
-                        />
-                      ))}
-                    </TabsContent>
+                    
+                    {/* Make the content area scrollable with a max height */}
+                    <div className="max-h-[60vh] overflow-y-auto">
+                      <TabsContent value="all">
+                        {notifications.map((notification) => (
+                          <NotificationItem
+                            key={notification._id}
+                            notification={notification}
+                            onClick={() => markAsRead(notification._id)}
+                            onNavigate={() => setIsDropdownOpen(false)}
+                          />
+                        ))}
+                      </TabsContent>
+                      <TabsContent value="orders">
+                        {groupedNotifications.orders.map((notification) => (
+                          <NotificationItem
+                            key={notification._id}
+                            notification={notification}
+                            onClick={() => markAsRead(notification._id)}
+                            onNavigate={() => setIsDropdownOpen(false)}
+                          />
+                        ))}
+                      </TabsContent>
+                      <TabsContent value="users">
+                        {groupedNotifications.users.map((notification) => (
+                          <NotificationItem
+                            key={notification._id}
+                            notification={notification}
+                            onClick={() => markAsRead(notification._id)}
+                            onNavigate={() => setIsDropdownOpen(false)}
+                          />
+                        ))}
+                      </TabsContent>
+                      <TabsContent value="feedback">
+                        {groupedNotifications.feedback.map((notification) => (
+                          <NotificationItem
+                            key={notification._id}
+                            notification={notification}
+                            onClick={() => markAsRead(notification._id)}
+                            onNavigate={() => setIsDropdownOpen(false)}
+                          />
+                        ))}
+                      </TabsContent>
+                    </div>
+
                     {hasMore && (
                       <div className="p-2 text-center border-t">
                         <button
                           onClick={loadMore}
-                          className="text-sm text-primary hover:underline"
+                          className="text-xs sm:text-sm text-primary hover:underline"
                         >
                           Load More
                         </button>
