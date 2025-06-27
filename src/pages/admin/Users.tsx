@@ -119,7 +119,6 @@ export default function Users() {
       }
 
       const data = await response.json();
-      console.log('Fetched users:', data); // Debug log
       setUsers(data);
     } catch (error) {
       console.error('Error fetching users:', error);

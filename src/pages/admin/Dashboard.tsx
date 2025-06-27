@@ -83,8 +83,6 @@ export default function Dashboard() {
           throw new Error('Failed to fetch stats');
         }
         const data = await response.json();
-        console.log('Fetched stats data:', data); // Add this debug log
-        console.log('Most ordered items:', data.mostOrderedItems); // Add this debug log
         setStats(data);
       } catch (error) {
         console.error('Error fetching dashboard stats:', error);
