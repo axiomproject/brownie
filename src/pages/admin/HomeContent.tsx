@@ -3,10 +3,10 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { toast } from "sonner";
 import { Loader2 } from "lucide-react";
 import { API_URL } from '@/config';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 interface Value {
   title: string;
@@ -92,6 +92,7 @@ export default function HomeContent() {
   });
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [currentSection, setCurrentSection] = useState("app");
 
   useEffect(() => {
     const fetchContent = async () => {
@@ -183,42 +184,49 @@ export default function HomeContent() {
         </Button>
       </div>
 
-      <Tabs defaultValue="app" className="space-y-6">
-        <TabsList className="grid grid-cols-5 w-full max-w-[800px]">
-          <TabsTrigger value="app">App</TabsTrigger>
-          <TabsTrigger value="home">Home</TabsTrigger>
-          <TabsTrigger value="menu">Menu</TabsTrigger>
-          <TabsTrigger value="about">About</TabsTrigger>
-          <TabsTrigger value="contact">Contact</TabsTrigger>
-        </TabsList>
+      <div className="w-full max-w-[300px] mb-6">
+        <Select value={currentSection} onValueChange={setCurrentSection}>
+          <SelectTrigger>
+            <SelectValue placeholder="Select section" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="app">App Settings</SelectItem>
+            <SelectItem value="home">Home</SelectItem>
+            <SelectItem value="menu">Menu</SelectItem>
+            <SelectItem value="about">About</SelectItem>
+            <SelectItem value="contact">Contact</SelectItem>
+          </SelectContent>
+        </Select>
+      </div>
 
-        {/* App Settings Tab */}
-        <TabsContent value="app" className="space-y-6">
-          <Card>
-            <CardHeader>
-              <CardTitle>App Settings</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="space-y-2">
-                <label className="text-sm font-medium">App Name</label>
-                <Input
-                  value={content.appSettings?.appName}
-                  onChange={(e) => setContent(prev => ({
-                    ...prev,
-                    appSettings: { 
-                      ...prev.appSettings, 
-                      appName: e.target.value 
-                    }
-                  }))}
-                  placeholder="Enter app name"
-                />
-              </div>
-            </CardContent>
-          </Card>
-        </TabsContent>
+      {/* App Settings Section */}
+      {currentSection === "app" && (
+        <Card>
+          <CardHeader>
+            <CardTitle>App Settings</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="space-y-2">
+              <label className="text-sm font-medium">App Name</label>
+              <Input
+                value={content.appSettings?.appName}
+                onChange={(e) => setContent(prev => ({
+                  ...prev,
+                  appSettings: { 
+                    ...prev.appSettings, 
+                    appName: e.target.value 
+                  }
+                }))}
+                placeholder="Enter app name"
+              />
+            </div>
+          </CardContent>
+        </Card>
+      )}
 
-        {/* Home Tab Content */}
-        <TabsContent value="home" className="space-y-6">
+      {/* Home Section */}
+      {currentSection === "home" && (
+        <div className="space-y-6">
           <Card>
             <CardHeader>
               <CardTitle>Hero Section</CardTitle>
@@ -275,43 +283,45 @@ export default function HomeContent() {
               </div>
             </CardContent>
           </Card>
-        </TabsContent>
+        </div>
+      )}
 
-        {/* Menu Tab Content */}
-        <TabsContent value="menu" className="space-y-6">
-          <Card>
-            <CardHeader>
-              <CardTitle>Hero Section</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="space-y-2">
-                <label className="text-sm font-medium">Title</label>
-                <Input
-                  value={content.menuPageHero.title}
-                  onChange={(e) => setContent(prev => ({
-                    ...prev,
-                    menuPageHero: { ...prev.menuPageHero, title: e.target.value }
-                  }))}
-                  placeholder="Enter menu page title"
-                />
-              </div>
-              <div className="space-y-2">
-                <label className="text-sm font-medium">Subtitle</label>
-                <Input
-                  value={content.menuPageHero.subtitle}
-                  onChange={(e) => setContent(prev => ({
-                    ...prev,
-                    menuPageHero: { ...prev.menuPageHero, subtitle: e.target.value }
-                  }))}
-                  placeholder="Enter menu page subtitle"
-                />
-              </div>
-            </CardContent>
-          </Card>
-        </TabsContent>
+      {/* Menu Section */}
+      {currentSection === "menu" && (
+        <Card>
+          <CardHeader>
+            <CardTitle>Hero Section</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="space-y-2">
+              <label className="text-sm font-medium">Title</label>
+              <Input
+                value={content.menuPageHero.title}
+                onChange={(e) => setContent(prev => ({
+                  ...prev,
+                  menuPageHero: { ...prev.menuPageHero, title: e.target.value }
+                }))}
+                placeholder="Enter menu page title"
+              />
+            </div>
+            <div className="space-y-2">
+              <label className="text-sm font-medium">Subtitle</label>
+              <Input
+                value={content.menuPageHero.subtitle}
+                onChange={(e) => setContent(prev => ({
+                  ...prev,
+                  menuPageHero: { ...prev.menuPageHero, subtitle: e.target.value }
+                }))}
+                placeholder="Enter menu page subtitle"
+              />
+            </div>
+          </CardContent>
+        </Card>
+      )}
 
-        {/* About Tab Content */}
-        <TabsContent value="about" className="space-y-6">
+      {/* About Section */}
+      {currentSection === "about" && (
+        <div className="space-y-6">
           <Card>
             <CardHeader>
               <CardTitle>Hero Section</CardTitle>
@@ -436,10 +446,12 @@ export default function HomeContent() {
               ))}
             </CardContent>
           </Card>
-        </TabsContent>
+        </div>
+      )}
 
-        {/* Contact Tab Content */}
-        <TabsContent value="contact" className="space-y-6">
+      {/* Contact Section */}
+      {currentSection === "contact" && (
+        <div className="space-y-6">
           <Card>
             <CardHeader>
               <CardTitle>Hero Section</CardTitle>
@@ -521,8 +533,8 @@ export default function HomeContent() {
               </div>
             </CardContent>
           </Card>
-        </TabsContent>
-      </Tabs>
+        </div>
+      )}
     </div>
   );
 }

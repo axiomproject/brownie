@@ -125,9 +125,9 @@ export default function Dashboard() {
   }
 
   return (
-    <div className="p-2 xs:p-4 sm:p-6 w-full bg-background min-h-screen">
-      {/* Stats cards grid - Improved responsiveness */}
-      <div className="grid grid-cols-1 xs:grid-cols-2 lg:grid-cols-4 gap-2 xs:gap-3 sm:gap-4 mb-4 xs:mb-6">
+    <div className="p-4 sm:p-6 lg:p-8 w-full bg-background min-h-screen">
+      {/* Stats cards grid - Make more responsive */}
+      <div className="grid grid-cols-1 xs:grid-cols-2 lg:grid-cols-4 gap-3 xs:gap-4 mb-6">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Total Orders</CardTitle>
@@ -166,26 +166,26 @@ export default function Dashboard() {
         </Card>
       </div>
 
-      {/* Charts Grid Section - Better scaling for smaller screens */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-2 xs:gap-3 sm:gap-4 mb-4 xs:mb-6">
+      {/* Charts Grid Section - Improve responsiveness */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 xs:gap-6 mb-6">
         {/* Revenue Chart */}
         <Card className="col-span-1">
-          <CardHeader className="space-y-1 p-4 sm:p-6">
-            <CardTitle className="text-sm xs:text-base">Monthly Revenue</CardTitle>
-            <CardDescription className="text-xs xs:text-sm">Total revenue by month</CardDescription>
+          <CardHeader>
+            <CardTitle className="text-base xs:text-lg">Monthly Revenue</CardTitle>
+            <CardDescription>Total revenue by month</CardDescription>
           </CardHeader>
-          <CardContent className="pl-0 xs:pl-2 p-2 xs:p-4">
-            <div className="h-[250px] xs:h-[300px] sm:h-[350px]">
+          <CardContent className="pl-0 xs:pl-2">
+            <div className="h-[300px] xs:h-[350px]">
               <ChartContainer config={chartConfig}>
                 <BarChart 
                   data={stats.revenueData}
                   margin={{ 
                     top: 20, 
-                    right: 5,  // Reduced right margin
-                    bottom: 40, // Reduced bottom margin
-                    left: 40   // Reduced left margin
+                    right: 10, 
+                    bottom: 50, 
+                    left: 50 
                   }}
-                  height={250}  // Match container height
+                  height={300}
                 >
                   <CartesianGrid vertical={false} />
                   <XAxis 
@@ -219,25 +219,25 @@ export default function Dashboard() {
           </CardContent>
         </Card>
 
-        {/* Most Ordered Items Chart - Similar adjustments */}
+        {/* Most Ordered Items Chart */}
         <Card className="col-span-1">
-          <CardHeader className="space-y-1 p-4 sm:p-6">
-            <CardTitle className="text-sm xs:text-base">Most Ordered Items</CardTitle>
-            <CardDescription className="text-xs xs:text-sm">Top selling products by quantity</CardDescription>
+          <CardHeader>
+            <CardTitle className="text-base xs:text-lg">Most Ordered Items</CardTitle>
+            <CardDescription>Top selling products by quantity</CardDescription>
           </CardHeader>
-          <CardContent className="p-2 xs:p-4">
-            <div className="h-[250px] xs:h-[300px] sm:h-[350px]">
+          <CardContent>
+            <div className="h-[300px] xs:h-[350px]">
               <ChartContainer config={mostOrderedConfig}>
                 <BarChart
                   data={stats.mostOrderedItems || []}
                   layout="vertical"
                   margin={{
                     top: 5,
-                    right: 20,
+                    right: 30,
                     bottom: 5,
-                    left: 60,  // Reduced for smaller screens
+                    left: 80,
                   }}
-                  height={250}  // Match container height
+                  height={300}
                 >
                   <CartesianGrid horizontal={false} />
                   <YAxis
@@ -284,27 +284,27 @@ export default function Dashboard() {
       </div>
 
       {/* Recent Orders Table */}
-      <div className="mt-4 xs:mt-6">
-        <h3 className="text-sm xs:text-base font-medium text-foreground mb-2 xs:mb-4">Recent Orders</h3>
+      <div className="mt-8">
+        <h3 className="text-base xs:text-lg font-medium text-foreground mb-4">Recent Orders</h3>
         <div className="bg-card rounded-lg shadow overflow-x-auto">
-          <table className="w-full min-w-[500px] xs:min-w-[600px]">
+          <table className="w-full min-w-[600px]">
             <thead className="bg-muted">
               <tr>
-                <th className="px-2 xs:px-4 py-2 xs:py-3 text-left text-[10px] xs:text-xs font-medium text-foreground">Order ID</th>
-                <th className="px-2 xs:px-4 py-2 xs:py-3 text-left text-[10px] xs:text-xs font-medium text-foreground">Customer</th>
-                <th className="px-2 xs:px-4 py-2 xs:py-3 text-left text-[10px] xs:text-xs font-medium text-foreground">Amount</th>
-                <th className="px-2 xs:px-4 py-2 xs:py-3 text-left text-[10px] xs:text-xs font-medium text-foreground">Status</th>
-                <th className="px-2 xs:px-4 py-2 xs:py-3 text-left text-[10px] xs:text-xs font-medium text-foreground">Date</th>
+                <th className="px-4 py-3 text-left text-xs font-medium text-foreground">Order ID</th>
+                <th className="px-4 py-3 text-left text-xs font-medium text-foreground">Customer</th>
+                <th className="px-4 py-3 text-left text-xs font-medium text-foreground">Amount</th>
+                <th className="px-4 py-3 text-left text-xs font-medium text-foreground">Status</th>
+                <th className="px-4 py-3 text-left text-xs font-medium text-foreground">Date</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-border">
               {stats.recentOrders.map((order) => (
-                <tr key={order._id} className="text-[10px] xs:text-xs sm:text-sm">
-                  <td className="px-2 xs:px-4 py-2 xs:py-3 text-foreground">#{order._id.slice(-6)}</td>
-                  <td className="px-2 xs:px-4 py-2 xs:py-3 text-foreground">{order.user?.name || 'Guest Order'}</td>
-                  <td className="px-2 xs:px-4 py-2 xs:py-3 text-foreground">₱{order.totalAmount.toFixed(2)}</td>
-                  <td className="px-2 xs:px-4 py-2 xs:py-3 text-foreground capitalize">{order.status}</td>
-                  <td className="px-2 xs:px-4 py-2 xs:py-3 text-foreground">
+                <tr key={order._id} className="text-xs xs:text-sm">
+                  <td className="px-4 py-3 text-foreground">#{order._id.slice(-6)}</td>
+                  <td className="px-4 py-3 text-foreground">{order.user?.name || 'Guest Order'}</td>
+                  <td className="px-4 py-3 text-foreground">₱{order.totalAmount.toFixed(2)}</td>
+                  <td className="px-4 py-3 text-foreground capitalize">{order.status}</td>
+                  <td className="px-4 py-3 text-foreground">
                     {new Date(order.createdAt).toLocaleDateString()}
                   </td>
                 </tr>
