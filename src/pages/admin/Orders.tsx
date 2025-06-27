@@ -32,6 +32,7 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
 import { API_URL } from '@/config';
+import { Card, CardContent } from "@/components/ui/card";
 
 interface OrderItem {
   productId: number;
@@ -434,33 +435,34 @@ export default function Orders() {
 
   return (
     <div className="space-y-4">
-      <div className="flex justify-between items-center gap-4">
-        <div className="flex-1">
-          <div className="relative w-full max-w-sm">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+        <div className="w-full sm:w-auto sm:flex-1">
+          <div className="relative w-full sm:max-w-sm">
+            <Search className="absolute left-2 xs:left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
             <Input
               placeholder="Search orders..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="pl-10 w-full bg-background text-foreground placeholder:text-muted-foreground border-border"
+              className="pl-8 xs:pl-10 w-full text-sm xs:text-base bg-background text-foreground placeholder:text-muted-foreground border-border"
             />
           </div>
         </div>
-        <Button onClick={exportOrders} variant="secondary" className="mt-8">
+        <Button onClick={exportOrders} variant="secondary" className="w-full sm:w-auto">
           <FileDown className="h-4 w-4 mr-2" />
           Export Orders
         </Button>
       </div>
 
       {selectedOrders.length > 0 && (
-        <div className="flex items-center justify-between bg-muted p-2 rounded-md">
-          <span className="text-sm text-foreground">
-            {selectedOrders.length} orders selected
+        <div className="flex items-center justify-between bg-muted px-2 xs:px-4 py-2 border-y border-border">
+          <span className="text-xs xs:text-sm text-muted-foreground">
+            {selectedOrders.length} selected
           </span>
           <Button
             variant="destructive"
             size="sm"
             onClick={confirmBulkDelete}
+            className="text-xs xs:text-sm px-2 xs:px-4"
           >
             Delete Selected
           </Button>
@@ -556,211 +558,186 @@ export default function Orders() {
         </DialogContent>
       </Dialog>
 
-      <div className="rounded-md border border-border">
-        <Table>
-          <TableHeader>
-            <TableRow className="border-border">
-              <TableHead className="w-[50px]">
-                <Checkbox
-                  checked={
-                    paginatedOrders().length > 0 &&
-                    paginatedOrders().every(order => selectedOrders.includes(order._id))
-                  }
-                  onCheckedChange={toggleAll}
-                />
-              </TableHead>
-              <TableHead className="text-foreground">Order ID</TableHead>
-              <TableHead className="text-foreground">Customer</TableHead>
-              <TableHead className="text-foreground">
-                Items & Discounts
-              </TableHead>
-              <TableHead 
-                className="text-foreground cursor-pointer hover:bg-muted"
-                onClick={() => handleSort('totalAmount')}
-              >
-                Total <SortIcon column="totalAmount" />
-              </TableHead>
-              <TableHead 
-                className="text-foreground cursor-pointer hover:bg-muted"
-                onClick={() => handleSort('paymentMethod')}
-              >
-                Payment <SortIcon column="paymentMethod" />
-              </TableHead>
-              <TableHead 
-                className="text-foreground cursor-pointer hover:bg-muted"
-                onClick={() => handleSort('status')}
-              >
-                Status <SortIcon column="status" />
-              </TableHead>
-              <TableHead 
-                className="text-foreground cursor-pointer hover:bg-muted"
-                onClick={() => handleSort('createdAt')}
-              >
-                Date <SortIcon column="createdAt" />
-              </TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {paginatedOrders().map((order) => (
-              <TableRow 
-                key={order._id} 
-                className="border-border"
-                data-selected={selectedOrders.includes(order._id)}
-              >
-                <TableCell>
-                  <Checkbox
-                    checked={selectedOrders.includes(order._id)}
-                    onCheckedChange={() => toggleOrder(order._id)}
-                  />
-                </TableCell>
-                <TableCell className="text-foreground font-mono">
-                  {order._id.slice(-6)}
-                </TableCell>
-                <TableCell>
-                  <Dialog 
-                    open={isDetailsDialogOpen} 
-                    onOpenChange={setIsDetailsDialogOpen}
+      <Card>
+        <CardContent className="p-0">
+          <div className="border-0 overflow-x-auto">
+            <Table>
+              <TableHeader>
+                <TableRow className="border-border">
+                  <TableHead className="w-[30px] xs:w-[40px] sm:w-[50px]">
+                    <Checkbox
+                      checked={paginatedOrders().length > 0 && paginatedOrders().every(order => selectedOrders.includes(order._id))}
+                      onCheckedChange={toggleAll}
+                      className="scale-75 xs:scale-90 sm:scale-100"
+                    />
+                  </TableHead>
+                  <TableHead className="min-w-[80px] text-foreground">Order ID</TableHead>
+                  <TableHead className="min-w-[120px] lg:min-w-[150px] text-foreground">Customer</TableHead>
+                  <TableHead className="hidden md:table-cell text-foreground">Items</TableHead>
+                  <TableHead 
+                    className="text-foreground cursor-pointer hover:bg-muted"
+                    onClick={() => handleSort('totalAmount')}
                   >
-                    <DialogTrigger  asChild>
-                      {order.user ? (
-                        <button 
-                          onClick={() => order.user && handleCustomerClick(order.user._id, order.user.name)}
-                          className="text-left hover:underline decoration-foreground/50 hover:text-foreground"
-                        >
-                          <div className="text-foreground">{order.user.name}</div>
-                          <div className="text-sm text-muted-foreground">{order.user.email}</div>
-                        </button>
-                      ) : (
-                        <div className="text-muted-foreground">Guest Order</div>
-                      )}
-                    </DialogTrigger>
-                    {selectedCustomer && customerDetails && order.user && (
-                      <DialogContent className="bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/95">
-                        <DialogHeader>
-                          <DialogTitle className="text-foreground">
-                            Customer Details: {selectedCustomer.name}
-                          </DialogTitle>
-                        </DialogHeader>
-                        <div className="space-y-4">
-                          <div className="grid grid-cols-2 gap-4 text-sm">
-                            <div>
-                              <p className="text-muted-foreground">Total Orders</p>
-                              <p className="text-foreground text-lg">{customerDetails.orderCount}</p>
-                            </div>
-                            <div>
-                              <p className="text-muted-foreground">Total Spent</p>
-                              <p className="text-foreground text-lg">₱{customerDetails.totalSpent.toFixed(2)}</p>
-                            </div>
-                              <p className="text-muted-foreground">Customer Since</p>
-                              <p className="text-foreground">{new Date(customerDetails.firstOrder).toLocaleDateString()}</p>
-                            </div>
-                          </div>
-                          
-                          <div className="mt-4">
-                            <h3 className="text-lg font-semibold mb-2 text-foreground">Order History</h3>
-                            <div className="space-y-2 max-h-[300px] overflow-y-auto">
-                              {customerDetails.orders.map((order) => (
-                              <div key={order._id} className="border p-3 rounded-lg">
-                                <div className="flex justify-between">
-                                  <span className="text-foreground">#{order._id.slice(-6)}</span>
-                                  <span className="text-muted-foreground">
-                                    {new Date(order.createdAt).toLocaleDateString()}
-                                  </span>
+                    Total <SortIcon column="totalAmount" />
+                  </TableHead>
+                  <TableHead className="hidden lg:table-cell text-foreground">Payment</TableHead>
+                  <TableHead className="text-foreground min-w-[140px]">Status</TableHead>
+                  <TableHead className="hidden md:table-cell text-foreground">Date</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {paginatedOrders().map((order) => (
+                  <TableRow key={order._id} className="border-border">
+                    <TableCell className="p-2 sm:py-2">
+                      <Checkbox
+                        checked={selectedOrders.includes(order._id)}
+                        onCheckedChange={() => toggleOrder(order._id)}
+                        className="scale-75 xs:scale-90 sm:scale-100"
+                      />
+                    </TableCell>
+                    <TableCell className="p-2 sm:py-2 font-mono text-foreground">
+                      {order._id.slice(-6)}
+                    </TableCell>
+                    <TableCell className="p-2 sm:py-2">
+                      <div className="flex flex-col gap-0.5">
+                        <Dialog open={isDetailsDialogOpen} onOpenChange={setIsDetailsDialogOpen}>
+                          <DialogTrigger asChild>
+                            {order.user ? (
+                              <button 
+                                onClick={() => order.user && handleCustomerClick(order.user._id, order.user.name)}
+                                className="text-left hover:underline decoration-foreground/50 hover:text-foreground"
+                              >
+                                <div className="text-xs xs:text-sm text-foreground">{order.user.name}</div>
+                                <div className="text-[10px] xs:text-xs text-muted-foreground truncate">{order.user.email}</div>
+                              </button>
+                            ) : (
+                              <div className="text-xs xs:text-sm text-muted-foreground">Guest Order</div>
+                            )}
+                          </DialogTrigger>
+                          {selectedCustomer && customerDetails && order.user && (
+                            <DialogContent className="bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/95">
+                              <DialogHeader>
+                                <DialogTitle className="text-foreground">
+                                  Customer Details: {selectedCustomer.name}
+                                </DialogTitle>
+                              </DialogHeader>
+                              <div className="space-y-4">
+                                <div className="grid grid-cols-2 gap-4 text-sm">
+                                  <div>
+                                    <p className="text-muted-foreground">Total Orders</p>
+                                    <p className="text-foreground text-lg">{customerDetails.orderCount}</p>
+                                  </div>
+                                  <div>
+                                    <p className="text-muted-foreground">Total Spent</p>
+                                    <p className="text-foreground text-lg">₱{customerDetails.totalSpent.toFixed(2)}</p>
+                                  </div>
+                                    <p className="text-muted-foreground">Customer Since</p>
+                                    <p className="text-foreground">{new Date(customerDetails.firstOrder).toLocaleDateString()}</p>
+                                  </div>
                                 </div>
-                                <div className="text-sm text-muted-foreground mt-1">
-                                  {order.items.map((item, i) => (
-                                    <div key={i}>{item.quantity}x {item.name}</div>
+                                
+                                <div className="mt-4">
+                                  <h3 className="text-lg font-semibold mb-2 text-foreground">Order History</h3>
+                                  <div className="space-y-2 max-h-[300px] overflow-y-auto">
+                                    {customerDetails.orders.map((order) => (
+                                    <div key={order._id} className="border p-3 rounded-lg">
+                                      <div className="flex justify-between">
+                                        <span className="text-foreground">#{order._id.slice(-6)}</span>
+                                        <span className="text-muted-foreground">
+                                          {new Date(order.createdAt).toLocaleDateString()}
+                                        </span>
+                                      </div>
+                                      <div className="text-sm text-muted-foreground mt-1">
+                                        {order.items.map((item, i) => (
+                                          <div key={i}>{item.quantity}x {item.name}</div>
+                                        ))}
+                                      </div>
+                                      <div className="flex justify-between mt-2">
+                                        <span className={statusColors[order.status]}>{order.status}</span>
+                                        <span className="text-foreground">₱{order.totalAmount.toFixed(2)}</span>
+                                      </div>
+                                    </div>
                                   ))}
                                 </div>
-                                <div className="flex justify-between mt-2">
-                                  <span className={statusColors[order.status]}>{order.status}</span>
-                                  <span className="text-foreground">₱{order.totalAmount.toFixed(2)}</span>
-                                </div>
                               </div>
-                            ))}
-                          </div>
+                            </DialogContent>
+                          )}
+                        </Dialog>
+                        <span className="text-[10px] xs:text-xs text-muted-foreground md:hidden">
+                          {new Date(order.createdAt).toLocaleString()}
+                        </span>
+                        <span className="text-[10px] xs:text-xs text-muted-foreground lg:hidden capitalize">
+                          {order.paymentMethod}
+                        </span>
+                      </div>
+                    </TableCell>
+                    <TableCell className="hidden md:table-cell p-2 sm:py-2 text-muted-foreground">
+                      {order.items.map((item, index) => (
+                        <div key={index} className="text-xs">
+                          {item.quantity}x {item.name} ({item.variantName})
                         </div>
-                      </DialogContent>
-                    )}
-                  </Dialog>
-                </TableCell>
-                <TableCell className="text-muted-foreground">
-                  {order.items.map((item, index) => (
-                    <div key={index} className="text-sm">
-                      {item.quantity}x {item.name} ({item.variantName})
-                    </div>
-                  ))}
-                  {order.coupon && (
-                    <div className="mt-1 text-sm text-primary-foreground">
-                      <span className="bg-primary px-2 py-0.5 rounded-full text-xs">
-                        Coupon: {order.coupon.code} 
-                        ({order.coupon.type === 'fixed' 
-                          ? `₱${order.coupon.value} OFF`
-                          : `${order.coupon.value}x Free Item`
-                        })
-                      </span>
-                    </div>
-                  )}
-                </TableCell>
-                <TableCell className="text-foreground">
-                  ₱{order.totalAmount.toFixed(2)}
-                </TableCell>
-                <TableCell className="text-foreground capitalize">
-                  {order.paymentMethod}
-                </TableCell>
-                <TableCell>
-                  <Select
-                    defaultValue={order.status}
-                    onValueChange={(value) => updateOrderStatus(order._id, value)}
-                  >
-                    <SelectTrigger className={`w-[140px] ${statusColors[order.status]}`}>
-                      <SelectValue>{order.status}</SelectValue>
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="received">Received</SelectItem>
-                      <SelectItem value="baking">Baking</SelectItem>
-                      <SelectItem value="out for delivery">Out for Delivery</SelectItem>
-                      <SelectItem value="delivered">Delivered</SelectItem>
-                      <SelectItem value="refunded">Refunded</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </TableCell>
-                <TableCell className="text-foreground">
-                  {new Date(order.createdAt).toLocaleString()}
-                </TableCell>
-              </TableRow>
-            ))}
-          </TableBody>
-        </Table>
-      </div>
+                      ))}
+                      {order.coupon && (
+                        <div className="mt-1">
+                          <span className="bg-primary px-2 py-0.5 rounded-full text-[10px] xs:text-xs text-primary-foreground">
+                            Coupon: {order.coupon.code}
+                          </span>
+                        </div>
+                      )}
+                    </TableCell>
+                    <TableCell className="p-2 sm:py-2 text-foreground">
+                      ₱{order.totalAmount.toFixed(2)}
+                    </TableCell>
+                    <TableCell className="hidden lg:table-cell p-2 sm:py-2 text-foreground capitalize">
+                      {order.paymentMethod}
+                    </TableCell>
+                    <TableCell className="p-2 sm:py-2">
+                      <Select
+                        defaultValue={order.status}
+                        onValueChange={(value) => updateOrderStatus(order._id, value)}
+                      >
+                        <SelectTrigger className={`w-[140px] text-xs xs:text-sm ${statusColors[order.status]}`}>
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="received">Received</SelectItem>
+                          <SelectItem value="baking">Baking</SelectItem>
+                          <SelectItem value="out for delivery">Out for Delivery</SelectItem>
+                          <SelectItem value="delivered">Delivered</SelectItem>
+                          <SelectItem value="refunded">Refunded</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </TableCell>
+                    <TableCell className="hidden md:table-cell p-2 sm:py-2 text-foreground">
+                      {new Date(order.createdAt).toLocaleString()}
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </div>
 
-      {totalPages > 1 && (
-        <Pagination className="mt-4 select-none">
-          <PaginationContent>
-            <PaginationItem>
-              <PaginationPrevious 
-                onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
-                className={`${currentPage === 1 ? 'pointer-events-none opacity-50' : 'cursor-pointer'} text-foreground hover:bg-muted hover:text-foreground`}
-              />
-            </PaginationItem>
-            
-            {renderPaginationItems().map((item, index) => (
-              <PaginationItem key={index} className="text-foreground">
-                {React.cloneElement(item, {
-                  className: `${item.props.className || ''} text-foreground hover:bg-muted hover:text-foreground select-none`
-                })}
-              </PaginationItem>
-            ))}
-            
-            <PaginationItem>
-              <PaginationNext 
-                onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
-                className={`${currentPage === totalPages ? 'pointer-events-none opacity-50' : 'cursor-pointer'} text-foreground hover:bg-muted hover:text-foreground`}
-              />
-            </PaginationItem>
-          </PaginationContent>
-        </Pagination>
-      )}
+          {totalPages > 1 && (
+            <div className="border-t border-border">
+              <Pagination className="py-1 xs:py-2 sm:py-4">
+                <PaginationContent className="flex justify-center gap-0.5 xs:gap-1 sm:gap-2">
+                  <PaginationPrevious 
+                    onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                    className={`px-1 xs:px-2 sm:px-4 text-xs xs:text-sm ${currentPage === 1 ? 'pointer-events-none opacity-50' : ''}`}
+                  />
+                  {renderPaginationItems()}
+                  <PaginationNext 
+                    onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+                    className={`px-1 xs:px-2 sm:px-4 text-xs xs:text-sm ${currentPage === totalPages ? 'pointer-events-none opacity-50' : ''}`}
+                  />
+                </PaginationContent>
+              </Pagination>
+            </div>
+          )}
+        </CardContent>
+      </Card>
+
+      {/* ...existing dialogs... */}
     </div>
   );
 }
