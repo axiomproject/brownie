@@ -115,7 +115,7 @@ export default function ProductDetail() {
       <>
         <Navbar />
         <div className="min-h-screen pt-24 bg-background">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-foreground">
             <motion.div
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
@@ -183,7 +183,7 @@ export default function ProductDetail() {
   return (
     <>
       <Navbar />
-      <div className="min-h-screen pt-24 bg-background">
+      <div className="min-h-screen pt-24 bg-background text-foreground">
         <motion.div 
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
