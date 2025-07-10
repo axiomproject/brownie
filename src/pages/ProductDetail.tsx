@@ -195,7 +195,7 @@ export default function ProductDetail() {
             onClick={() => navigate('/menu')}
             className="mb-8"
           >
-            <ArrowLeft className="mr-2 h-4 w-4" />
+            <ArrowLeft className="mr-2 h-4 w-4 text-foreground" />
             Back to Menu
           </Button>
 
